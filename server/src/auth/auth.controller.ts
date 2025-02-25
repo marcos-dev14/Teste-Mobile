@@ -12,6 +12,6 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return { message: 'Login bem-sucedido' };
+    return { message: 'Usuário logado com sucesso' };
   }
 }

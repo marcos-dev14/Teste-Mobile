@@ -3,10 +3,11 @@ import { AppController } from './app.controller';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PrismaService } from './prisma/prisma.service';
+import { ProductsModule } from './products/products.module'; // Importação correta
 
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, UsersModule, ProductsModule], // Importa o ProductsModule
   controllers: [AppController],
-  providers: [PrismaService],
+  providers: [PrismaService], // Fornece o PrismaService globalmente
 })
 export class AppModule {}
