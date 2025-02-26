@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
 import { ProductsService } from './products.service'; 
 import { ProductDto } from './dto/product.dto';
 
@@ -18,5 +18,18 @@ export class ProductsController {
       throw new Error('Produto não encontrado'); 
     }
     return product;
+  }
+
+  @Patch(':id/rating') // Rota: PATCH /products/:id/rating
+  async updateRating(
+    @Param('id') productId: string,
+    @Body('rating') rating: number,
+  ): Promise<ProductDto> {
+    return this.productsService.updateRating(productId, rating);
+  }
+
+  @Get(':id/rating') // Rota: GET /products/:id/rating
+  async getRating(@Param('id') productId: string): Promise<number | null> {
+    return this.productsService.getRating(productId);
   }
 }

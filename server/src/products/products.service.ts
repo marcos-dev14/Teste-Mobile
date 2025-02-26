@@ -14,12 +14,13 @@ export class ProductsService {
       description: product.description,
       price: product.price,
       images: product.images,
+      rating: product.rating || undefined,
     }));
   }
 
   async findOne(id: string): Promise<ProductDto> {
     const product = await this.prisma.product.findUnique({
-      where: { id }, // Busca pelo UUID
+      where: { id },
     });
 
     if (!product) {
@@ -32,6 +33,31 @@ export class ProductsService {
       description: product.description,
       price: product.price,
       images: product.images,
+      rating: product.rating || undefined,
     };
+  }
+
+  async updateRating(productId: string, newRating: number): Promise<ProductDto> {
+    const product = await this.prisma.product.update({
+      where: { id: productId },
+      data: { rating: newRating },
+    });
+
+    return {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      images: product.images,
+      rating: product.rating || undefined,
+    };
+  }
+
+  async getRating(productId: string): Promise<number | null> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { rating: true },
+    });
+    return product?.rating || null;
   }
 }

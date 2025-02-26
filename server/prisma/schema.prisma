@@ -28,6 +28,7 @@ model Product {
   description String
   price       Float
   images      String[]
+  rating      Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
