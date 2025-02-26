@@ -1,43 +1,41 @@
-import { StatusBar, View } from "react-native"
-import { Stack } from "expo-router"
-import {
+import "@/styles/global.css"
+
+import { useEffect } from "react"
+import { View } from "react-native"
+import { StatusBar } from "expo-status-bar"
+import { Slot } from "expo-router"
+import * as SplashScreen from 'expo-splash-screen';
+import { 
   useFonts,
   NotoSans_400Regular,
   NotoSans_600SemiBold,
   NotoSans_700Bold
-} from "@expo-google-fonts/noto-sans"
+} from "@expo-google-fonts/noto-sans" 
 
-import { colors } from "@/styles/colors"
-
-import { Loading } from "@/components/loading"
+SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
-  const [fontsLoaded, fontError] = useFonts([
+  const [ fontsLoaded, fontError ] = useFonts({
     NotoSans_400Regular,
     NotoSans_600SemiBold,
     NotoSans_700Bold,
-  ])
+  })
 
-  if(!fontsLoaded) {
-    return <Loading />
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
   }
 
   return (
     <View style={{ flex: 1 }}>
-      <Stack 
-        screenOptions={{
-          headerShown: false,
-          contentStyle: {
-            backgroundColor: colors.white
-          }
-        }}
-      />
-      
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={colors.white}
-        translucent
-      />
+      <StatusBar style="dark" translucent backgroundColor="transparent" />
+
+      <Slot />
     </View>
   )
 }

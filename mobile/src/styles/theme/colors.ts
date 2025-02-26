@@ -9,4 +9,4 @@ export const colors = {
   light: '#EDEDED',
   white: '#FFFFFF',
   gradient: ['#6AC9FF', '#28CE9C'],
-};
+}
