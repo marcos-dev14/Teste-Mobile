@@ -76,6 +76,11 @@ export default function TabLayout() {
         name="product/[id]"
         options={{ href: null }}
       />
+
+      <Tabs.Screen
+        name="checkout/address"
+        options={{ href: null }}
+      />
     </Tabs>
   )
 }
