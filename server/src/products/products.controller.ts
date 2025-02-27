@@ -20,7 +20,7 @@ export class ProductsController {
     return product;
   }
 
-  @Patch(':id/rating') // Rota: PATCH /products/:id/rating
+  @Patch(':id/rating') 
   async updateRating(
     @Param('id') productId: string,
     @Body('rating') rating: number,
@@ -28,7 +28,7 @@ export class ProductsController {
     return this.productsService.updateRating(productId, rating);
   }
 
-  @Get(':id/rating') // Rota: GET /products/:id/rating
+  @Get(':id/rating')
   async getRating(@Param('id') productId: string): Promise<number | null> {
     return this.productsService.getRating(productId);
   }

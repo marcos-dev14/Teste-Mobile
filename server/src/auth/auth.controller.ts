@@ -12,6 +12,12 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException();
     }
-    return { message: 'Usuário logado com sucesso' };
+
+    const { password, ...userData } = user;
+
+    return {
+      user: userData, 
+      message: 'Usuário logado com sucesso' 
+    };
   }
 }
