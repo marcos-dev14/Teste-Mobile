@@ -5,9 +5,10 @@ import { UsersModule } from './users/users.module';
 import { PrismaService } from './prisma/prisma.service';
 import { ProductsModule } from './products/products.module'; // Importação correta
 import { AddressModule } from './address/address.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
-  imports: [AuthModule, UsersModule, ProductsModule, AddressModule], // Importa o ProductsModule
+  imports: [AuthModule, UsersModule, ProductsModule, AddressModule, OrderModule], // Importa o ProductsModule
   controllers: [AppController],
   providers: [PrismaService], // Fornece o PrismaService globalmente
 })

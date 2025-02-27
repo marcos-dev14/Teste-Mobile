@@ -19,6 +19,7 @@ model User {
   email     String    @unique
   password  String
   addresses Address[]
+  orders    Order[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -45,6 +46,20 @@ model Address {
   country      String
   userId       String
   user         User     @relation(fields: [userId], references: [id])
+  orders       Order[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model Order {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  addressId  String
+  address    Address  @relation(fields: [addressId], references: [id])
+  items      Json
+  totalItems Int
+  totalPrice Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
