@@ -1,11 +1,12 @@
 import { View, TouchableOpacity, Text, Image, type TouchableOpacityProps } from "react-native"
+
 import { StartRating } from "./start-rating"
 
 interface CardProductProps extends TouchableOpacityProps {
   title: string
-  price: string
+  price: number
   productImage: string
-  rating: number
+  rating: number | undefined
 }
 
 export function CardProduct({
@@ -21,11 +22,10 @@ export function CardProduct({
       activeOpacity={0.7}
       {...rest}	
     >
-      {/* <Image
-        source={productImage}
+      <Image
+        source={{ uri: productImage }}
         className="w-full h-40 rounded-lg mb-2"
-      /> */}
-      <View className="w-full h-[170px] bg-slate-300" />
+      />
       
       <View className="w-full items-start p-4">
         <Text className="text-lg font-semibold text-darker mb-2">
@@ -33,10 +33,12 @@ export function CardProduct({
         </Text>
 
         <Text className="text-xl font-bold text-darker mb-2">
-          {price}
+          R$ {price}
         </Text>
 
-        <StartRating rating={rating} />
+        {rating && (
+          <StartRating rating={rating} />
+        )}
       </View>
     </TouchableOpacity>
   )

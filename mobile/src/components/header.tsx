@@ -1,7 +1,8 @@
-import { colors } from "@/styles/theme/colors"
-import { AntDesign } from "@expo/vector-icons"
-import { Link, type Href } from "expo-router";
 import { View, Text, TouchableOpacity } from "react-native"
+import { Link, type Href } from "expo-router"
+import { AntDesign } from "@expo/vector-icons"
+
+import { colors } from "@/styles/theme/colors"
 
 interface HeaderProps {
   backButton?: boolean

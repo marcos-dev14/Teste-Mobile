@@ -1,4 +1,7 @@
+import { View, Text } from "react-native"
 import { Tabs } from "expo-router"
+
+import { useCart } from "@/context/cart-context"
 
 import CatalogDefault from "@/assets/icons/catalog-default.svg"
 import CatalogActive from "@/assets/icons/catalog-active.svg"
@@ -8,6 +11,9 @@ import MenuDefault from "@/assets/icons/menu-default.svg"
 import MenuActive from "@/assets/icons/menu-active.svg"
 
 export default function TabLayout() {
+  const { cart } = useCart()
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+
   return (
     <Tabs
       screenOptions={{
@@ -40,7 +46,17 @@ export default function TabLayout() {
         name="cart"
         options={{
           tabBarIcon: ({ focused }) => (
-            focused? <CartActive /> : <CartDefault />
+            // focused? <CartActive /> : <CartDefault />
+            <View className="relative">
+              {focused ? <CartActive /> : <CartDefault />}
+              {itemCount > 0 && (
+                <View className="w-4 h-4 rounded-full bg-red absolute -top-1 -right-1 items-center justify-center">
+                  <Text className="text-white text-xs font-bold">
+                    {itemCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
           tabBarLabel: "Carrinho"
         }}
@@ -56,12 +72,9 @@ export default function TabLayout() {
         }}
       />
 
-      <Tabs.Screen 
+      <Tabs.Screen
         name="product/[id]"
-        options={{
-          tabBarButton: () => null,
-          tabBarStyle: { display: 'none' },
-        }} 
+        options={{ href: null }}
       />
     </Tabs>
   )

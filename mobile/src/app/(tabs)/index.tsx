@@ -1,55 +1,20 @@
-import { CardProduct } from '@/components/card-product';
-import { Header } from '@/components/header'
-import { StartRating } from '@/components/start-rating';
-import { colors } from '@/styles/theme/colors'
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList } from 'react-native'
+import { Link } from 'expo-router'
+import { useQuery } from '@tanstack/react-query'
 import { Ionicons } from '@expo/vector-icons'
-import { Link } from 'expo-router';
-import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image } from 'react-native'
+
+import { getProducts } from '@/api/products'
+
+import { CardProduct } from '@/components/card-product'
+import { Header } from '@/components/header'
+
+import { colors } from '@/styles/theme/colors'
 
 export default function Index() {
-  const products = [
-    {
-      id: 1,
-      name: 'Swag Labs Backpack',
-      price: '$29.99',
-      image: '',
-      rating: 3.5,
-    },
-    {
-      id: 2,
-      name: 'Swag Labs Bike Light',
-      price: '$9.99',
-      image: '',
-      rating: 3.5,
-    },
-    {
-      id: 3,
-      name: 'Swag Labs Bolt T-Shirt',
-      price: '$15.99',
-      image: '',
-      rating: 3.5,
-    },
-    {
-      id: 4,
-      name: 'Swag Labs Fleece Jacket',
-      price: '$59.99',
-      image: '',
-      rating: 3.5,
-    },
-    {
-      id: 5,
-      name: 'Swag Labs Onesie',
-      price: '$19.99',
-      image: '',
-      rating: 3.5,
-    },
-    // {
-    //   id: 5,
-    //   name: 'Swag Labs Onesie',
-    //   price: '$19.99',
-    //   image: '',
-    // },
-  ];
+  const { data: productsData } = useQuery({
+    queryKey: ['products'],
+    queryFn: () => getProducts()
+  })
 
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
@@ -70,21 +35,23 @@ export default function Index() {
         </View>
 
         <FlatList
-          data={products}
+          data={productsData}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }}
           numColumns={2}
           columnWrapperStyle={{ width: '100%', justifyContent: 'space-between', gap: 16, }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <Link key={item.id} href={`/product/${item.id}`} asChild>
-              <CardProduct 
-                title={item.name}
-                price={item.price}
-                productImage={item.image}
-                rating={item.rating}
-              />
-            </Link>
+            <View key={item.id}>
+              <Link href={`/product/${item.id}`} asChild>
+                <CardProduct 
+                  title={item.name}
+                  price={item.price}
+                  productImage={item.images[0]}
+                  rating={item.rating}
+                />
+              </Link>
+            </View>
           )}
         />
       </View>
