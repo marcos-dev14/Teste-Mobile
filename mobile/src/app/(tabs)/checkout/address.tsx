@@ -1,4 +1,4 @@
-import { SafeAreaView, ScrollView, Text, TextInput, View } from "react-native"
+import { Alert, SafeAreaView, ScrollView, Text, TextInput, View } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
@@ -11,20 +11,40 @@ import { Button } from "@/components/button"
 import { colors } from "@/styles/theme/colors"
 import { useState } from "react"
 import { formatZipCode } from "@/utils/format-zip-code"
+import { useMutation } from "@tanstack/react-query"
+import { createAddress } from "@/api/address"
 
 export default function AddressCheckout() {
-  const [zipCode, setZipCode] = useState("");
-
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressFormSchema),
+  })
+
+  const mutation = useMutation({
+    mutationFn: createAddress,
+    onSuccess: () => {
+      Alert.alert('Sucesso', 'Endereço enviado com sucesso!');
+    },
+    onError: () => {
+      Alert.alert('Erro', 'Ocorreu um erro ao enviar o endereço.');
+    },
   });
 
   function onSubmit(data: AddressFormData) {
-    console.log("Dados do formulário: ", JSON.stringify(data));
+    const formData = {
+      userId: '63b9e644-d4f4-4723-8497-9d3476710b73',
+      fullName: data.fullName,
+      addressLine1: data.addressLine1,
+      addressLine2: data.addressLine2 || undefined,
+      city: data.city,
+      state: data.state,
+      zipCode: formatZipCode(data.zipCode),
+      country: data.country,
+    }
+    mutation.mutate(formData)
   }
 
   return (
@@ -45,7 +65,7 @@ export default function AddressCheckout() {
           <View className="w-full mt-6">
             <Controller
               control={control}
-              name="full_name"
+              name="fullName"
               render={({ field: { onChange, onBlur, value } }) => (
                 <View className="flex-1 mb-4">
                   <Input
@@ -53,12 +73,12 @@ export default function AddressCheckout() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
-                    error={!!errors.full_name}
+                    error={!!errors.fullName}
                   />
   
-                  {errors.full_name && (
+                  {errors.fullName && (
                     <Text className="text-red text-sm mt-1">
-                      {errors.full_name.message}
+                      {errors.fullName.message}
                     </Text>
                   )}
                 </View>
@@ -67,7 +87,7 @@ export default function AddressCheckout() {
 
             <Controller
               control={control}
-              name="address_line_1"
+              name="addressLine1"
               render={({ field: { onChange, onBlur, value } }) => (
                 <View className="flex-1 mb-4">
                   <Input
@@ -75,12 +95,12 @@ export default function AddressCheckout() {
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
-                    error={!!errors.address_line_1}
+                    error={!!errors.addressLine1}
                   />
 
-                  {errors.address_line_1 && (
+                  {errors.addressLine1 && (
                     <Text className="text-red text-sm mt-1">
-                      {errors.address_line_1.message}
+                      {errors.addressLine1.message}
                     </Text>
                   )}
                 </View>
@@ -89,20 +109,20 @@ export default function AddressCheckout() {
 
             <Controller
               control={control}
-              name="address_line_2"
+              name="addressLine2"
               render={({ field: { onChange, onBlur, value } }) => (
                 <View className="flex-1 mb-4">
                   <Input
                     label="Address Line 2 *"
                     onBlur={onBlur}
                     onChangeText={onChange}
-                    value={value}
-                    error={!!errors.address_line_2}
+                    value={value || undefined}
+                    error={!!errors.addressLine2}
                   />
 
-                  {errors.address_line_2 && (
+                  {errors.addressLine2 && (
                     <Text className="text-red text-sm mt-1">
-                      {errors.address_line_2.message}
+                      {errors.addressLine2.message}
                     </Text>
                   )}
                 </View>
@@ -158,7 +178,7 @@ export default function AddressCheckout() {
             <View className="flex-row w-full justify-between gap-4">
               <Controller
                 control={control}
-                name="zip_code"
+                name="zipCode"
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View className="flex-1 mb-4">
                     <Input
@@ -167,12 +187,12 @@ export default function AddressCheckout() {
                       keyboardType="numeric"
                       value={value}
                       onChangeText={(text) => onChange(formatZipCode(text))}
-                      error={!!errors.zip_code}
+                      error={!!errors.zipCode}
                     />
 
-                    {errors.zip_code && (
+                    {errors.zipCode && (
                       <Text className="text-red text-sm mt-1">
-                        {errors.zip_code.message}
+                        {errors.zipCode.message}
                       </Text>
                     )}
                   </View>
