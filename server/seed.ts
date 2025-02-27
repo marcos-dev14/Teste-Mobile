@@ -53,15 +53,6 @@ async function main() {
       ],
     },
     {
-      name: 'Bermuda Sarja',
-      description: 'Bermuda de sarja, casual e confortável.',
-      price: 49.99,
-      rating: 3.5,
-      images: [
-        'https://images.unsplash.com/photo-1591047139820-db1e9e9b9c9f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-      ],
-    },
-    {
       name: 'Calça Jogger',
       description: 'Calça jogger masculina, moderna e versátil.',
       price: 79.99,
