@@ -1,5 +1,5 @@
 import { FlatList, SafeAreaView, Text, View } from "react-native"
-import { Link, router } from "expo-router"
+import { router } from "expo-router"
 
 import { useCart } from "@/context/cart-context"
 
@@ -16,6 +16,8 @@ export default function Order() {
   const { cart, totalPrice } = useCart()
   const { user } = useUser()
 
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+
   const { data: addressUserData } = useQuery({
     queryKey: ['address-user'],
     queryFn: () => getAddressByUserId(user?.id)
@@ -27,7 +29,6 @@ export default function Order() {
     }
 
     router.replace('/checkout/payment')
-    console.log("PODE FINALIZAR")
   }
 
   return (
@@ -121,9 +122,9 @@ export default function Order() {
             <Text className="font-bold text-lg text-darker">
               Total: {''}
               <Text className="font-medium text-lg text-darker">
-                {cart.length === 1 && `${cart.length} item`}
+                {itemCount === 1 && `${itemCount} item`}
 
-                {cart.length > 1 && `${cart.length} itens`}
+                {itemCount > 1 && `${itemCount} itens`}
               </Text>
             </Text>
 

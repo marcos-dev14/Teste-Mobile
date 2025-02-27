@@ -46,7 +46,6 @@ export default function TabLayout() {
         name="cart"
         options={{
           tabBarIcon: ({ focused }) => (
-            // focused? <CartActive /> : <CartDefault />
             <View className="relative">
               {focused ? <CartActive /> : <CartDefault />}
               {itemCount > 0 && (

@@ -17,6 +17,7 @@ interface CartContextProps {
   addToCart: (item: CartItem) => void
   updateQuantity: (id: string, quantity: number) => void
   removeItemCart: (id: string) => void
+  clearCart: () => void
 }
 
 interface CartProviderProps {
@@ -63,6 +64,10 @@ export function CartContextProvider({ children }: CartProviderProps) {
     setCart((prevCart) => prevCart.filter((cartItem) => cartItem.id !== id));
   }
 
+  function clearCart() {
+    setCart([]);
+  }
+
   async function saveCartItemLocalStorage(cartItems: CartItem[]) {
     try {
       await cartItemsStorage.save(cartItems);
@@ -96,7 +101,8 @@ export function CartContextProvider({ children }: CartProviderProps) {
       totalPrice,
       addToCart,
       updateQuantity,
-      removeItemCart
+      removeItemCart,
+      clearCart
     }}>
       {children}
     </CartContext.Provider>

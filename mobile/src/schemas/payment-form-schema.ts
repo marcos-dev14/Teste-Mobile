@@ -13,17 +13,14 @@ export const paymentFormSchema = z.object({
 
   cardNumber: z
     .string()
-    .regex(/^\d{16}$/, 'O número do cartão deve ter 16 dígitos.')
     .nonempty('O número do cartão é obrigatório.'),
 
   expirationDate: z
     .string()
-    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'A data de validade deve estar no formato MM/AA.')
     .nonempty('A data de validade é obrigatória.'),
 
   securityCode: z
     .string()
-    .regex(/^\d{3,4}$/, 'O código de segurança deve ter 3 ou 4 dígitos.')
     .nonempty('O código de segurança é obrigatório.'),
 });
 

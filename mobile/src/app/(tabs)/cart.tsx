@@ -15,6 +15,8 @@ import { colors } from '@/styles/theme/colors'
 export default function Cart() {
   const { cart, totalPrice } = useCart()
 
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
       <ImageBackground
@@ -55,9 +57,9 @@ export default function Cart() {
                 <Text className="font-bold text-lg text-darker">
                   Total: {''}
                   <Text className="font-medium text-lg text-darker">
-                    {cart.length === 1 && `${cart.length} item`}
+                    {itemCount === 1 && `${itemCount} item`}
 
-                    {cart.length > 1 && `${cart.length} itens`}
+                    {itemCount > 1 && `${itemCount} itens`}
                   </Text>
                 </Text>
 
@@ -95,13 +97,7 @@ export default function Cart() {
               </Link>
             </View>
           </View>
-        )}
-
-        
-
-        
-
-       
+        )}       
       </ImageBackground>
     </SafeAreaView>
   )

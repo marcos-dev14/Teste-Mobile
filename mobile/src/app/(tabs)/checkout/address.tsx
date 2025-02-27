@@ -33,7 +33,7 @@ export default function AddressCheckout() {
     onSuccess: () => {
 
       if (isSuccess) {
-        router.replace('/checkout/order')
+        router.replace('/checkout/payment')
       }
 
       queryClient.invalidateQueries({ queryKey: ["address-user"] });
