@@ -12,7 +12,7 @@ export function Input({ label, error = false, ...rest }: InputPros) {
       style={{
         borderBottomWidth: 2,
         borderColor: error ? colors.red : colors.light,
-        height: 76
+        height: 48
       }}
     >
       {label && 

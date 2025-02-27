@@ -1,18 +1,17 @@
-import { Alert, SafeAreaView, ScrollView, Text, TextInput, View } from "react-native"
+import { Alert, SafeAreaView, ScrollView, Text, View } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from "@tanstack/react-query"
 
 import { AddressFormData, addressFormSchema } from "@/schemas/address-form-schema"
+import { formatZipCode } from "@/utils/format-zip-code"
+import { createAddress } from "@/api/address"
 
 import { Header } from "@/components/header"
 import { Input } from "@/components/input"
 import { Button } from "@/components/button"
 
 import { colors } from "@/styles/theme/colors"
-import { useState } from "react"
-import { formatZipCode } from "@/utils/format-zip-code"
-import { useMutation } from "@tanstack/react-query"
-import { createAddress } from "@/api/address"
 
 export default function AddressCheckout() {
   const {

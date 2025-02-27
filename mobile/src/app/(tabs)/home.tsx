@@ -10,7 +10,7 @@ import { Header } from '@/components/header'
 
 import { colors } from '@/styles/theme/colors'
 
-export default function Index() {
+export default function Home() {
   const { data: productsData } = useQuery({
     queryKey: ['products'],
     queryFn: () => getProducts()
