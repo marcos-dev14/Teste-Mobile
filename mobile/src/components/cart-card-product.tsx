@@ -14,6 +14,7 @@ interface CartCardProductProps {
   image: string
   rating?: number
   quantity: number
+  cardFooter?: boolean
 }
 
 export function CartCardProduct({
@@ -22,7 +23,8 @@ export function CartCardProduct({
   price,
   image,
   rating,
-  quantity
+  quantity,
+  cardFooter = true
 }: CartCardProductProps) {
   const { removeItemCart, updateQuantity } = useCart()
 
@@ -64,44 +66,46 @@ export function CartCardProduct({
           R$ {price.toFixed(2)}
         </Text>
 
-        <View className="flex-row items-center justify-between mt-auto">
-          <View className="mr-4 flex-row items-center justify-center">
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => updateQuantity(id, quantity - 1)}
-              disabled={quantity === 0}
-              className="p-1 items-center justify-center"
-            >
-              <Ionicons 
-                name="remove-circle-outline" 
-                size={25} 
-                color={quantity === 0 ? colors.light : colors.darkBlue}  
-              />
-            </TouchableOpacity>
+        {cardFooter && (
+          <View className="flex-row items-center justify-between mt-auto">
+            <View className="mr-4 flex-row items-center justify-center">
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => updateQuantity(id, quantity - 1)}
+                disabled={quantity === 0}
+                className="p-1 items-center justify-center"
+              >
+                <Ionicons 
+                  name="remove-circle-outline" 
+                  size={25} 
+                  color={quantity === 0 ? colors.light : colors.darkBlue}  
+                />
+              </TouchableOpacity>
 
-            <Text className="font-semibold text-base text-darker mx-2">
-              {quantity}
-            </Text>
+              <Text className="font-semibold text-base text-darker mx-2">
+                {quantity}
+              </Text>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => updateQuantity(id, quantity + 1)}
+                className="p-1 items-center justify-center"
+              >
+                <Ionicons name="add-circle-outline" size={25} color={colors.darkBlue} />
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
+              className="p-2 items-center justify-center"
               activeOpacity={0.7}
-              onPress={() => updateQuantity(id, quantity + 1)}
-              className="p-1 items-center justify-center"
+              onPress={() => handleRemoveItemCart(id)}
             >
-              <Ionicons name="add-circle-outline" size={25} color={colors.darkBlue} />
+              <Text className="font-bold text-base text-red">
+                Remover
+              </Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            className="p-2 items-center justify-center"
-            activeOpacity={0.7}
-            onPress={() => handleRemoveItemCart(id)}
-          >
-            <Text className="font-bold text-base text-red">
-              Remover
-            </Text>
-          </TouchableOpacity>
-        </View>
+        )}
       </View>
     </View>
   )

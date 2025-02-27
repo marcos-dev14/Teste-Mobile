@@ -1,7 +1,7 @@
 import { Alert, SafeAreaView, ScrollView, Text, View } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { AddressFormData, addressFormSchema } from "@/schemas/address-form-schema"
 import { formatZipCode } from "@/utils/format-zip-code"
@@ -12,8 +12,14 @@ import { Input } from "@/components/input"
 import { Button } from "@/components/button"
 
 import { colors } from "@/styles/theme/colors"
+import { useUser } from "@/context/user-context"
+import { router } from "expo-router"
 
 export default function AddressCheckout() {
+  const { user } = useUser()
+
+  const queryClient = useQueryClient()
+
   const {
     control,
     handleSubmit,
@@ -22,9 +28,15 @@ export default function AddressCheckout() {
     resolver: zodResolver(addressFormSchema),
   })
 
-  const mutation = useMutation({
+  const { mutateAsync: createAddressMutation, isSuccess } = useMutation({
     mutationFn: createAddress,
     onSuccess: () => {
+
+      if (isSuccess) {
+        router.replace('/checkout/order')
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["address-user"] });
       Alert.alert('Sucesso', 'Endereço enviado com sucesso!');
     },
     onError: () => {
@@ -34,7 +46,7 @@ export default function AddressCheckout() {
 
   function onSubmit(data: AddressFormData) {
     const formData = {
-      userId: '63b9e644-d4f4-4723-8497-9d3476710b73',
+      userId: user?.id || null,
       fullName: data.fullName,
       addressLine1: data.addressLine1,
       addressLine2: data.addressLine2 || undefined,
@@ -43,12 +55,13 @@ export default function AddressCheckout() {
       zipCode: formatZipCode(data.zipCode),
       country: data.country,
     }
-    mutation.mutate(formData)
+
+    createAddressMutation(formData)
   }
 
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
-      <Header backButton linkButton="/cart" />
+      <Header backButton linkButton="/checkout/order" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -88,7 +101,7 @@ export default function AddressCheckout() {
               control={control}
               name="addressLine1"
               render={({ field: { onChange, onBlur, value } }) => (
-                <View className="flex-1 mb-4">
+                 <View className="flex-1 mb-4">
                   <Input
                     label="Address Line 1 *"
                     onBlur={onBlur}
@@ -110,7 +123,7 @@ export default function AddressCheckout() {
               control={control}
               name="addressLine2"
               render={({ field: { onChange, onBlur, value } }) => (
-                <View className="flex-1 mb-4">
+                 <View className="flex-1 mb-4">
                   <Input
                     label="Address Line 2 *"
                     onBlur={onBlur}
@@ -133,7 +146,7 @@ export default function AddressCheckout() {
                 control={control}
                 name="city"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1 mb-4">
+                   <View className="flex-1 mb-4">
                     <Input
                       label="City *"
                       onBlur={onBlur}
@@ -155,7 +168,7 @@ export default function AddressCheckout() {
                 control={control}
                 name="state"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1 mb-4">
+                   <View className="flex-1 mb-4">
                     <Input
                       label="State / Region *"
                       onBlur={onBlur}
@@ -179,7 +192,7 @@ export default function AddressCheckout() {
                 control={control}
                 name="zipCode"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1 mb-4">
+                   <View className="flex-1 mb-4">
                     <Input
                       label="Zip Code *"
                       onBlur={onBlur}
@@ -202,7 +215,7 @@ export default function AddressCheckout() {
                 control={control}
                 name="country"
                 render={({ field: { onChange, onBlur, value } }) => (
-                  <View className="flex-1 mb-4">
+                   <View className="flex-1 mb-4">
                     <Input
                       label="Country *"
                       onBlur={onBlur}

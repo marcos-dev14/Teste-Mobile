@@ -19,8 +19,8 @@ export async function getAddressById(id: string) {
   return response.data
 }
 
-export async function getAddressByUserId(userId: string) {
-  const response = await api.get<AddressParams>(`/address/user/${userId}`)
+export async function getAddressByUserId(userId: string | undefined) {
+  const response = await api.get<AddressParams[]>(`/address/user/${userId}`)
 
   return response.data
 }

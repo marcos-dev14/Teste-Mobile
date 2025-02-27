@@ -55,8 +55,10 @@ export default function Login() {
     setIsLoading(true)
 
     if (user) {
-      router.replace("/(tabs)/home");
+      return router.replace("/(tabs)/home");
     }
+
+    setIsLoading(false)
   }, [user]);
 
   return (

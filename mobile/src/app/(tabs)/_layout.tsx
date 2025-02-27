@@ -1,5 +1,5 @@
 import { View, Text } from "react-native"
-import { Tabs } from "expo-router"
+import { Slot, Tabs } from "expo-router"
 
 import { useCart } from "@/context/cart-context"
 
@@ -81,6 +81,23 @@ export default function TabLayout() {
         name="checkout/address"
         options={{ href: null }}
       />
+
+      <Tabs.Screen
+        name="checkout/order"
+        options={{ href: null }}
+      />
+
+      <Tabs.Screen
+        name="checkout/payment"
+        options={{ href: null }}
+      />
+
+      <Tabs.Screen
+        name="checkout/complete"
+        options={{ href: null }}
+      />
+
+      <Slot />
     </Tabs>
   )
 }

@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { View } from "react-native"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
-import { router, Stack } from "expo-router"
+import { router, Slot, Stack } from "expo-router"
 import * as SplashScreen from 'expo-splash-screen'
 import { 
   useFonts,
@@ -58,6 +58,8 @@ export default function Layout() {
                   animation: 'fade_from_bottom',
                 }}
               />
+
+              <Slot />
             </Stack>
 
             <StatusBar style="dark" translucent backgroundColor="transparent" />

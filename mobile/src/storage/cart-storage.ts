@@ -16,8 +16,6 @@ async function save(cartItems: CartItemsProps[]) {
   try {
     const cartItemsJson = JSON.stringify(cartItems);
 
-    console.log("ITEM SALVO:", cartItemsJson);
-
     await AsyncStorage.setItem(CART_ITEMS_STORAGE_KEY, cartItemsJson);
   } catch (error) {
     throw new Error("Erro ao salvar o item no LocalStore: " + error);
@@ -29,7 +27,6 @@ async function get(): Promise<CartItemsProps[] | null> {
   try {
     const cartItemsJson = await AsyncStorage.getItem(CART_ITEMS_STORAGE_KEY);
 
-    console.log("ITEM CARREGADO:", cartItemsJson);
     return cartItemsJson ? JSON.parse(cartItemsJson) : null;
   } catch (error) {
     throw new Error("Erro ao buscar o item no LocalStore: " + error);

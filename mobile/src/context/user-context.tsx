@@ -1,5 +1,6 @@
-import { userStorage } from "@/storage/user"
 import { createContext, useContext, useState, ReactNode, useEffect } from "react"
+
+import { userStorage } from "@/storage/user"
 
 interface UserProps {
   id: string
@@ -41,7 +42,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   useEffect(() => {
     loadUserData()
-  })
+  }, [])
 
   return (
     <UserContext.Provider value={{ user, saveUserData, logout }}>

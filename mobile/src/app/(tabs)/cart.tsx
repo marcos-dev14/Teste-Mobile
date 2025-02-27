@@ -67,7 +67,7 @@ export default function Cart() {
               </View>
 
               <View className="w-full h-[48px]">
-                <Link href="/checkout/address" asChild>
+                <Link href="/checkout/order" asChild>
                   <Button title="Ir para Checkout" />
                 </Link>
               </View>

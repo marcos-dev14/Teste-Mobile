@@ -1,5 +1,5 @@
 export interface AddressParams {
-  userId: string;
+  userId: string | null;
   fullName: string;
   addressLine1: string;
   addressLine2?: string;
@@ -7,4 +7,8 @@ export interface AddressParams {
   state: string;
   zipCode: string;
   country: string;
+}
+
+export interface AddressByUserIdResponse {
+  address: AddressParams[]
 }

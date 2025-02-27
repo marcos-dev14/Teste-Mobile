@@ -8,11 +8,12 @@ interface InputPros extends TextInputProps {
 
 export function Input({ label, error = false, ...rest }: InputPros) {
   return (
-    <View className="w-full"
+    <View
       style={{
         borderBottomWidth: 2,
         borderColor: error ? colors.red : colors.light,
-        height: 48
+        width: '100%',
+        height: label ? 65 : 48,
       }}
     >
       {label && 
