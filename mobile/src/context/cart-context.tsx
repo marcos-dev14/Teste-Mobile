@@ -1,7 +1,6 @@
+import { cartItemsStorage } from "@/storage/cart-storage"
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Alert } from "react-native"
-import { saveCartItem, USER_STATE_STORAGE_KEY } from "@/storage/cart-storage"
 
 interface CartItem {
   id: string
@@ -14,6 +13,7 @@ interface CartItem {
 
 interface CartContextProps {
   cart: CartItem[]
+  totalPrice: number
   addToCart: (item: CartItem) => void
   updateQuantity: (id: string, quantity: number) => void
   removeItemCart: (id: string) => void
@@ -28,6 +28,8 @@ const CartContext = createContext<CartContextProps>({} as CartContextProps)
 export function CartContextProvider({ children }: CartProviderProps) {
   const [cart, setCart] = useState<CartItem[]>([])
 
+  const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0)
+
   function addToCart(item: CartItem) {
     const existingItem = cart.find((cartItem) => cartItem.id === item.id)
 
@@ -39,7 +41,7 @@ export function CartContextProvider({ children }: CartProviderProps) {
       )
     }
 
-    setCart((prevCart) => [...prevCart, item])
+    setCart((prevCart) => [...prevCart, item]);
     Alert.alert(
       'Produto adicionado',
       `${item.name} foi adicionado ao carrinho!`,
@@ -49,21 +51,21 @@ export function CartContextProvider({ children }: CartProviderProps) {
 
   function updateQuantity(id: string, quantity: number) {
     setCart((prevCart) =>
-      prevCart.map((cartItem) => 
-        cartItem.id === id 
+      prevCart.map((cartItem) =>
+        cartItem.id === id
           ? { ...cartItem, quantity: quantity }
           : cartItem
       )
-    )
+    );
   }
 
   function removeItemCart(id: string) {
     setCart((prevCart) => prevCart.filter((cartItem) => cartItem.id !== id));
   }
 
-  async function saveCartItemLocalStorage() {
+  async function saveCartItemLocalStorage(cartItems: CartItem[]) {
     try {
-      await saveCartItem(JSON.stringify(cart))
+      await cartItemsStorage.save(cartItems);
     } catch (error) {
       console.error('Erro ao salvar o carrinho:', error);
     }
@@ -71,37 +73,37 @@ export function CartContextProvider({ children }: CartProviderProps) {
 
   async function loadCartItemLocalStorage() {
     try {
-      const savedCart = await AsyncStorage.getItem(USER_STATE_STORAGE_KEY)
-
-      if (savedCart ) {
-        setCart(JSON.parse(savedCart))
+      const cartItems = await cartItemsStorage.get();
+      if (cartItems) {
+        setCart(cartItems);
       }
     } catch (error) {
-      console.error('Erro ao recuperar o carrinho:', error);
+      console.error('Erro ao carregar o carrinho:', error);
     }
   }
 
   useEffect(() => {
-    saveCartItemLocalStorage()
-  }, [cart])
+    saveCartItemLocalStorage(cart);
+  }, [cart]);
 
   useEffect(() => {
-    loadCartItemLocalStorage()
-  }, [])
+    loadCartItemLocalStorage();
+  }, []);
 
   return (
     <CartContext.Provider value={{
       cart,
+      totalPrice,
       addToCart,
       updateQuantity,
       removeItemCart
     }}>
       {children}
     </CartContext.Provider>
-  )
+  );
 }
 
 export function useCart() {
-  const context = useContext(CartContext)
-  return context
+  const context = useContext(CartContext);
+  return context;
 }

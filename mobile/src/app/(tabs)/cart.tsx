@@ -13,9 +13,7 @@ import { CartCardProduct } from '@/components/cart-card-product'
 import { colors } from '@/styles/theme/colors'
 
 export default function Cart() {
-  const { cart } = useCart()
-
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const { cart, totalPrice } = useCart()
 
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
@@ -64,7 +62,7 @@ export default function Cart() {
                 </Text>
 
                 <Text className="font-bold text-xl text-darker">
-                  R$ {total.toFixed(2)}
+                  R$ {totalPrice.toFixed(2)}
                 </Text>
               </View>
 

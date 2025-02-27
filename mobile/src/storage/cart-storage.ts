@@ -1,28 +1,47 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export const USER_STATE_STORAGE_KEY = "@teste_mobile:cart_items"
-export async function saveCartItem(cart_items: string) {
-  try {
-    await AsyncStorage.setItem(USER_STATE_STORAGE_KEY, cart_items)
-  } catch (e) {
-    console.error('Error saving cart items', e)
-  }
-} 
+const CART_ITEMS_STORAGE_KEY = "@teste_mobile:cartItems";
 
-export async function getCartItem() {
+interface CartItemsProps {
+  id: string
+  name: string
+  price: number
+  rating?: number
+  quantity: number
+  image: string
+}
+
+
+async function save(cartItems: CartItemsProps[]) {
   try {
-    const cart_items = await AsyncStorage.getItem(USER_STATE_STORAGE_KEY)
-    return cart_items ? JSON.parse(cart_items) : []
-  } catch (e) {
-    console.error('Error retrieving cart items', e)
-    return []
+    const cartItemsJson = JSON.stringify(cartItems);
+
+    console.log("ITEM SALVO:", cartItemsJson);
+
+    await AsyncStorage.setItem(CART_ITEMS_STORAGE_KEY, cartItemsJson);
+  } catch (error) {
+    throw new Error("Erro ao salvar o item no LocalStore: " + error);
   }
 }
 
-export async function removeCartItem() {
+
+async function get(): Promise<CartItemsProps[] | null> {
   try {
-    await AsyncStorage.removeItem(USER_STATE_STORAGE_KEY)
-  } catch (e) {
-    console.error('Error removing cart items', e)
+    const cartItemsJson = await AsyncStorage.getItem(CART_ITEMS_STORAGE_KEY);
+
+    console.log("ITEM CARREGADO:", cartItemsJson);
+    return cartItemsJson ? JSON.parse(cartItemsJson) : null;
+  } catch (error) {
+    throw new Error("Erro ao buscar o item no LocalStore: " + error);
   }
 }
+
+async function remove() {
+  try {
+    await AsyncStorage.removeItem(CART_ITEMS_STORAGE_KEY);
+  } catch (error) {
+    throw new Error("Erro ao remover o item no LocalStore: " + error);
+  }
+}
+
+export const cartItemsStorage = { save, get, remove };
