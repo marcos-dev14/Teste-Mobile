@@ -1,5 +1,6 @@
-import { colors } from "@/styles/theme/colors"
 import { TextInput, TextInputProps, View, Text } from "react-native"
+
+import { colors } from "@/styles/theme/colors"
 
 interface InputPros extends TextInputProps {
   label?: string
@@ -14,7 +15,6 @@ export function Input({ label, error = false, ...rest }: InputPros) {
         borderColor: error ? colors.red : colors.light,
         width: '100%',
         height: label ? 60 : 48,
-        paddingBottom: 22
       }}
     >
       {label && 

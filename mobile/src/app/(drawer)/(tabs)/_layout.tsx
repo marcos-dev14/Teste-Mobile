@@ -1,5 +1,7 @@
-import { View, Text } from "react-native"
-import { Slot, Tabs } from "expo-router"
+import { View, Text, TouchableOpacity } from "react-native"
+import { router, Slot, Tabs } from "expo-router"
+import { DrawerActions } from "@react-navigation/native"
+import { useNavigation } from "expo-router"
 
 import { useCart } from "@/context/cart-context"
 
@@ -13,6 +15,11 @@ import MenuActive from "@/assets/icons/menu-active.svg"
 export default function TabLayout() {
   const { cart } = useCart()
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+
+  const navigation = useNavigation()
+  const handleMenu = () => {
+    navigation.dispatch(DrawerActions.openDrawer())
+  }
 
   return (
     <Tabs
@@ -39,6 +46,14 @@ export default function TabLayout() {
             focused? <CatalogActive /> : <CatalogDefault />
           ),
           tabBarLabel: "Catalogo",
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              className="items-center justify-center flex-1" 
+              onPress={() => router.push('/home')}
+            >
+              {props.children}
+            </TouchableOpacity>
+          ),
         }}
       />
 
@@ -57,7 +72,15 @@ export default function TabLayout() {
               )}
             </View>
           ),
-          tabBarLabel: "Carrinho"
+          tabBarLabel: "Carrinho",
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              className="items-center justify-center flex-1" 
+              onPress={() => router.push('/cart')}
+            >
+              {props.children}
+            </TouchableOpacity>
+          ),
         }}
       />
 
@@ -67,7 +90,15 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             focused? <MenuActive /> : <MenuDefault />
           ),
-          tabBarLabel: "Menu"
+          tabBarLabel: "Menu",
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              className="items-center justify-center flex-1" 
+              onPress={handleMenu}
+            >
+              {props.children}
+            </TouchableOpacity>
+          ),
         }}
       />
 

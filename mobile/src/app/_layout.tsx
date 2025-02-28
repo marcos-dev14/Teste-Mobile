@@ -1,10 +1,9 @@
 import "@/styles/global.css"
 
 import { useEffect } from "react"
-import { View } from "react-native"
 import { StatusBar } from "expo-status-bar"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
-import { router, Slot, Stack } from "expo-router"
+import { Slot, Stack } from "expo-router"
 import * as SplashScreen from 'expo-splash-screen'
 import { 
   useFonts,
@@ -56,6 +55,13 @@ export default function Layout() {
                 options={{
                   headerShown: false,
                   animation: 'fade_from_bottom',
+                }}
+              />
+
+              <Stack.Screen
+                name="(drawer)"
+                options={{
+                  headerShown: false,
                 }}
               />
 

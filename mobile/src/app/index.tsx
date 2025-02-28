@@ -1,4 +1,4 @@
-import { SafeAreaView, View, Text, ScrollView, Alert, Platform } from "react-native"
+import { SafeAreaView, View, Text, ScrollView, Alert, Platform, TouchableOpacity } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from "@tanstack/react-query"
@@ -24,6 +24,7 @@ export default function Login() {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
@@ -33,30 +34,44 @@ export default function Login() {
   const { mutateAsync: authenticate, isPending } = useMutation({
     mutationFn: userLogin,
     onSuccess: async (data) => {
-      console.log(data.user)
-      saveUserData(data.user)
-      router.replace('/(tabs)/home')
-
-      Alert.alert('Sucesso', 'usuário logado com sucesso!')
+      
+      router.replace("/home");
+      
+      Alert.alert("Sucesso", "Usuário logado com sucesso!");
+      saveUserData(data.user);
     },
-    onError: () => {
-      Alert.alert('Erro', 'Ocorreu um erro ao logar o usuário.')
+    onError: (error: any) => {
+      const errorMessage =
+        error?.response?.data?.message || error?.message;
+  
+      Alert.alert("Erro", errorMessage);
     },
   });
 
   async function handleLogin(data: LoginFormSchema) {
     try {
-      authenticate(data)
+      authenticate({
+        email: data?.email.toLowerCase(), 
+        password: data?.password
+      })
     } catch (error) {
       console.error(error);
     }
+  }
+
+  function handleAutomaticData() {
+    const email = "bob@example.com";
+    const password = "10203040";
+
+    setValue("email", email);
+    setValue("password", password);
   }
 
   useEffect(() => {
     setIsLoading(true)
 
     if (user) {
-      return router.replace("/(tabs)/home");
+      return router.replace("/home");
     }
 
     setIsLoading(false)
@@ -80,10 +95,10 @@ export default function Login() {
               </Text>
 
               <Text className="font-sans text-base text-darker mt-4">
-                Selecione um nome de usuário e uma senha na lista abaixo 
+                Selecione um email e uma senha na lista abaixo 
                 e clique no botão "Login" para entrar. Você também pode ou 
-                clique no nome de usuário para preencher automaticamente 
-                o nome de usuário e a senha.
+                clique no email para preencher automaticamente 
+                o email e a senha.
               </Text>
 
               <View className="mt-[55px]">
@@ -144,18 +159,22 @@ export default function Login() {
               </View>
 
               <View className="w-full p-4 border border-light bg-[#FBFBFB] mt-[50px]">
-                <View className="w-full">
-                  <Text className="font-bold text-base text-darker">
-                    Nomes de usuário aceitos:
-                  </Text>
+                <TouchableOpacity
+                  onPress={handleAutomaticData}
+                >
+                  <View className="w-full">
+                    <Text className="font-bold text-base text-darker">
+                      Nomes de usuário aceitos:
+                    </Text>
 
-                  <Text className="font-sans text-base text-darker">
-                    bob@example.com
-                  </Text>
-                  <Text className="font-sans text-base text-darker">
-                    alice@example.com (locked out)
-                  </Text>
-                </View>
+                    <Text className="font-sans text-base text-darker">
+                      bob@example.com
+                    </Text>
+                    <Text className="font-sans text-base text-darker">
+                      alice@example.com (locked out)
+                    </Text>
+                  </View>
+                </TouchableOpacity>
 
                 <View className="w-full mt-4">
                   <Text className="font-bold text-base text-darker">
