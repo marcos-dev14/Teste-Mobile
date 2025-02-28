@@ -102,7 +102,7 @@ export function DrawerContent() {
               <Text 
                 className="font-sans text-xl"
                 style={{
-                  color: pathname === "/qrcode"? colors.darkBlue : colors.darker,
+                  color: pathname === "/qrcode" ? colors.darkBlue : colors.darker,
                 }}
               >
                 QR Code Scanner
@@ -117,12 +117,12 @@ export function DrawerContent() {
                 borderBottomWidth: 1,
                 borderBottomColor: colors.light
               }}
-              // onPress={() => router.push("/qr-code-scanner")}
+              onPress={() => router.push("/drawing")}
             >
               <Text 
                 className="font-sans text-xl"
                 style={{
-                  color: pathname === "/drawing"? colors.darkBlue : colors.darker,
+                  color: pathname === "/drawing" ? colors.darkBlue : colors.darker,
                 }}
               >
                 Desenho

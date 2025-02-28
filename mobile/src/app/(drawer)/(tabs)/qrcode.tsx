@@ -1,38 +1,47 @@
 import { useState, useEffect } from "react"
 import { View, Text, Linking, Alert, SafeAreaView, ScrollView } from "react-native"
-import { BarCodeScanner } from "expo-barcode-scanner"
+import { CameraView, useCameraPermissions } from "expo-camera"
 
 import { colors } from "@/styles/theme/colors"
 import { Header } from "@/components/header"
 import { Button } from "@/components/button"
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs"
 
 export default function QrCode() {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [facing, setFacing] = useState<'back' | 'front'>('back')
   const [scanned, setScanned] = useState(false)
   const [scannerData, setScannerData] = useState<string | null>(null)
-
-  function handleBarCodeScanned({ type, data }: { type: string; data: string }) {
-    setScanned(true);
-    setScannerData(data);
-    Linking.openURL(data).catch(error => console.log("Erro ao Scanned", error));
-  }
+  const [permission, requestPermission] = useCameraPermissions()
+  
+  const tabBarHeight = useBottomTabBarHeight()
 
   useEffect(() => {
     (async () => {
-      const { status } = await BarCodeScanner.requestPermissionsAsync();
-      setHasPermission(status === "granted");
+      if (!permission?.granted) {
+        await requestPermission();
+      }
     })();
-  }, []);
+  }, [permission])
 
-  if (hasPermission === null) {
-    return <Text>Requesting for camera permission</Text>
+  const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
+    setScanned(true);
+    setScannerData(data);
+    Alert.alert("QR Code Detected", `URL: ${data}`, [
+      { text: "Abrir", onPress: () => Linking.openURL(data) },
+      { text: "Cancelar", onPress: () => setScanned(false), style: "cancel" }
+    ]);
+  };
+
+  if (!permission) {
+    return <Text>Requesting for camera permission...</Text>;
   }
-  if (hasPermission === false) {
-    return Alert.alert("Permissão da câmera negada");
+
+  if (!permission.granted) {
+    return <Text>No access to camera</Text>;
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
+    <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white, paddingBottom: tabBarHeight }}>
       <Header />
 
       <ScrollView
@@ -51,9 +60,13 @@ export default function QrCode() {
           </View>
 
           <View className="flex-1 items-center justify-center mt-4 bg-darker rounded-lg">
-            <BarCodeScanner
-              onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+            <CameraView
               style={{ width: 260, height: 260 }}
+              facing={facing}
+              barcodeScannerSettings={{
+                barcodeTypes: ["qr"]
+              }}
+              onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             />
           </View>
 
