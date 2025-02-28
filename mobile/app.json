@@ -30,7 +30,13 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow My Demo App to access camera."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

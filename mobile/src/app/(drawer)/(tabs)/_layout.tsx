@@ -131,6 +131,12 @@ export default function TabLayout() {
         name="about"
         options={{ href: null }}
       />
+
+      <Tabs.Screen
+        name="qrcode"
+        options={{ href: null }}
+      />
+
       <Slot />
     </Tabs>
   )
