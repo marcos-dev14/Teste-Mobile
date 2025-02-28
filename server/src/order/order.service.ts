@@ -11,11 +11,11 @@ export class OrderService {
     const userAddress = await this.prisma.address.findFirst({
       where: { userId: createOrderDto.userId },
     });
-
+  
     if (!userAddress) {
       throw new BadRequestException('O usuário não tem um endereço cadastrado.');
     }
-
+  
     const order = await this.prisma.order.create({
       data: {
         userId: createOrderDto.userId,
@@ -25,14 +25,12 @@ export class OrderService {
         totalPrice: createOrderDto.totalPrice,
       },
     });
-
-    console.log('Pedido criado:', order);
-
+  
     return {
       id: order.id,
       userId: order.userId,
       addressId: order.addressId,
-      items: JSON.parse(order.items as unknown as string) || [],
+      items: JSON.parse(order.items as string) || [],
       totalItems: order.totalItems,
       totalPrice: order.totalPrice,
       createdAt: order.createdAt,
