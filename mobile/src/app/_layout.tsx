@@ -10,7 +10,8 @@ import {
   NotoSans_400Regular,
   NotoSans_500Medium,
   NotoSans_600SemiBold,
-  NotoSans_700Bold
+  NotoSans_700Bold,
+  NotoSans_300Light
 } from "@expo-google-fonts/noto-sans" 
 import { QueryClientProvider } from "@tanstack/react-query"
 
@@ -22,6 +23,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function Layout() {
   const [ fontsLoaded, fontError ] = useFonts({
+    NotoSans_300Light,
     NotoSans_400Regular,
     NotoSans_500Medium,
     NotoSans_600SemiBold,
@@ -45,11 +47,19 @@ export default function Layout() {
           <GestureHandlerRootView style={{ flex: 1 }}>
             <Stack>
               <Stack.Screen
-                name="index"
+                  name="index"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+
+              <Stack.Screen
+                name="login"
                 options={{
                   headerShown: false,
                 }}
               />
+
               <Stack.Screen
                 name="(tabs)"
                 options={{
