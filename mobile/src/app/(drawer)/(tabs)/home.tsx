@@ -94,10 +94,12 @@ export default function Home() {
             </View>
           )}
           ListEmptyComponent={() => (
-            <View className="flex-1 w-full items-center max-w-[300px] self-center">
-              <Text className="text-lg leading-normal text-darker text-center">
-                Nenhum produto encontrado. Tente buscar por algo diferente!
-              </Text>
+            <View className="flex-1 w-full mt-8 items-center max-w-[300px] self-center">
+              {filteredData && filteredData?.length > 1 && (
+                <Text className="text-lg leading-normal text-darker text-center">
+                  Nenhum produto encontrado. Tente buscar por algo diferente!
+                </Text>
+              )}
             </View>
           )}
         />
