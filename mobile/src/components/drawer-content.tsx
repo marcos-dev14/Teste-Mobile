@@ -220,7 +220,7 @@ export function DrawerContent() {
                 borderBottomWidth: 1,
                 borderBottomColor: colors.light
               }}
-              onPress={() => {}}
+              onPress={() => router.push('/about')}
             >
               <Text 
                 className="font-sans text-xl"

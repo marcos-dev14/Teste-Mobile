@@ -127,6 +127,10 @@ export default function TabLayout() {
         options={{ href: null }}
       />
 
+      <Tabs.Screen
+        name="about"
+        options={{ href: null }}
+      />
       <Slot />
     </Tabs>
   )
