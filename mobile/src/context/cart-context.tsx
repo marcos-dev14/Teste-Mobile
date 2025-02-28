@@ -28,6 +28,7 @@ const CartContext = createContext<CartContextProps>({} as CartContextProps)
 
 export function CartContextProvider({ children }: CartProviderProps) {
   const [cart, setCart] = useState<CartItem[]>([])
+  const [loading, setLoading] = useState(true);
 
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0)
 
@@ -76,24 +77,41 @@ export function CartContextProvider({ children }: CartProviderProps) {
     }
   }
 
-  async function loadCartItemLocalStorage() {
-    try {
+  // async function loadCartItemLocalStorage() {
+  //   const cartItems = await cartItemsStorage.get();
+
+  //   console.log("CHEGOU AQUI: ", cartItems)
+
+  //   if (cartItems) {
+  //     setCart(cartItems);
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   saveCartItemLocalStorage(cart);
+  // }, [cart]);
+
+  useEffect(() => {
+    async function loadCartItemLocalStorage() {
+      setLoading(true);
       const cartItems = await cartItemsStorage.get();
+      
+      console.log("CARRINHO CARREGADO: ", cartItems);
+      
       if (cartItems) {
         setCart(cartItems);
       }
-    } catch (error) {
-      console.error('Erro ao carregar o carrinho:', error);
+      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    saveCartItemLocalStorage(cart);
-  }, [cart]);
-
-  useEffect(() => {
+  
     loadCartItemLocalStorage();
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      saveCartItemLocalStorage(cart);
+    }
+  }, [cart, loading]);
 
   return (
     <CartContext.Provider value={{

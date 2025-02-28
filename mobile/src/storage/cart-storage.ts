@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const CART_ITEMS_STORAGE_KEY = "@teste_mobile:cartItems";
+const CART_ITEMS_STORAGE_KEY = "@myDemoApp:cart";
 
 interface CartItemsProps {
   id: string
@@ -21,7 +21,6 @@ async function save(cartItems: CartItemsProps[]) {
     throw new Error("Erro ao salvar o item no LocalStore: " + error);
   }
 }
-
 
 async function get(): Promise<CartItemsProps[] | null> {
   try {

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from "react"
 
-import { userStorage } from "@/storage/user"
+import { userStorage } from "@/storage/user-storage"
 
 interface UserProps {
   id: string

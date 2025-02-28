@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const USER_STORAGE_KEY = "@teste_mobile:user"
+const USER_STORAGE_KEY = "@myDemoApp:user"
 
 interface UserProps {
   id: string;

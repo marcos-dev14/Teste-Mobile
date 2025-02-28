@@ -57,7 +57,7 @@ export default function ProductDetails() {
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
       <Header 
         backButton
-        linkButton="/"
+        linkButton="/home"
       />
 
       {isFetching ? (
