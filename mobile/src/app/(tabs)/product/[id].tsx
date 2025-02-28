@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, Image, SafeAreaView, TouchableOpacity } from "react-native"
+import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 
@@ -63,64 +63,69 @@ export default function ProductDetails() {
       {isFetching ? (
         <Loading />
       ) : (
-        <View className="px-4 w-full mt-4">
-          <View className="w-full items-start">
-            <Text className="font-bold text-2xl text-darker mb-2">
-              {productData?.name}
-            </Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+        >
+          <View className="px-4 w-full mt-4">
+            <View className="w-full items-start">
+              <Text className="font-bold text-2xl text-darker mb-2">
+                {productData?.name}
+              </Text>
 
-            {productData?.rating && (
-              <StartRating rating={productData?.rating} />
-            )}
-          </View>
+              {productData?.rating && (
+                <StartRating rating={productData?.rating} />
+              )}
+            </View>
 
-          <Image 
-            source={{ uri: productImage }} 
-            className="w-full h-[358px] rounded-lg mt-4"
-          />
-        
-          <View className="w-full items-start mt-20">
-            <Text className="font-bold text-3xl text-darker">
-              R$ {productData?.price}
-            </Text>
+            <Image 
+              source={{ uri: productImage }} 
+              className="w-full h-[358px] rounded-lg mt-4"
+            />
+          
+            <View className="w-full items-start mt-10">
+              <Text className="font-bold text-3xl text-darker">
+                R$ {productData?.price}
+              </Text>
 
-            <View className="w-full flex-row items-center justify-between mt-4"> 
-              <View className="mr-4 flex-row items-center justify-center">
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={decreaseQuantity}
-                  disabled={quantity === 0}
-                  className="p-1 items-center justify-center"
-                >
-                  <Ionicons 
-                    name="remove-circle-outline" 
-                    size={25} 
-                    color={quantity === 0 ? colors.light : colors.darkBlue} 
+              <View className="w-full flex-row items-center justify-between mt-4"> 
+                <View className="mr-4 flex-row items-center justify-center">
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={decreaseQuantity}
+                    disabled={quantity === 0}
+                    className="p-1 items-center justify-center"
+                  >
+                    <Ionicons 
+                      name="remove-circle-outline" 
+                      size={25} 
+                      color={quantity === 0 ? colors.light : colors.darkBlue} 
+                    />
+                  </TouchableOpacity>
+
+                  <Text className="font-semibold text-base text-darker mx-2">
+                    {quantity}
+                  </Text>
+
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={increaseQuantity}
+                    className="p-1 items-center justify-center"
+                  >
+                    <Ionicons name="add-circle-outline" size={25} color={colors.darkBlue} />
+                  </TouchableOpacity>
+                </View>
+
+                <View className="w-[211px] h-[48px]">
+                  <Button 
+                    title="Adicionar ao carrinho" 
+                    onPress={handleAddToCart}  
                   />
-                </TouchableOpacity>
-
-                <Text className="font-semibold text-base text-darker mx-2">
-                  {quantity}
-                </Text>
-
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={increaseQuantity}
-                  className="p-1 items-center justify-center"
-                >
-                  <Ionicons name="add-circle-outline" size={25} color={colors.darkBlue} />
-                </TouchableOpacity>
-              </View>
-
-              <View className="w-[211px] h-[48px]">
-                <Button 
-                  title="Adicionar ao carrinho" 
-                  onPress={handleAddToCart}  
-                />
+                </View>
               </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       )}
     </SafeAreaView>
   );

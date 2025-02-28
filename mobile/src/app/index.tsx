@@ -1,4 +1,4 @@
-import { SafeAreaView, View, Text, ScrollView, Alert } from "react-native"
+import { SafeAreaView, View, Text, ScrollView, Alert, Platform } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from "@tanstack/react-query"
@@ -27,6 +27,7 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
+    mode: "onBlur"
   })
 
   const { mutateAsync: authenticate, isPending } = useMutation({
@@ -71,6 +72,7 @@ export default function Login() {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: Platform.OS === "ios" ? 130 : 40 }}
           >
             <View className="mt-4 px-4">
               <Text className="font-bold text-2xl text-darker">
@@ -95,13 +97,13 @@ export default function Login() {
                         onChangeText={onChange}
                         value={value}
                         error={!!errors.email}
-                        placeholder="Nome Completo"
+                        placeholder="E-mail"
                         placeholderTextColor={colors.darker}
                       />
 
                       {errors.email && (
                         <Text className="text-red text-sm mt-1">
-                          {errors.email.message}
+                          {errors.email.message === "Required" ? "O e-mail é obrigatório." : errors.email.message}
                         </Text>
                       )}
                     </View>
@@ -120,11 +122,12 @@ export default function Login() {
                         error={!!errors.password}
                         placeholder="Senha"
                         placeholderTextColor={colors.darker}
+                        secureTextEntry
                       />
 
                       {errors.password && (
                         <Text className="text-red text-sm mt-1">
-                          {errors.password.message}
+                          {errors.password.message === "Required" ? "A senha é obrigatória." : errors.password.message}
                         </Text>
                       )}
                     </View>

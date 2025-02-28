@@ -1,6 +1,6 @@
 import { router } from "expo-router"
 import { useState } from "react"
-import { Alert, SafeAreaView, ScrollView, Text, View } from "react-native"
+import { Alert, Platform, SafeAreaView, ScrollView, Text, View } from "react-native"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { MaterialIcons } from "@expo/vector-icons"
@@ -97,7 +97,7 @@ export default function Payment() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === "ios" ? 130 : 40 }}
       >
         <View className="w-full px-4 mt-4">
           <Text className="font-bold text-2xl text-darker">Checkout</Text>

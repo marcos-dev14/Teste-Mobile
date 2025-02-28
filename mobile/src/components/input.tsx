@@ -13,7 +13,8 @@ export function Input({ label, error = false, ...rest }: InputPros) {
         borderBottomWidth: 2,
         borderColor: error ? colors.red : colors.light,
         width: '100%',
-        height: label ? 65 : 48,
+        height: label ? 60 : 48,
+        paddingBottom: 22
       }}
     >
       {label && 
@@ -21,7 +22,7 @@ export function Input({ label, error = false, ...rest }: InputPros) {
           {label}
         </Text>
       }
-      <TextInput {...rest} className="font-sans text-darker text-base px-2" />
+      <TextInput {...rest} className="h-full font-sans text-darker text-base px-2" />
     </View>
   )
 }
