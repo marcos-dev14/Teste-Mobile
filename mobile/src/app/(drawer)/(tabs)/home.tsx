@@ -82,7 +82,7 @@ export default function Home() {
           columnWrapperStyle={{ width: '100%', justifyContent: 'space-between', gap: 16, }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View key={item.id}>
+            <View key={item.id} className="h-[290px] mb-4">
               <Link href={`/product/${item.id}`} asChild>
                 <CardProduct 
                   title={item.name}

@@ -18,7 +18,7 @@ export function CardProduct({
 }: CardProductProps) {
   return (
     <TouchableOpacity 
-      className="w-[171px] bg-white rounded-lg border border-light mb-5 overflow-hidden"
+      className="w-[171px] h-full bg-white rounded-lg border border-light mb-5 overflow-hidden"
       activeOpacity={0.7}
       {...rest}	
     >
