@@ -1,6 +1,12 @@
 import { api } from "@/lib/axios"
 
-import type { UserLoginParams, UserLoginResponse, UserParams } from "@/types/users"
+import type { UserLoginParams, UserLoginResponse, UserParams, UserRegisterParams } from "@/types/users"
+
+export async function userRegister(userRegisterData: UserRegisterParams) {
+  const response = await api.post<UserParams>("/users/register", userRegisterData)
+
+  return response.data
+}
 
 export async function userLogin(userLoginData: UserLoginParams) {
   const response = await api.post<UserLoginResponse>("/users/login", userLoginData)

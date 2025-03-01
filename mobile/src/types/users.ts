@@ -12,6 +12,12 @@ export interface UserLoginParams {
   password: string
 }
 
+export interface UserRegisterParams {
+  name: string
+  email: string
+  password: string
+}
+
 export interface UserLoginResponse {
   message: string
   user: {

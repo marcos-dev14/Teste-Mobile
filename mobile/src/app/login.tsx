@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, ScrollView, Alert, Platform, TouchableOpacity
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from "@tanstack/react-query"
-import { router } from "expo-router"
+import { Link, router } from "expo-router"
 
 import { userLogin } from "@/api/user"
 
@@ -172,10 +172,22 @@ export default function Login() {
                     disabled={isPending || isSubmitting}
                     onPress={handleSubmit(handleLogin)}
                   />
+
+                  <View className="w-full flex-row items-center justify-center gap-1 mt-4">
+                    <Text className="font-sans text-base text-darker">
+                      Ainda não tem uma conta?
+                    </Text>
+                      
+                    <Link href="/register">
+                      <Text className="font-bold text-base text-darkBlue">
+                        Registre-se aqui
+                      </Text>
+                    </Link>
+                  </View>
                 </View>
               </View>
 
-              <View className="w-full p-4 border border-light bg-[#FBFBFB] mt-[50px]">
+              <View className="w-full p-4 border border-light bg-[#FBFBFB] mt-20">
                 <TouchableOpacity
                   onPress={handleAutomaticData}
                 >
