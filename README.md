@@ -89,7 +89,7 @@ cd Teste-Mobile
   ```
 3. **Acesse o arquivo axios.ts no campinho src/lib/axios.ts e configure o endereço do backend com o IP da sua máquina e a porta 3000:**
   ```sh
-  baseURL: `"http://192.168.0.106:3000"`,
+  baseURL: "http://192.168.0.106:3000",
   ```
 4. **Inicie o projeto mobile:**
   ```sh
