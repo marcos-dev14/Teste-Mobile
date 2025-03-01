@@ -9,6 +9,12 @@ interface CartItemsProps {
   rating?: number
   quantity: number
   image: string
+  color: {
+    id: string;
+    name: string;
+    hex: string;
+    images: string[];
+  };
 }
 
 

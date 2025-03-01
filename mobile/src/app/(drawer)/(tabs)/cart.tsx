@@ -38,7 +38,7 @@ export default function Cart() {
               data={cart}
               keyExtractor={item => item.id}
               renderItem={({ item }) => (
-                <View className="mb-4">
+                <View key={item.color.id} className="mb-4">
                   <CartCardProduct 
                     id={item.id}
                     name={item.name}
@@ -46,6 +46,7 @@ export default function Cart() {
                     rating={item.rating}
                     quantity={item.quantity}
                     image={item.image}
+                    color={item.color}
                   />
                 </View>
               )}

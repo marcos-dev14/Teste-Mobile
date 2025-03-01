@@ -6,6 +6,7 @@ import { useCart } from "@/context/cart-context"
 import { StartRating } from "./start-rating"
 
 import { colors } from "@/styles/theme/colors"
+import { useEffect } from "react"
 
 interface CartCardProductProps {
   id: string
@@ -15,6 +16,12 @@ interface CartCardProductProps {
   rating?: number
   quantity: number
   cardFooter?: boolean
+  color: {
+    id: string;
+    name: string;
+    hex: string;
+    images: string[];
+  };
 }
 
 export function CartCardProduct({
@@ -24,7 +31,8 @@ export function CartCardProduct({
   image,
   rating,
   quantity,
-  cardFooter = true
+  cardFooter = true,
+  color,
 }: CartCardProductProps) {
   const { removeItemCart, updateQuantity } = useCart()
 
@@ -62,6 +70,28 @@ export function CartCardProduct({
           <StartRating rating={rating} />
         )}
 
+        {color && (
+          <View className="flex-row items-center justify-start gap-2 mt-4">
+            <Text className="font-semibold text-xl text-darker">
+              Cor:
+            </Text>
+
+            <View 
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: color.hex,
+                marginRight: 6,
+                borderWidth: 2,
+                borderColor: colors.light,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            />
+          </View>
+        )}
+
         <Text className="font-bold text-xl text-darker mt-4">
           R$ {price.toFixed(2)}
         </Text>
@@ -71,8 +101,12 @@ export function CartCardProduct({
             <View className="mr-4 flex-row items-center justify-center">
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => updateQuantity(id, quantity - 1)}
-                disabled={quantity === 0}
+                onPress={() => {
+                  if (quantity === 1) {
+                    handleRemoveItemCart(color.id)
+                  }
+                  updateQuantity(color.id, quantity - 1)
+                }}
                 className="p-1 items-center justify-center"
               >
                 <Ionicons 
@@ -88,7 +122,7 @@ export function CartCardProduct({
 
               <TouchableOpacity
                 activeOpacity={0.7}
-                onPress={() => updateQuantity(id, quantity + 1)}
+                onPress={() => updateQuantity(color.id, quantity + 1)}
                 className="p-1 items-center justify-center"
               >
                 <Ionicons name="add-circle-outline" size={25} color={colors.darkBlue} />
@@ -98,7 +132,7 @@ export function CartCardProduct({
             <TouchableOpacity
               className="p-2 items-center justify-center"
               activeOpacity={0.7}
-              onPress={() => handleRemoveItemCart(id)}
+              onPress={() => handleRemoveItemCart(color.id)}
             >
               <Text className="font-bold text-base text-red">
                 Remover

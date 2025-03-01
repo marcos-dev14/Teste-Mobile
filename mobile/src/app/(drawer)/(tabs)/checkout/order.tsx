@@ -25,7 +25,7 @@ export default function Order() {
 
   function handlePlaceOrder() {
     if (!addressUserData) {
-      return router.replace('/(tabs)/checkout/address')
+      return router.replace('/checkout/address')
     }
 
     router.replace('/checkout/payment')
@@ -63,6 +63,7 @@ export default function Order() {
                   quantity={item.quantity}
                   image={item.image}
                   cardFooter={false}
+                  color={item.color}
                 />
               </View>
             )}

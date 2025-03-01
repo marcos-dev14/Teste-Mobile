@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from "react-native"
+import { useEffect, useState } from "react"
+import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, Alert } from "react-native"
 import { useLocalSearchParams } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 
@@ -15,6 +15,7 @@ import { Loading } from "@/components/loading"
 
 import { colors } from "@/styles/theme/colors"
 
+import type { ProductColorsProps } from "@/types/product"
 
 export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1)
@@ -25,8 +26,10 @@ export default function ProductDetails() {
     queryKey: ['products', id],
     queryFn: () => getProductById(id)
   })
-  
-  const productImage = productData?.images[0]
+
+  const [selectedColor, setSelectedColor] = useState<ProductColorsProps | null>(
+    productData?.colors[0] || null
+  )
 
   const { addToCart } = useCart()
 
@@ -40,18 +43,41 @@ export default function ProductDetails() {
     }
   }
 
+  function handleColorPress(color: ProductColorsProps) {
+    setSelectedColor(color)
+    setQuantity(1)
+  }
+
   function handleAddToCart() {
-    if (productData) {
+    if (!selectedColor) {
+      return Alert.alert("Selecione uma cor")
+    }
+
+    if (productData && selectedColor) {
       addToCart({ 
         id: productData?.id,
         name: productData?.name,
         price: productData?.price,
         rating: productData?.rating,
         quantity,
-        image: productData?.images[0]
+        image: selectedColor.images[0],
+        color: {
+          id: selectedColor.id,
+          name: selectedColor.name,
+          hex: selectedColor.hex,
+          images: selectedColor.images,
+        },
       })
     }
   }
+
+  useEffect(() => {
+    setQuantity(1)
+
+    if (productData?.colors && productData.colors.length > 0) {
+      setSelectedColor(productData.colors[0]);
+    }
+  }, [productData]);
 
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
@@ -78,13 +104,43 @@ export default function ProductDetails() {
               )}
             </View>
 
-            <Image 
-              source={{ uri: productImage }} 
-              className="w-full h-[358px] rounded-lg mt-4"
-            />
-          
-            <View className="w-full items-start mt-10">
-              <Text className="font-bold text-3xl text-darker">
+            {selectedColor?.images.map((image, index) => (
+              <Image 
+                key={index}
+                source={{ uri: image }} 
+                className="w-full h-[358px] rounded-lg mt-4"
+              />
+            ))}
+
+            <View className="w-full items-start mt-5">
+              {productData?.colors && (
+                <View className="flex-row items-center justify-start gap-2 mt-4">
+                  <Text className="font-semibold text-xl text-darker">
+                    Cor:
+                  </Text>
+
+                  {productData.colors.map((color) => (
+                    <TouchableOpacity
+                      key={color.id}
+                      activeOpacity={0.4}
+                      onPress={() => handleColorPress(color)}
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 12,
+                        backgroundColor: color.hex,
+                        marginRight: 6,
+                        borderWidth: 2,
+                        borderColor: colors.light,
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    />
+                  ))}
+                </View>
+              )}
+
+              <Text className="font-bold text-3xl text-darker mt-4">
                 R$ {productData?.price}
               </Text>
 

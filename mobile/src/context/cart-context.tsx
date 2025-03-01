@@ -1,6 +1,7 @@
-import { cartItemsStorage } from "@/storage/cart-storage"
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { Alert } from "react-native"
+
+import { cartItemsStorage } from "@/storage/cart-storage"
 
 interface CartItem {
   id: string
@@ -9,6 +10,12 @@ interface CartItem {
   rating?: number
   quantity: number
   image: string
+  color: {
+    id: string;
+    name: string;
+    hex: string;
+    images: string[];
+  };
 }
 
 interface CartContextProps {
@@ -33,7 +40,7 @@ export function CartContextProvider({ children }: CartProviderProps) {
   const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0)
 
   function addToCart(item: CartItem) {
-    const existingItem = cart.find((cartItem) => cartItem.id === item.id)
+    const existingItem = cart.find((cartItem) => cartItem.color.id === item.color.id)
 
     if (existingItem) {
       return Alert.alert(
@@ -46,7 +53,7 @@ export function CartContextProvider({ children }: CartProviderProps) {
     setCart((prevCart) => [...prevCart, item]);
     Alert.alert(
       'Produto adicionado',
-      `${item.name} foi adicionado ao carrinho!`,
+      `${item.name} da cor ${item.color.name} foi adicionado ao carrinho!`,
       [{ text: 'OK' }]
     )
   }
@@ -54,7 +61,7 @@ export function CartContextProvider({ children }: CartProviderProps) {
   function updateQuantity(id: string, quantity: number) {
     setCart((prevCart) =>
       prevCart.map((cartItem) =>
-        cartItem.id === id
+        cartItem.color.id === id
           ? { ...cartItem, quantity: quantity }
           : cartItem
       )
@@ -62,7 +69,7 @@ export function CartContextProvider({ children }: CartProviderProps) {
   }
 
   function removeItemCart(id: string) {
-    setCart((prevCart) => prevCart.filter((cartItem) => cartItem.id !== id));
+    setCart((prevCart) => prevCart.filter((cartItem) => cartItem.color.id !== id));
   }
 
   function clearCart() {
@@ -81,8 +88,6 @@ export function CartContextProvider({ children }: CartProviderProps) {
     async function loadCartItemLocalStorage() {
       setLoading(true);
       const cartItems = await cartItemsStorage.get();
-      
-      console.log("CARRINHO CARREGADO: ", cartItems);
       
       if (cartItems) {
         setCart(cartItems);
