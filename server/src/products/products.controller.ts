@@ -1,10 +1,23 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
-import { ProductsService } from './products.service'; 
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ProductsService } from './products.service';
 import { ProductDto } from './dto/product.dto';
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {} 
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Post()
+  async create(@Body() createProductDto: CreateProductDto): Promise<ProductDto> {
+    return this.productsService.create(createProductDto);
+  }
 
   @Get()
   async findAll(): Promise<ProductDto[]> {
@@ -15,12 +28,12 @@ export class ProductsController {
   async findOne(@Param('id') id: string): Promise<ProductDto> {
     const product = await this.productsService.findOne(id);
     if (!product) {
-      throw new Error('Produto não encontrado'); 
+      throw new Error('Produto não encontrado');
     }
     return product;
   }
 
-  @Patch(':id/rating') 
+  @Patch(':id/rating')
   async updateRating(
     @Param('id') productId: string,
     @Body('rating') rating: number,

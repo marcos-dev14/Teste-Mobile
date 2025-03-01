@@ -1,3 +1,5 @@
+import { ProductColorDto } from './product-color.dto';
+
 export class ProductDto {
   id: string;
   name: string;
@@ -5,4 +7,5 @@ export class ProductDto {
   price: number;
   images: string[];
   rating?: number;
+  colors: ProductColorDto[]; 
 }

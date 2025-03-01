@@ -25,14 +25,15 @@ model User {
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   name        String
   description String
   price       Float
   images      String[]
   rating      Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  colors      ProductColor[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 model Address {
@@ -62,4 +63,15 @@ model Order {
   totalPrice Float
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model ProductColor {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  name      String
+  hex       String
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -18,6 +18,7 @@ describe('ProductsService', () => {
               findMany: jest.fn(),
               findUnique: jest.fn(),
               update: jest.fn(),
+              create: jest.fn(),
             },
           },
         },
@@ -37,14 +38,16 @@ describe('ProductsService', () => {
         price: 100,
         images: ['image1.jpg'],
         rating: 4.5,
-      },
-      {
-        id: 'prod-2',
-        name: 'Produto 2',
-        description: 'Descrição do produto 2',
-        price: 200,
-        images: ['image2.jpg'],
-        rating: 5.0,
+        colors: [
+          {
+            id: 'color-1',
+            name: 'Azul Claro',
+            hex: '#ADD8E6',
+            images: ['image1.jpg'],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        ],
       },
     ];
 
@@ -53,7 +56,9 @@ describe('ProductsService', () => {
     const result = await productsService.findAll();
 
     expect(result).toEqual(mockProducts);
-    expect(prismaService.product.findMany).toHaveBeenCalled();
+    expect(prismaService.product.findMany).toHaveBeenCalledWith({
+      include: { colors: true },
+    });
   });
 
   it('Deve retornar um produto pelo ID', async () => {
@@ -64,6 +69,16 @@ describe('ProductsService', () => {
       price: 100,
       images: ['image1.jpg'],
       rating: 4.5,
+      colors: [
+        {
+          id: 'color-1',
+          name: 'Azul Claro',
+          hex: '#ADD8E6',
+          images: ['image1.jpg'],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
     };
 
     (prismaService.product.findUnique as jest.Mock).mockResolvedValue(mockProduct);
@@ -73,6 +88,7 @@ describe('ProductsService', () => {
     expect(result).toEqual(mockProduct);
     expect(prismaService.product.findUnique).toHaveBeenCalledWith({
       where: { id: 'prod-1' },
+      include: { colors: true },
     });
   });
 
@@ -90,6 +106,16 @@ describe('ProductsService', () => {
       price: 100,
       images: ['image1.jpg'],
       rating: 4.8,
+      colors: [
+        {
+          id: 'color-1',
+          name: 'Azul Claro',
+          hex: '#ADD8E6',
+          images: ['image1.jpg'],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ],
     };
 
     (prismaService.product.update as jest.Mock).mockResolvedValue(updatedProduct);
@@ -100,6 +126,7 @@ describe('ProductsService', () => {
     expect(prismaService.product.update).toHaveBeenCalledWith({
       where: { id: 'prod-1' },
       data: { rating: 4.8 },
+      include: { colors: true },
     });
   });
 

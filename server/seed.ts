@@ -13,7 +13,23 @@ async function main() {
       rating: 3.5,
       images: [
         'https://images.unsplash.com/photo-1581655353564-df123a1eb820?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1620799139652-715e4d5b2325?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1521330784804-5f69f8a17b1d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+      ],
+      colors: [
+        {
+          name: 'Vermelho',
+          hex: '#FFFFFF',
+          images: [
+            'https://images.unsplash.com/photo-1581655353564-df123a1eb820?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
+        {
+          name: 'Azul',
+          hex: '#0000FF',
+          images: [
+            'https://images.unsplash.com/photo-1521330784804-5f69f8a17b1d?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+          ],
+        },
       ],
     },
     {
@@ -23,6 +39,15 @@ async function main() {
       rating: 3.5,
       images: [
         'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      ],
+      colors: [
+        {
+          name: 'Azul Claro',
+          hex: '#ce978b',
+          images: [
+            'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
       ],
     },
     {
@@ -34,6 +59,22 @@ async function main() {
         'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
       ],
+      colors: [
+        {
+          name: 'Azul Escuro',
+          hex: '#00008B',
+          images: [
+            'https://images.unsplash.com/photo-1604176354204-9268737828e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
+        {
+          name: 'Preto',
+          hex: '#000000',
+          images: [
+            'https://images.unsplash.com/photo-1542272604-787c3835535d?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
+      ],
     },
     {
       name: 'Bolsa de Couro',
@@ -42,6 +83,15 @@ async function main() {
       rating: 5,
       images: [
         'https://images.unsplash.com/photo-1566150902887-9679ecc155ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      ],
+      colors: [
+        {
+          name: 'Marrom',
+          hex: '#A52A2A',
+          images: [
+            'https://images.unsplash.com/photo-1566150902887-9679ecc155ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
       ],
     },
     {
@@ -52,6 +102,15 @@ async function main() {
       images: [
         'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
       ],
+      colors: [
+        {
+          name: 'Branco',
+          hex: '#000000',
+          images: [
+            'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
+      ],
     },
     {
       name: 'Calça Jogger',
@@ -60,6 +119,15 @@ async function main() {
       rating: 4,
       images: [
         'https://images.unsplash.com/photo-1602293589930-45aad59ba3ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      ],
+      colors: [
+        {
+          name: 'Preto',
+          hex: '#ADD8E6',
+          images: [
+            'https://images.unsplash.com/photo-1602293589930-45aad59ba3ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
       ],
     },
     {
@@ -70,13 +138,35 @@ async function main() {
       images: [
         'https://images.unsplash.com/photo-1594035910387-fea47794261f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
       ],
+      colors: [
+        {
+          name: 'Azul Claro',
+          hex: '#000000',
+          images: [
+            'https://images.unsplash.com/photo-1594035910387-fea47794261f?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+          ],
+        },
+      ],
     },
   ];
 
   // Inserir produtos no banco de dados
   for (const product of products) {
     await prisma.product.create({
-      data: product,
+      data: {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        images: product.images,
+        rating: product.rating,
+        colors: {
+          create: product.colors.map((color) => ({
+            name: color.name,
+            hex: color.hex,
+            images: color.images,
+          })),
+        },
+      },
     });
   }
 
