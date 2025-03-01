@@ -97,3 +97,36 @@ cd Teste-Mobile
   ```
 
 Abra o Expo Go no celular ou use um emulador para testar o app.
+
+## **Documentação Técnica e Funcionalidades Extras**
+
+## Backend
+
+PostgreSQL: Foi escolhido como banco de dados relacional devido à sua robustez, escalabilidade e suporte.
+
+Docker: Utilizei o para garantir a consistência entre ambientes de desenvolvimento e produção.
+
+Pasta DTO: Organiza e valida dados transferidos entre partes da aplicação.
+
+Tabelas: Criadas para usuário, produto, endereço e pedido, garantindo estruturação dos dados.
+
+
+## Mobile
+
+Expo Router: Facilita a navegação entre telas.
+
+TailwindCSS + NativeWind: Agiliza a criação de layouts.
+
+Pasta Theme: Centraliza as cores do projeto para consistência visual.
+
+React Query: Gerencia requisições à API, substituindo useState e melhorando performance.
+
+React Hook Form + Zod: Combinação eficiente para validação e criação de formulários.
+
+Contextos: Dois contextos criados (usuário e carrinho) para gerenciar dados globais.
+
+Pasta API: Centraliza chamadas à API, integradas com React Query.
+
+Async Storage: Persiste dados do usuário e carrinho, evitando logins repetidos e mantendo o carrinho ao fechar o app.
+
+Adaptações no Figma: Tela de criação de usuário adicionada e textos traduzidos para português, optei em traduzir para facilitar a compreensão dos usuários e seguir um padrão de linguagem.
