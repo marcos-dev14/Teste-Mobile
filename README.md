@@ -14,7 +14,7 @@ A aplicação foi desenvolvida utilizando **React Native (Expo)** para o fronten
 - **[React Hook Form](https://react-hook-form.com/)** para gerenciamento de formulários
 - **[Zod](https://zod.dev/)** para validação de formulários
 - **[React Query](https://tanstack.com/query/latest)** para requisições e cache de dados
-- **[tailwindcss](https://tailwindcss.com/)** com **[NativeWind](https://www.nativewind.dev/)** para estilização
+- **[Tailwindcss](https://tailwindcss.com/)** com **[NativeWind](https://www.nativewind.dev/)** para estilização
 
 ### 🖥️ **Backend (API)**
 - **[Node.js](https://nodejs.org/)** com **[NestJS](https://nestjs.com/)**
@@ -39,7 +39,7 @@ cd Teste-Mobile
 
 1. **Navegue até o diretório do server:**
   ```sh
-  cd ../server
+  cd .\server
   ```
 
 2. **Copie o arquivo `.env.example` para `.env` e configure as variáveis de ambiente:**
@@ -61,7 +61,7 @@ cd Teste-Mobile
   npx prisma migrate dev
   ```
 
-6. **Criação dos produtos e da conta de login:**
+6. **Criação dos produtos e da conta de login banco de dados:**
   ```sh
   npm run seed
   ```
@@ -71,24 +71,27 @@ cd Teste-Mobile
   npm run start ou npm run start:dev
   ```
 
+8. **Comando para rodar os testes:**
+  ```sh
+  npm run test
+  ```
+
 ## **Configuração do mobile**
 
 1. **Navegue até o diretório do mobile:**
   ```sh
-  cd ../mobile
+  cd ..\mobile\
   ```
 
 2. **Instale as dependências:**
   ```sh
-  yarn install
-   ou
   npm install
   ```
 3. **Acesse o arquivo axios.ts no campinho src/lib/axios.ts e configure o endereço do backend com o IP da sua máquina e a porta 3000:**
   ```sh
   baseURL: `"http://192.168.0.106:3000"`,
   ```
-4. **Navegue até o diretório do mobile:**
+4. **Inicie o projeto mobile:**
   ```sh
   npx expo start
   ```
