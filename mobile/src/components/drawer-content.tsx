@@ -76,7 +76,7 @@ export function DrawerContent() {
               }}
               onPress={() => {
                 logout()
-                router.push("/")
+                router.push("/login")
               }}
             >
               <Text 
@@ -145,7 +145,7 @@ export function DrawerContent() {
               }}
               onPress={() => {
                 logout()
-                router.push("/")
+                router.push("/login")
               }}
             >
               <Text 

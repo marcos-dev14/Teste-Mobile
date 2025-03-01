@@ -77,20 +77,6 @@ export function CartContextProvider({ children }: CartProviderProps) {
     }
   }
 
-  // async function loadCartItemLocalStorage() {
-  //   const cartItems = await cartItemsStorage.get();
-
-  //   console.log("CHEGOU AQUI: ", cartItems)
-
-  //   if (cartItems) {
-  //     setCart(cartItems);
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   saveCartItemLocalStorage(cart);
-  // }, [cart]);
-
   useEffect(() => {
     async function loadCartItemLocalStorage() {
       setLoading(true);

@@ -1,4 +1,4 @@
-import { Alert, SafeAreaView, ScrollView, Text, View } from "react-native"
+import { Alert, Platform, SafeAreaView, ScrollView, Text, View } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -28,13 +28,10 @@ export default function AddressCheckout() {
     resolver: zodResolver(addressFormSchema),
   })
 
-  const { mutateAsync: createAddressMutation, isSuccess } = useMutation({
+  const { mutateAsync: createAddressMutation } = useMutation({
     mutationFn: createAddress,
     onSuccess: () => {
-
-      if (isSuccess) {
-        router.replace('/checkout/payment')
-      }
+      router.replace('/checkout/payment')
 
       queryClient.invalidateQueries({ queryKey: ["address-user"] });
       Alert.alert('Sucesso', 'Endereço enviado com sucesso!');
@@ -61,11 +58,11 @@ export default function AddressCheckout() {
 
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
-      <Header backButton linkButton="/checkout/order" />
+      <Header backButton linkButton="/checkout/payment" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 140 : 40}}
       >
         <View className="w-full px-4 mt-4">
           <Text className="font-bold text-2xl text-darker">Checkout</Text>

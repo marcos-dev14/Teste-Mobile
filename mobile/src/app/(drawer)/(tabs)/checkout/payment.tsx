@@ -73,7 +73,7 @@ export default function Payment() {
 
     if (!fullName || !fullNameOnCard || !cardNumber || !expirationDate || !securityCode || !addressData) {
       Alert.alert("Por favor, preencha todos os dados para finalizar a compra!");
-      return;
+      return router.push('/checkout/address')
     }
 
     const formattedData = {
