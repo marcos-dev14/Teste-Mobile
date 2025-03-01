@@ -144,7 +144,11 @@ export default function ProductDetails() {
                 R$ {productData?.price}
               </Text>
 
-              <View className="w-full flex-row items-center justify-between mt-4"> 
+              <Text className="font-semibold text-base text-darker mt-4">
+                {productData?.description}
+              </Text>
+
+              <View className="w-full flex-row items-center justify-between mt-6"> 
                 <View className="mr-4 flex-row items-center justify-center">
                   <TouchableOpacity
                     activeOpacity={0.7}

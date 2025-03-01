@@ -1,7 +1,7 @@
-import { useState } from "react"
 import { View, Text, TouchableOpacity, type TouchableOpacityProps } from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { colors } from "@/styles/theme/colors";
+
+import { colors } from "@/styles/theme/colors"
 
 interface CheckboxProps extends TouchableOpacityProps {
   checked: boolean;
@@ -16,7 +16,7 @@ export function Checkbox({
   return (
     <TouchableOpacity
       activeOpacity={0.4}
-      className="flex-row items-start justify-center"
+      className="flex-row items-start justify-start"
       {...rest}
     >
       <View  style={{
@@ -40,7 +40,7 @@ export function Checkbox({
       </View>
 
       <Text className="font-sans text-base text-darker">
-        Meu endereço de cobrança é igual ao meu endereço de entrega
+        {text}
       </Text>
     </TouchableOpacity>
   )

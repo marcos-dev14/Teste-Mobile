@@ -1,21 +1,27 @@
+import { useState } from "react"
 import { Alert, Platform, SafeAreaView, ScrollView, Text, View } from "react-native"
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { router } from "expo-router"
+
+import { useUser } from "@/context/user-context"
 
 import { AddressFormData, addressFormSchema } from "@/schemas/address-form-schema"
+
 import { formatZipCode } from "@/utils/format-zip-code"
-import { createAddress } from "@/api/address"
+import { createAddress, getAddressByUserId } from "@/api/address"
 
 import { Header } from "@/components/header"
 import { Input } from "@/components/input"
 import { Button } from "@/components/button"
+import { Checkbox } from "@/components/checkbox"
 
 import { colors } from "@/styles/theme/colors"
-import { useUser } from "@/context/user-context"
-import { router } from "expo-router"
 
 export default function AddressCheckout() {
+  const [isChecked, setIsChecked] = useState(false)
+
   const { user } = useUser()
 
   const queryClient = useQueryClient()
@@ -23,12 +29,17 @@ export default function AddressCheckout() {
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<AddressFormData>({
     resolver: zodResolver(addressFormSchema),
   })
 
-  const { mutateAsync: createAddressMutation } = useMutation({
+  const { data: addressUserData } = useQuery({
+    queryKey: ['address-user'],
+    queryFn: () => getAddressByUserId(user?.id)
+  })
+
+  const { mutateAsync: createAddressMutation, isPending } = useMutation({
     mutationFn: createAddress,
     onSuccess: () => {
       router.replace('/checkout/payment')
@@ -56,19 +67,27 @@ export default function AddressCheckout() {
     createAddressMutation(formData)
   }
 
+  const handleFormSubmit = handleSubmit((data) => {
+    if (isChecked) {
+      router.push('/checkout/payment');
+    } else {
+      onSubmit(data);
+    }
+  });
+
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
-      <Header backButton linkButton="/checkout/payment" />
+      <Header backButton linkButton="/cart" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 140 : 40}}
+        contentContainerStyle={{ paddingBottom: Platform.OS === 'ios' ? 160 : 40}}
       >
         <View className="w-full px-4 mt-4">
           <Text className="font-bold text-2xl text-darker">Checkout</Text>
 
           <Text className="font-semibold text-lg text-darker mt-4">
-            Enter a shipping address
+            Endereço de entrega
           </Text>
 
           <View className="w-full mt-6">
@@ -78,7 +97,7 @@ export default function AddressCheckout() {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View className="flex-1 mb-4">
                   <Input
-                    label="Full Name *"
+                    label="Nome completo *"
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -100,7 +119,7 @@ export default function AddressCheckout() {
               render={({ field: { onChange, onBlur, value } }) => (
                  <View className="flex-1 mb-4">
                   <Input
-                    label="Address Line 1 *"
+                    label="Endereço 1 *"
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -122,7 +141,7 @@ export default function AddressCheckout() {
               render={({ field: { onChange, onBlur, value } }) => (
                  <View className="flex-1 mb-4">
                   <Input
-                    label="Address Line 2 *"
+                    label="Endereço 2 *"
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value || undefined}
@@ -145,7 +164,7 @@ export default function AddressCheckout() {
                 render={({ field: { onChange, onBlur, value } }) => (
                    <View className="flex-1 mb-4">
                     <Input
-                      label="City *"
+                      label="Cidade *"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
@@ -167,7 +186,7 @@ export default function AddressCheckout() {
                 render={({ field: { onChange, onBlur, value } }) => (
                    <View className="flex-1 mb-4">
                     <Input
-                      label="State / Region *"
+                      label="Estado *"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
@@ -191,7 +210,7 @@ export default function AddressCheckout() {
                 render={({ field: { onChange, onBlur, value } }) => (
                    <View className="flex-1 mb-4">
                     <Input
-                      label="Zip Code *"
+                      label="Código postal *"
                       onBlur={onBlur}
                       keyboardType="numeric"
                       value={value}
@@ -214,7 +233,7 @@ export default function AddressCheckout() {
                 render={({ field: { onChange, onBlur, value } }) => (
                    <View className="flex-1 mb-4">
                     <Input
-                      label="Country *"
+                      label="País *"
                       onBlur={onBlur}
                       onChangeText={onChange}
                       value={value}
@@ -231,11 +250,26 @@ export default function AddressCheckout() {
               />
             </View>
           </View>
+
+          {addressUserData && addressUserData?.length >= 1 && (
+            <View className="w-full mt-4">
+              <Checkbox 
+                checked={isChecked}
+                onPress={() => setIsChecked(!isChecked)}
+                text="Usar o endereço já cadastrado"
+              />
+            </View>
+          )}
+
         </View>
       </ScrollView>
 
       <View className="w-full h-[48px] mt-auto mb-6 px-4">
-        <Button title="Continuar" onPress={handleSubmit(onSubmit)} />
+        <Button 
+          title="Continuar" 
+          onPress={handleFormSubmit} 
+          disabled={isSubmitting || isPending}
+        />
       </View>
     </SafeAreaView>
   );

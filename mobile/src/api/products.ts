@@ -1,5 +1,6 @@
-import type { ProductParams } from "@/types/product"
 import { api } from "../lib/axios"
+
+import type { ProductParams } from "@/types/product"
 
 export async function getProducts() {
   const response = await api.get<ProductParams[]>("/products")

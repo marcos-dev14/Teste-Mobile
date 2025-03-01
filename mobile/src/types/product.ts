@@ -8,6 +8,7 @@ export interface ProductColorsProps {
 export interface ProductParams {
   id: string
   name: string
+  description: string
   price: number
   images: string[]
   rating?: number

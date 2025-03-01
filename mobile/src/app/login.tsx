@@ -26,7 +26,7 @@ export default function Login() {
     control,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormSchema>({
     resolver: zodResolver(loginFormSchema),
     mode: "onBlur"
@@ -169,7 +169,7 @@ export default function Login() {
                 <View className="w-full h-[48px] mt-8">
                   <Button 
                     title="Login" 
-                    disabled={isPending}
+                    disabled={isPending || isSubmitting}
                     onPress={handleSubmit(handleLogin)}
                   />
                 </View>

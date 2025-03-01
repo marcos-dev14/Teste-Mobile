@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const CART_ITEMS_STORAGE_KEY = "@myDemoApp:cart";
+const CART_ITEMS_STORAGE_KEY = "@myDemoApp:cart"
 
 interface CartItemsProps {
   id: string
@@ -10,13 +10,12 @@ interface CartItemsProps {
   quantity: number
   image: string
   color: {
-    id: string;
-    name: string;
-    hex: string;
-    images: string[];
-  };
+    id: string
+    name: string
+    hex: string
+    images: string[]
+  }
 }
-
 
 async function save(cartItems: CartItemsProps[]) {
   try {

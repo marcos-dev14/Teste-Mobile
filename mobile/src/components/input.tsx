@@ -14,7 +14,7 @@ export function Input({ label, error = false, ...rest }: InputPros) {
         borderBottomWidth: 2,
         borderColor: error ? colors.red : colors.light,
         width: '100%',
-        height: label ? 60 : 48,
+        height: label ? 70 : 48,
       }}
     >
       {label && 

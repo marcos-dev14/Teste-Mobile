@@ -1,5 +1,6 @@
-import type { AddressParams } from "@/types/address"
 import { api } from "../lib/axios"
+
+import type { AddressParams } from "@/types/address"
 
 export async function createAddress(addressData: AddressParams) {
   const response = await api.post<AddressParams>("/address", addressData)

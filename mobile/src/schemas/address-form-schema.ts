@@ -3,17 +3,17 @@ import { z } from 'zod'
 export const addressFormSchema = z.object({
   fullName: z
     .string()
-    .min(4, 'O nome completo deve ter pelo menos 4 caracteres.')
+    .min(3, 'O nome completo deve ter pelo menos 3 caracteres.')
     .nonempty('O nome completo é obrigatório.'),
     
   addressLine1: z
     .string()
-    .min(6, 'O endereço (linha 1) deve ter pelo menos 6 caracteres.')
-    .nonempty('O endereço (linha 1) é obrigatório.'),
+    .min(4, 'O endereço 1 deve ter pelo menos 4 caracteres.')
+    .nonempty('O endereço 1 é obrigatório.'),
     
   addressLine2: z
     .string()
-    .min(6, 'O endereço (linha 2) deve ter pelo menos 6 caracteres.')
+    .min(4, 'O endereço 2 deve ter pelo menos 4 caracteres.')
     .nullable(),
     
   city: z

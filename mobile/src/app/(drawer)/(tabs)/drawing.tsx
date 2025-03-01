@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, SafeAreaView, Alert, ImageBackground, Image } from "react-native"
+import { View, Text, SafeAreaView, Alert, Image } from "react-native"
 import { Canvas, Path, Skia  } from "@shopify/react-native-skia"
 
 import ImgDrawing from "@/assets/images/drawing.png"

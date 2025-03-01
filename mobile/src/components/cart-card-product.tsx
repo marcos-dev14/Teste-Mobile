@@ -6,7 +6,6 @@ import { useCart } from "@/context/cart-context"
 import { StartRating } from "./start-rating"
 
 import { colors } from "@/styles/theme/colors"
-import { useEffect } from "react"
 
 interface CartCardProductProps {
   id: string

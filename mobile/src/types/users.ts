@@ -1,22 +1,22 @@
-import type { AddressParams } from "./address";
+import type { AddressParams } from "./address"
 
 export interface UserParams {
-  id: string;
-  name: string;
-  email: string;
-  address: AddressParams[];
+  id: string
+  name: string
+  email: string
+  address: AddressParams[]
 }
 
 export interface UserLoginParams {
-  email: string;
-  password: string;
+  email: string
+  password: string
 }
 
 export interface UserLoginResponse {
-  message: string;
+  message: string
   user: {
-    id: string;
-    name: string;
-    email: string;
+    id: string
+    name: string
+    email: string
   }
 }

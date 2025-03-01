@@ -1,17 +1,11 @@
-import { router } from "expo-router"
 import { useState } from "react"
-import { Alert, Platform, SafeAreaView, ScrollView, Text, View } from "react-native"
+import { Platform, SafeAreaView, ScrollView, Text, View } from "react-native"
+import { router } from "expo-router"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { MaterialIcons } from "@expo/vector-icons"
-import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { useUser } from "@/context/user-context"
-import { useCart } from "@/context/cart-context"
-
-import { createOrder } from "@/api/order"
 import { paymentFormSchema, type PaymentFormSchema } from "@/schemas/payment-form-schema"
-import { getAddressByUserId } from "@/api/address"
 import { formatCardNumber } from "@/utils/format-card-number"
 import { formatExpirationDate } from "@/utils/format-expiration-data"
 import { formatSecurityCode } from "@/utils/format-security-code"
@@ -23,77 +17,19 @@ import { Checkbox } from "@/components/checkbox"
 
 import { colors } from "@/styles/theme/colors"
 
-interface formDataPaymentMethods {
-  fullName: string
-  fullNameOnCard: string
-  cardNumber: string
-  expirationDate: string
-  securityCode: string
-}
-
 export default function Payment() {
   const [isChecked, setIsChecked] = useState(true)
 
-  const { user } = useUser()
-  const { cart, totalPrice } = useCart()
-
   const {
     control,
-    handleSubmit,
     formState: { errors },
   } = useForm<PaymentFormSchema>({
     resolver: zodResolver(paymentFormSchema),
   })
 
-  const { data: addressUserData } = useQuery({
-    queryKey: ['address-user'],
-    queryFn: () => getAddressByUserId(user?.id)
-  })
-
-  const { mutateAsync: createOrderMutation } = useMutation({
-    mutationFn: createOrder,
-    onSuccess: () => {
-      router.replace('/checkout/complete')
-    },
-    onError: () => {
-      Alert.alert('Erro', 'Ocorreu um erro ao finalizar a compra.');
-    },
-  });
-
-  function handleEndPurchase(data: formDataPaymentMethods) {
-    const {  
-      fullName,
-      fullNameOnCard,
-      cardNumber,
-      expirationDate,
-      securityCode,
-    } = data
-
-    const addressData = addressUserData ? addressUserData[0] : undefined
-
-    if (!fullName || !fullNameOnCard || !cardNumber || !expirationDate || !securityCode || !addressData) {
-      Alert.alert("Por favor, preencha todos os dados para finalizar a compra!");
-      return router.push('/checkout/address')
-    }
-
-    const formattedData = {
-      userId: user?.id,
-      addressId: addressData?.id,
-      items: cart.map((product) => ({
-        productId: product.id, 
-        quantity: product.quantity, 
-        price: product.price,
-      })),
-      totalItems: cart.length,
-      totalPrice: Number(totalPrice.toFixed(2)),
-    }
-
-    createOrderMutation(formattedData)
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
-      <Header backButton linkButton="/checkout/order" />
+      <Header backButton linkButton="/checkout/address" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -103,16 +39,16 @@ export default function Payment() {
           <Text className="font-bold text-2xl text-darker">Checkout</Text>
 
           <Text className="font-semibold text-lg text-darker mt-4">
-            Enter a payment method
+            Método de pagamento
           </Text>
 
           <Text className="font-sans text-base text-darker mt-4">
-            You will not be charged until you review your purchase on the next screen.
+            A cobrança não será feita até que você revise sua compra na próxima tela.
           </Text>
 
           <View className="flex-row items-center justify-between mb-4 mt-6">
             <Text className="font-semibold text-lg text-darker">
-              Card
+              Cartão
             </Text>
 
             <MaterialIcons name="credit-card" size={32} color="#DBDBDB" />
@@ -125,7 +61,7 @@ export default function Payment() {
               render={({ field: { onChange, onBlur, value } }) => (
                 <View className="flex-1 mb-4">
                   <Input
-                    label="Full Name *"
+                    label="Nome completo *"
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -147,7 +83,7 @@ export default function Payment() {
               render={({ field: { onChange, onBlur, value } }) => (
                  <View className="flex-1 mb-4">
                   <Input
-                    label="Card Number *"
+                    label="Número do cartão *"
                     onBlur={onBlur}
                     keyboardType="numeric"
                     onChangeText={(text) => onChange(formatCardNumber(text))}
@@ -170,7 +106,7 @@ export default function Payment() {
               render={({ field: { onChange, onBlur, value } }) => (
                  <View className="flex-1 mb-4">
                   <Input
-                    label="Full Name on Card *"
+                    label="Nome completo no cartão *"
                     onBlur={onBlur}
                     onChangeText={onChange}
                     value={value}
@@ -193,7 +129,7 @@ export default function Payment() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <View className="flex-1 mb-4">
                     <Input
-                      label="Expiration Date *"
+                      label="Data de expiração *"
                       onBlur={onBlur}
                       keyboardType="numeric"
                       onChangeText={(text) => onChange(formatExpirationDate(text))}
@@ -216,7 +152,7 @@ export default function Payment() {
                 render={({ field: { onChange, onBlur, value } }) => (
                    <View className="flex-1 mb-4">
                     <Input
-                      label="Security Code *"
+                      label="Código de segurança *"
                       onBlur={onBlur}
                       keyboardType="numeric"
                       onChangeText={(text) => onChange(formatSecurityCode(text))}
@@ -235,17 +171,27 @@ export default function Payment() {
             </View>
           </View>
 
-          <View className="w-full">
+          <View className="w-full mt-4">
             <Checkbox 
               checked={isChecked}
               onPress={() => setIsChecked(!isChecked)}
+              text="Meu endereço de cobrança é igual ao meu endereço de entrega"
             />
           </View>
         </View>
       </ScrollView>
 
       <View className="w-full h-[48px] mt-auto mb-6 px-4">
-        <Button title="Comprar agora" onPress={handleSubmit(handleEndPurchase)} />
+        <Button 
+          title={isChecked ? "Comprar agora" : "Adicionar endereço"} 
+          onPress={() => {
+            if (isChecked) {
+              router.push('/checkout/order')
+            } else {
+              router.push('/checkout/address')
+            }
+          }} 
+        />
       </View>
     </SafeAreaView>
   )

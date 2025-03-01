@@ -1,19 +1,21 @@
-import { FlatList, SafeAreaView, ScrollView, Text, View } from "react-native"
+import { Alert, FlatList, SafeAreaView, ScrollView, Text, View } from "react-native"
 import { router } from "expo-router"
+import { useMutation, useQuery } from "@tanstack/react-query"
 
 import { useCart } from "@/context/cart-context"
+import { useUser } from "@/context/user-context"
+
+import { createOrder } from "@/api/order"
+import { getAddressByUserId } from "@/api/address"
 
 import { Header } from "@/components/header"
 import { CartCardProduct } from "@/components/cart-card-product"
 import { Button } from "@/components/button"
 
 import { colors } from "@/styles/theme/colors"
-import { useQuery } from "@tanstack/react-query"
-import { getAddressByUserId } from "@/api/address"
-import { useUser } from "@/context/user-context"
 
 export default function Order() {
-  const { cart, totalPrice } = useCart()
+  const { cart, totalPrice, clearCart } = useCart()
   const { user } = useUser()
 
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
@@ -23,17 +25,39 @@ export default function Order() {
     queryFn: () => getAddressByUserId(user?.id)
   })
 
-  function handlePlaceOrder() {
-    if (!addressUserData) {
-      return router.replace('/checkout/address')
+  const { mutateAsync: createOrderMutation } = useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => {
+      clearCart()
+
+      router.replace('/checkout/complete')
+    },
+    onError: () => {
+      Alert.alert('Erro', 'Ocorreu um erro ao finalizar a compra.');
+    },
+  });
+
+  function handleEndPurchase() {
+    const addressData = addressUserData ? addressUserData[0] : undefined
+
+    const formattedData = {
+      userId: user?.id,
+      addressId: addressData?.id,
+      items: cart.map((product) => ({
+        productId: product.id, 
+        quantity: product.quantity, 
+        price: product.price,
+      })),
+      totalItems: cart.length,
+      totalPrice: Number(totalPrice.toFixed(2)),
     }
 
-    router.replace('/checkout/payment')
+    createOrderMutation(formattedData)
   }
 
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
-      <Header backButton linkButton="/cart" />
+      <Header backButton linkButton="/checkout/payment" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -75,46 +99,42 @@ export default function Order() {
               Endereço de entrega
             </Text>
 
-            {addressUserData && (
-              <>
-                {addressUserData?.map((address, index) => (
-                  <View key={index} className="w-full">
-                    <Text className="font-sans text-lg text-darker">
-                      {address.fullName}
-                    </Text>
+            {addressUserData && addressUserData?.length >= 1 && (
+              <View className="w-full">
+                <Text className="font-sans text-lg text-darker">
+                  {addressUserData[0].fullName}
+                </Text>
 
-                    <View className="flex-row items-center gap-2">
-                      <Text className="font-sans text-lg text-darker">
-                        {address.addressLine1},
-                      </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-sans text-lg text-darker">
+                    {addressUserData[0].addressLine1},
+                  </Text>
 
-                      <Text className="font-sans text-lg text-darker">
-                        {address.addressLine2}
-                      </Text>
-                    </View>
+                  <Text className="font-sans text-lg text-darker">
+                    {addressUserData[0].addressLine2}
+                  </Text>
+                </View>
 
-                    <View className="flex-row items-center gap-2">
-                      <Text className="font-sans text-lg text-darker">
-                        {address.city},
-                      </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-sans text-lg text-darker">
+                    {addressUserData[0].city},
+                  </Text>
 
-                      <Text className="font-sans text-lg text-darker">
-                        {address.state}
-                      </Text>
-                    </View>
+                  <Text className="font-sans text-lg text-darker">
+                    {addressUserData[0].state}
+                  </Text>
+                </View>
 
-                    <View className="flex-row items-center gap-2">
-                      <Text className="font-sans text-lg text-darker">
-                        {address.country},
-                      </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="font-sans text-lg text-darker">
+                    {addressUserData[0].country},
+                  </Text>
 
-                      <Text className="font-sans text-lg text-darker">
-                        {address.zipCode}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </>
+                  <Text className="font-sans text-lg text-darker">
+                    {addressUserData[0].zipCode}
+                  </Text>
+                </View>
+              </View>
             )}
           </View>
 
@@ -142,7 +162,7 @@ export default function Order() {
           <View className="w-full h-[48px]">
             <Button 
               title="Fazer pedido" 
-              onPress={handlePlaceOrder}
+              onPress={handleEndPurchase}
             />
           </View>
         </View>

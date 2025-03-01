@@ -4,22 +4,12 @@ import { router } from "expo-router"
 import ImgBackground from "@/assets/images/image-background.png"
 import SvgComplete from "@/assets/icons/complete.svg"
 
-import { useCart } from "@/context/cart-context"
-
 import { Header } from "@/components/header"
 import { Button } from "@/components/button"
 
 import { colors } from "@/styles/theme/colors"
 
 export default function Complete() {
-  const { clearCart } = useCart()
-
-  function handleGoHome() {
-    clearCart()
-
-    router.replace('/home')
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: 40, backgroundColor: colors.white }}>
       <ImageBackground
@@ -42,7 +32,7 @@ export default function Complete() {
           </Text>
 
           <View className="w-full h-[48px] max-w-[300px] mt-6">
-            <Button title="Comprar agora" onPress={handleGoHome} />
+            <Button title="Comprar agora" onPress={() => router.replace('/home')} />
           </View>
         </View>
       </ImageBackground>

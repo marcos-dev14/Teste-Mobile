@@ -3,9 +3,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 const USER_STORAGE_KEY = "@myDemoApp:user"
 
 interface UserProps {
-  id: string;
-  name: string;
-  email: string;
+  id: string
+  name: string
+  email: string
 }
 
 async function save(user: UserProps) {
