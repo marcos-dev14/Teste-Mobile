@@ -62,3 +62,24 @@ const styleFactory = makeStyles((t) => ({
   title: { flex: 1, textAlign: 'center' },
   large: { paddingHorizontal: t.space.xs, paddingTop: t.space.xs, paddingBottom: t.space.md, gap: t.space.xxs },
 }))
+
+/** Título de tela para uso dentro de conteúdo que já aplica a margem lateral (listas, formulários). */
+export function ScreenTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+  const styles = useStyles(titleStyleFactory)
+  return (
+    <View style={styles.container}>
+      <Text variant="display" accessibilityRole="header">
+        {title}
+      </Text>
+      {subtitle ? (
+        <Text variant="body" color="textMuted">
+          {subtitle}
+        </Text>
+      ) : null}
+    </View>
+  )
+}
+
+const titleStyleFactory = makeStyles((t) => ({
+  container: { paddingTop: t.space.xs, paddingBottom: t.space.md, gap: t.space.xxs },
+}))

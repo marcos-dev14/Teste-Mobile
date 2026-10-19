@@ -3,7 +3,7 @@ import { Alert, ScrollView, View } from 'react-native'
 
 import { session, useSession } from '@/features/auth/session-store'
 import { env } from '@/lib/env'
-import { AppHeader, Button, Card, Divider, EmptyState, ListItem, makeStyles, Screen, Text, useStyles, useToast } from '@/ui'
+import { AppHeader, Button, ScreenTitle, Card, Divider, EmptyState, ListItem, makeStyles, Screen, Text, useStyles, useToast } from '@/ui'
 
 export default function ProfileScreen() {
   const styles = useStyles(styleFactory)
@@ -51,7 +51,7 @@ export default function ProfileScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
-        <AppHeader largeTitle="Perfil" />
+        <ScreenTitle title="Perfil" />
         <View style={styles.identity}>
           <View style={styles.avatar} accessibilityElementsHidden>
             <Text variant="headline" color="onPrimary">

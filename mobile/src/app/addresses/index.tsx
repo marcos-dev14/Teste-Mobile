@@ -6,7 +6,7 @@ import { useAddresses, useDeleteAddress } from '@/features/addresses/api'
 import { RequireAuth } from '@/features/auth/require-auth'
 import { describeError } from '@/lib/api/errors'
 import type { Address } from '@/lib/api/types'
-import { AppHeader, Button, Card, EmptyState, ErrorState, IconButton, makeStyles, Screen, Skeleton, useStyles, useToast } from '@/ui'
+import { AppHeader, ScreenTitle, Button, Card, EmptyState, ErrorState, IconButton, makeStyles, Screen, Skeleton, useStyles, useToast } from '@/ui'
 
 export default function AddressesScreen() {
   const styles = useStyles(styleFactory)
@@ -36,7 +36,7 @@ export default function AddressesScreen() {
           data={addresses.data ?? []}
           keyExtractor={(address) => address.id}
           contentContainerStyle={styles.list}
-          ListHeaderComponent={<AppHeader largeTitle="Endereços" />}
+          ListHeaderComponent={<ScreenTitle title="Endereços" />}
           renderItem={({ item }) => (
             <Card style={styles.card}>
               <View style={styles.flex}>

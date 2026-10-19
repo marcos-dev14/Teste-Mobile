@@ -1,4 +1,4 @@
-export { AppHeader } from './components/app-header'
+export { AppHeader, ScreenTitle } from './components/app-header'
 export { Button } from './components/button'
 export { Badge, ColorSwatch, Price, ProductImage, RatingStars } from './components/commerce'
 export { Card, Chip, Divider, ListItem, QuantityStepper } from './components/controls'

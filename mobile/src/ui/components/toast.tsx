@@ -49,7 +49,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     sequence.current += 1
     setToast({ ...options, id: sequence.current })
     AccessibilityInfo.announceForAccessibility(options.message)
-    timer.current = setTimeout(() => setToast(null), options.durationMs ?? 3000)
+    timer.current = setTimeout(() => setToast(null), options.durationMs ?? (options.onAction ? 5000 : 3000))
   }, [])
 
   const value = useMemo(() => ({ show, setBottomOffset }), [show])

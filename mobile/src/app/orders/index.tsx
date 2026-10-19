@@ -6,7 +6,7 @@ import { RequireAuth } from '@/features/auth/require-auth'
 import { STATUS_LABELS, useOrders } from '@/features/orders/api'
 import type { OrderSummary } from '@/lib/api/types'
 import { formatDate, formatMoney, pluralize } from '@/lib/format'
-import { AppHeader, Badge, EmptyState, ErrorState, Icon, makeStyles, PressableScale, Price, ProductImage, Screen, Skeleton, Text, useStyles, useTheme } from '@/ui'
+import { AppHeader, ScreenTitle, Badge, EmptyState, ErrorState, Icon, makeStyles, PressableScale, Price, ProductImage, Screen, Skeleton, Text, useStyles, useTheme } from '@/ui'
 
 const OrderCard = memo(function OrderCard({ order }: { order: OrderSummary }) {
   const styles = useStyles(styleFactory)
@@ -62,7 +62,7 @@ export default function OrdersScreen() {
           data={orders}
           keyExtractor={(order) => order.id}
           renderItem={({ item }) => <OrderCard order={item} />}
-          ListHeaderComponent={<AppHeader largeTitle="Meus pedidos" />}
+          ListHeaderComponent={<ScreenTitle title="Meus pedidos" />}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
             query.isPending ? (

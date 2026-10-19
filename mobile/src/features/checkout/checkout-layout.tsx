@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { RequireAuth } from '@/features/auth/require-auth'
-import { AppHeader, makeStyles, Screen, useStyles } from '@/ui'
+import { AppHeader, makeStyles, ScreenTitle, Screen, useStyles } from '@/ui'
 
 import { CheckoutSteps } from './checkout-steps'
 
@@ -18,7 +18,7 @@ export function CheckoutLayout({ step, title, children, footer }: { step: 0 | 1 
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <CheckoutSteps current={step} />
-            <AppHeader largeTitle={title} />
+            <ScreenTitle title={title} />
             {children}
           </ScrollView>
           {footer ? <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>{footer}</View> : null}

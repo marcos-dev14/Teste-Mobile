@@ -141,9 +141,9 @@ export default function ProductScreen() {
   }
 
   return (
-    <Screen edges={[]}>
+    <Screen>
       <ScrollView contentContainerStyle={{ paddingBottom: 140 + insets.bottom }} showsVerticalScrollIndicator={false}>
-        <View style={{ paddingTop: insets.top }}>
+        <View>
           <FlatList
             data={images}
             horizontal
@@ -169,7 +169,7 @@ export default function ProductScreen() {
               ))}
             </View>
           ) : null}
-          <View style={[styles.floatingHeader, { top: insets.top + theme.space.xs }]}>
+          <View style={styles.floatingHeader}>
             <IconButton
               icon="chevron-back"
               variant="surface"
@@ -271,6 +271,7 @@ const styleFactory = makeStyles((t) => ({
   loading: { gap: t.space.lg },
   floatingHeader: {
     position: 'absolute',
+    top: t.space.xs,
     left: t.space.md,
     right: t.space.md,
     flexDirection: 'row',
