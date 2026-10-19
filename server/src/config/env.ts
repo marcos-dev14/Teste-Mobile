@@ -30,6 +30,8 @@ const envSchema = z.object({
   TRUST_PROXY: booleanString.default(false),
 })
 
+const EXAMPLE_SECRET_MARKER = 'troque-por-um-segredo'
+
 export type Env = z.infer<typeof envSchema>
 
 /** Carrega `.env` do diretório atual (se existir) sem sobrescrever variáveis já definidas. */
@@ -44,6 +46,11 @@ export function parseEnv(source: NodeJS.ProcessEnv = process.env): Env {
       .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)
       .join('\n')
     throw new Error(`Configuração inválida:\n${issues}`)
+  }
+  if (result.data.NODE_ENV === 'production' && result.data.JWT_SECRET.includes(EXAMPLE_SECRET_MARKER)) {
+    throw new Error(
+      'Configuração inválida:\n  - JWT_SECRET: o valor de exemplo do .env.example não pode ser usado em produção',
+    )
   }
   return result.data
 }

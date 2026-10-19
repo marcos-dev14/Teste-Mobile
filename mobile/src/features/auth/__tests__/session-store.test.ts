@@ -56,6 +56,22 @@ describe('session store', () => {
     expect(await SecureStore.getItemAsync('vesti.session.v1')).toBeNull()
   })
 
+  it('refresh que termina depois do logout não ressuscita a sessão', async () => {
+    await SecureStore.setItemAsync('vesti.session.v1', JSON.stringify({ refreshToken: 'r', user }))
+    let resolveRefresh: (value: { tokens: ReturnType<typeof tokens> }) => void = () => {}
+    mocked.refresh.mockImplementation(() => new Promise((resolve) => (resolveRefresh = resolve)))
+    mocked.logout.mockResolvedValue(undefined)
+
+    const pending = refreshAccessToken()
+    await new Promise((resolve) => setImmediate(resolve))
+    await session.signOut()
+    resolveRefresh({ tokens: tokens(9) })
+
+    await expect(pending).resolves.toBeNull()
+    expect(useSession.getState()).toMatchObject({ status: 'anonymous', accessToken: null })
+    expect(await SecureStore.getItemAsync('vesti.session.v1')).toBeNull()
+  })
+
   it('logout limpa o aparelho mesmo se o servidor estiver fora', async () => {
     mocked.login.mockResolvedValue({ user, tokens: tokens(1) })
     mocked.logout.mockRejectedValue(new ApiError('network', 0, 'NETWORK_ERROR', 'x'))

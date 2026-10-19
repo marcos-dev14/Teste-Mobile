@@ -1,4 +1,4 @@
-import { addItem, countItems, MAX_QUANTITY_PER_ITEM, quantityInCart, removeItem, setQuantity, toPurchaseItems, type CartItem } from '../cart-logic'
+import { addItem, countItems, MAX_CART_LINES, MAX_QUANTITY_PER_ITEM, quantityInCart, removeItem, setQuantity, toPurchaseItems, type CartItem } from '../cart-logic'
 
 const base: Omit<CartItem, 'quantity'> = {
   productId: 'p1',
@@ -22,6 +22,13 @@ describe('cart-logic', () => {
     expect(items[0]!.quantity).toBe(MAX_QUANTITY_PER_ITEM)
     items = setQuantity(items, 'c1', 0)
     expect(items[0]!.quantity).toBe(1)
+  })
+
+  it('recusa nova cor além do limite de linhas do pedido, mas aceita somar em linha existente', () => {
+    let items: CartItem[] = []
+    for (let index = 0; index < MAX_CART_LINES; index += 1) items = addItem(items, { ...base, colorId: `c${index}` }, 1)
+    expect(addItem(items, { ...base, colorId: 'extra' }, 1)).toBe(items)
+    expect(quantityInCart(addItem(items, { ...base, colorId: 'c0' }, 1), 'c0')).toBe(2)
   })
 
   it('remove item', () => {

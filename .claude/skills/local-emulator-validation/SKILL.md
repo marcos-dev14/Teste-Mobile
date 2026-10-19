@@ -33,7 +33,11 @@ O app resolve automaticamente (`mobile/src/lib/env.ts`): `EXPO_PUBLIC_API_URL` �
 
 ## Checagem de conectividade
 1. Host: `curl http://127.0.0.1:3333/health/ready` → `{"status":"ok","db":"ok"}`.
-2. Emulador: `adb shell "curl -s http://10.0.2.2:3333/health"` (Android 11 inclui `curl`) → `{"status":"ok"}`.
+2. Emulador (a imagem Android 11 não tem `curl`; use o `nc` do toybox):
+   ```bash
+   adb shell "printf 'GET /health HTTP/1.0\r\n\r\n' | nc -w 3 10.0.2.2 3333"
+   ```
+   → `HTTP/1.1 200 OK` … `{"status":"ok"}`. No Git Bash, prefixe com `MSYS_NO_PATHCONV=1` comandos `adb` que usam caminhos como `/sdcard`.
 3. App: tela inicial lista produtos; o log da API mostra `GET /v1/products` com `statusCode 200`.
 
 ## Troubleshooting

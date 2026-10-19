@@ -56,6 +56,9 @@ export interface RefreshTokenRecord {
   familyId: string
   expired: boolean
   revoked: boolean
+  /** Rotacionado há menos que a janela de tolerância e com sucessor ainda ativo. */
+  rotatedWithinGrace: boolean
+  replacedBy: string | null
 }
 
 interface RefreshTokenRow {
@@ -64,6 +67,8 @@ interface RefreshTokenRow {
   family_id: string
   expired: boolean
   revoked: boolean
+  rotated_within_grace: boolean
+  replaced_by: string | null
 }
 
 // Emissão e verificação de expiração usam o relógio do banco (fonte única de tempo):
@@ -84,16 +89,38 @@ export async function insertRefreshToken(
 export async function findRefreshTokenForUpdate(
   db: Queryable,
   tokenHash: Buffer,
+  graceSeconds = 0,
 ): Promise<RefreshTokenRecord | null> {
   const { rows } = await db.query<RefreshTokenRow>(
-    `SELECT id, user_id, family_id, expires_at <= now() AS expired, revoked_at IS NOT NULL AS revoked
-       FROM refresh_tokens WHERE token_hash = $1 FOR UPDATE`,
-    [tokenHash],
+    `SELECT t.id, t.user_id, t.family_id, t.expires_at <= now() AS expired, t.revoked_at IS NOT NULL AS revoked,
+            t.replaced_by,
+            (t.revoked_at > now() - make_interval(secs => $2)
+             AND EXISTS (SELECT 1 FROM refresh_tokens s WHERE s.id = t.replaced_by AND s.revoked_at IS NULL))
+              AS rotated_within_grace
+       FROM refresh_tokens t WHERE t.token_hash = $1 FOR UPDATE OF t`,
+    [tokenHash, graceSeconds],
   )
   const row = rows[0]
   return row
-    ? { id: row.id, userId: row.user_id, familyId: row.family_id, expired: row.expired, revoked: row.revoked }
+    ? {
+        id: row.id,
+        userId: row.user_id,
+        familyId: row.family_id,
+        expired: row.expired,
+        revoked: row.revoked,
+        rotatedWithinGrace: row.rotated_within_grace === true,
+        replacedBy: row.replaced_by,
+      }
     : null
+}
+
+/** Trava o token e informa se ainda está ativo (não revogado e não expirado). */
+export async function lockActiveRefreshToken(db: Queryable, id: string): Promise<boolean> {
+  const { rows } = await db.query<{ active: boolean }>(
+    'SELECT revoked_at IS NULL AND expires_at > now() AS active FROM refresh_tokens WHERE id = $1 FOR UPDATE',
+    [id],
+  )
+  return rows[0]?.active === true
 }
 
 export async function markRefreshTokenRotated(db: Queryable, id: string, replacedBy: string): Promise<void> {

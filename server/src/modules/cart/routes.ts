@@ -2,12 +2,12 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 
 import type { Pool } from '../../db/pool.js'
-import { purchaseItemSchema, uuidSchema } from '../../lib/schemas.js'
+import { MAX_LINES_PER_ORDER, purchaseItemSchema, uuidSchema } from '../../lib/schemas.js'
 import type { ZodTypeProvider } from '../../lib/zod-compiler.js'
 import { aggregateItems, buildQuote, loadColorsForPricing } from '../orders/pricing.js'
 
 export const quoteBodySchema = z
-  .object({ items: z.array(purchaseItemSchema).min(1, 'O carrinho está vazio.').max(50) })
+  .object({ items: z.array(purchaseItemSchema).min(1, 'O carrinho está vazio.').max(MAX_LINES_PER_ORDER) })
   .strict()
 
 export const quoteLineSchema = z.object({

@@ -22,11 +22,22 @@ export function resolveApiUrl(options: {
   return options.platform === 'android' ? `http://10.0.2.2:${API_PORT}` : `http://127.0.0.1:${API_PORT}`
 }
 
+/** Em build de release a API precisa ser HTTPS (HTTP só no desenvolvimento local). */
+export function assertSecureInRelease(url: string, isDev: boolean): string {
+  if (!isDev && !url.startsWith('https://')) {
+    throw new Error('EXPO_PUBLIC_API_URL deve usar https:// em builds de release.')
+  }
+  return url
+}
+
 export const env = {
-  apiUrl: resolveApiUrl({
-    explicit: process.env.EXPO_PUBLIC_API_URL,
-    hostUri: Constants.expoConfig?.hostUri,
-    platform: Platform.OS,
-  }),
+  apiUrl: assertSecureInRelease(
+    resolveApiUrl({
+      explicit: process.env.EXPO_PUBLIC_API_URL,
+      hostUri: Constants.expoConfig?.hostUri,
+      platform: Platform.OS,
+    }),
+    __DEV__,
+  ),
   appVersion: Constants.expoConfig?.version ?? '0.0.0',
 }

@@ -2,6 +2,8 @@ import type { PurchaseItem } from '@/lib/api/types'
 
 /** Mesmo limite aplicado pelo servidor. */
 export const MAX_QUANTITY_PER_ITEM = 20
+/** Cores distintas por pedido (mesmo limite do servidor). */
+export const MAX_CART_LINES = 20
 
 /**
  * Item do carrinho local. `snapshot` serve só para exibição imediata/offline;
@@ -31,6 +33,7 @@ export function addItem(items: CartItem[], item: Omit<CartItem, 'quantity'>, qua
         : current,
     )
   }
+  if (items.length >= MAX_CART_LINES) return items
   return [...items, { ...item, quantity: clamp(quantity) }]
 }
 

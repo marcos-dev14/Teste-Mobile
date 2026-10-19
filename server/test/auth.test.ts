@@ -104,7 +104,8 @@ describe('auth', () => {
       await ctx.app.inject({ method: 'POST', url: '/v1/auth/refresh', payload: { refreshToken: user.tokens.refreshToken } })
     ).json().tokens
 
-    // Atacante reapresenta o token antigo.
+    // Atacante reapresenta o token antigo depois da janela de tolerância.
+    await ctx.pool.query("UPDATE refresh_tokens SET revoked_at = now() - interval '5 minutes' WHERE revoked_at IS NOT NULL")
     const reuse = await ctx.app.inject({
       method: 'POST',
       url: '/v1/auth/refresh',
@@ -119,6 +120,24 @@ describe('auth', () => {
       payload: { refreshToken: rotated.refreshToken },
     })
     expect(legit.statusCode).toBe(401)
+  })
+
+  it('refresh duplicado dentro da janela de tolerância não derruba a sessão', async () => {
+    const user = await registerUser(ctx.app)
+    const refresh = () =>
+      ctx.app.inject({ method: 'POST', url: '/v1/auth/refresh', payload: { refreshToken: user.tokens.refreshToken } })
+    // Ex.: o cliente perdeu a resposta (timeout) e repetiu com o mesmo token.
+    const [first, second] = await Promise.all([refresh(), refresh()])
+    expect([first.statusCode, second.statusCode]).toEqual([200, 200])
+
+    // Passada a janela, reapresentar o token original volta a ser reuso e revoga a família.
+    await ctx.pool.query("UPDATE refresh_tokens SET revoked_at = now() - interval '5 minutes' WHERE revoked_at IS NOT NULL")
+    expect((await refresh()).statusCode).toBe(401)
+    const latest = [first, second].map((response) => response.json().tokens.refreshToken as string)
+    for (const refreshToken of latest) {
+      const response = await ctx.app.inject({ method: 'POST', url: '/v1/auth/refresh', payload: { refreshToken } })
+      expect(response.statusCode).toBe(401)
+    }
   })
 
   it('logout revoga o refresh token', async () => {

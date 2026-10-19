@@ -8,7 +8,7 @@ interface CheckoutState {
   paymentMethod: PaymentMethod
   /** Chave de idempotência vinculada ao conteúdo do pedido (ver `idempotencyKeyFor`). */
   idempotency: { key: string; signature: string } | null
-  setAddress: (id: string) => void
+  setAddress: (id: string | null) => void
   setPaymentMethod: (method: PaymentMethod) => void
   reset: () => void
 }

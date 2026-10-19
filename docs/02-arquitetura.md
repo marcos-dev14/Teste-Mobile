@@ -52,7 +52,7 @@ Alternativas avaliadas:
 - **Access token** JWT HS256 (`@fastify/jwt`), 15 min, `sub = userId`.
 - **Refresh token** opaco (32 bytes aleatórios), armazenado apenas como **hash SHA-256**, 30 dias, **rotação a cada uso** e **detecção de reuso** (reuso de token já rotacionado revoga toda a família → mitiga roubo de token).
 - Senhas com **scrypt nativo do Node** (`N=2^15, r=8, p=1`, salt de 16 bytes, comparação em tempo constante). Sem dependência nativa (o `bcrypt` antigo trazia `node-pre-gyp`/`tar` vulneráveis — S15). Login com usuário inexistente também executa scrypt contra hash fictício (mitiga enumeração por tempo).
-- Política de senha: 8–72 caracteres, ao menos 1 letra e 1 número, validada **no backend** (S11).
+- Política de senha: 8–128 caracteres, ao menos 1 letra e 1 número, validada **no backend** (S11).
 - No app: tokens no **expo-secure-store** (Keystore/Keychain) (S13); perfil buscado de `/me`; interceptor faz refresh único concorrente (single-flight) e encerra a sessão se o refresh falhar.
 
 ### ADR-06 — Autorização e integridade comercial
@@ -107,7 +107,7 @@ O original coletava número de cartão e CVV e os descartava (S12). A nova vers�
 | POST | `/v1/auth/refresh` | — | rotação: `{ tokens }` |
 | POST | `/v1/auth/logout` | — | revoga a família do refresh token (204) |
 | GET | `/v1/me` | ✓ | perfil |
-| GET | `/v1/products?search&sort&page&pageSize` | — | `{ data, page, pageSize, total }`; `sort ∈ relevance,price_asc,price_desc,rating,newest` |
+| GET | `/v1/products?search&sort&page&pageSize` | — | `{ data, page, pageSize, total }`; `sort ∈ featured,price_asc,price_desc,newest` |
 | GET | `/v1/products/:id` | — | detalhe com cores, imagens e estoque |
 | POST | `/v1/cart/quote` | — | preços/estoque/totais calculados no servidor |
 | GET/POST | `/v1/addresses` | ✓ | listar/criar endereços próprios |

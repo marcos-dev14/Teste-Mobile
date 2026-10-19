@@ -7,6 +7,7 @@ import type { Env } from './config/env.js'
 import type { Pool } from './db/pool.js'
 import { serializerCompiler, validatorCompiler } from './lib/zod-compiler.js'
 import { addressRoutes } from './modules/addresses/routes.js'
+import { createAddressesService } from './modules/addresses/service.js'
 import { authRoutes } from './modules/auth/routes.js'
 import { createAuthService } from './modules/auth/service.js'
 import { cartRoutes } from './modules/cart/routes.js'
@@ -81,6 +82,7 @@ export async function buildApp({ env, pool, logger }: BuildAppOptions) {
     refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
   })
   const ordersService = createOrdersService({ pool })
+  const addressesService = createAddressesService({ pool })
 
   await app.register(healthRoutes(pool))
   await app.register(
@@ -88,7 +90,7 @@ export async function buildApp({ env, pool, logger }: BuildAppOptions) {
       await v1.register(authRoutes(authService))
       await v1.register(productRoutes(pool))
       await v1.register(cartRoutes(pool))
-      await v1.register(addressRoutes(pool))
+      await v1.register(addressRoutes(addressesService))
       await v1.register(orderRoutes(ordersService))
     },
     { prefix: '/v1' },

@@ -1,8 +1,10 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { View } from 'react-native'
 
 import { AddressSummary } from '@/features/addresses/address-card'
 import { useAddresses } from '@/features/addresses/api'
+import { useCurrentUser } from '@/features/auth/require-auth'
 import { toPurchaseItems } from '@/features/cart/cart-logic'
 import { useCartQuote } from '@/features/cart/hooks'
 import { useCartStore } from '@/features/cart/store'
@@ -11,6 +13,7 @@ import { idempotencyKeyFor, useCheckout } from '@/features/checkout/store'
 import { PAYMENT_LABELS, usePlaceOrder } from '@/features/orders/api'
 import { describeError, isApiError } from '@/lib/api/errors'
 import { formatMoney, pluralize } from '@/lib/format'
+import { queryKeys } from '@/lib/query-keys'
 import { haptics } from '@/lib/haptics'
 import { Button, Card, Divider, ErrorState, makeStyles, Price, ProductImage, Skeleton, Text, useStyles, useToast } from '@/ui'
 
@@ -23,6 +26,8 @@ export default function CheckoutReviewScreen() {
   const addressId = useCheckout((state) => state.addressId)
   const paymentMethod = useCheckout((state) => state.paymentMethod)
   const placeOrder = usePlaceOrder()
+  const queryClient = useQueryClient()
+  const user = useCurrentUser()
 
   const address = addresses.data?.find((item) => item.id === addressId)
   const data = quote.data
@@ -47,6 +52,9 @@ export default function CheckoutReviewScreen() {
             void quote.refetch()
             toast.show({ tone: 'error', message: 'O estoque mudou. Revise sua sacola.', actionLabel: 'Ver sacola', onAction: () => router.navigate('/cart') })
           } else if (isApiError(error) && error.code === 'ADDRESS_NOT_FOUND') {
+            // Endereço removido (ex.: em outro aparelho): descarta a seleção e recarrega a lista.
+            useCheckout.getState().setAddress(null)
+            void queryClient.invalidateQueries({ queryKey: queryKeys.addresses(user?.id ?? 'anon') })
             toast.show({ tone: 'error', message: 'Endereço não encontrado. Escolha outro.' })
             router.navigate('/checkout/address')
           } else {

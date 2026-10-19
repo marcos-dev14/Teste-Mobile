@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import {
   isoDateSchema,
+  MAX_LINES_PER_ORDER,
   paginationQuerySchema,
   paymentMethodSchema,
   purchaseItemSchema,
@@ -12,7 +13,7 @@ export const createOrderBodySchema = z
   .object({
     addressId: uuidSchema,
     paymentMethod: paymentMethodSchema,
-    items: z.array(purchaseItemSchema).min(1, 'O pedido precisa ter ao menos um item.').max(20),
+    items: z.array(purchaseItemSchema).min(1, 'O pedido precisa ter ao menos um item.').max(MAX_LINES_PER_ORDER),
   })
   .strict()
 

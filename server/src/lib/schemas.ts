@@ -23,6 +23,9 @@ export const errorResponseSchema = z.object({
 
 export const paymentMethodSchema = z.enum(['pix', 'credit_card', 'boleto'])
 
+/** Linhas (cores distintas) por pedido/cotação. O app aplica o mesmo limite na sacola. */
+export const MAX_LINES_PER_ORDER = 20
+
 /** Quantidade máxima de uma mesma cor por pedido (também garantida por CHECK no banco). */
 export const MAX_QUANTITY_PER_ITEM = 20
 

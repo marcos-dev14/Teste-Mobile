@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { FlatList, ScrollView, useWindowDimensions, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { MAX_QUANTITY_PER_ITEM, quantityInCart } from '@/features/cart/cart-logic'
+import { MAX_CART_LINES, MAX_QUANTITY_PER_ITEM, quantityInCart } from '@/features/cart/cart-logic'
 import { useCartCount, useCartStore } from '@/features/cart/store'
 import { useProduct } from '@/features/catalog/hooks'
 import { isApiError } from '@/lib/api/errors'
@@ -112,6 +112,10 @@ export default function ProductScreen() {
   const soldOut = !color || color.stock === 0
   const handleAdd = () => {
     if (!color) return
+    if (inCart === 0 && cartItems.length >= MAX_CART_LINES) {
+      toast.show({ tone: 'info', message: `A sacola aceita até ${MAX_CART_LINES} itens diferentes por pedido.` })
+      return
+    }
     if (maxAddable === 0) {
       toast.show({ tone: 'info', message: 'Você já tem na sacola todas as unidades disponíveis desta cor.' })
       return

@@ -1,5 +1,5 @@
 import { router } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { View } from 'react-native'
 
 import { AddressOption } from '@/features/addresses/address-card'
@@ -12,18 +12,14 @@ import { Button, ErrorState, makeStyles, Skeleton, Text, useStyles } from '@/ui'
 export default function CheckoutAddressScreen() {
   const styles = useStyles(styleFactory)
   const addresses = useAddresses()
-  const selectedId = useCheckout((state) => state.addressId)
+  const storedId = useCheckout((state) => state.addressId)
   const setAddress = useCheckout((state) => state.setAddress)
   const [adding, setAdding] = useState(false)
 
   const list = addresses.data ?? []
-  const selectedExists = list.some((address) => address.id === selectedId)
-  const newestId = list[0]?.id
-
-  // Seleciona o endereço mais recente se nada válido estiver escolhido.
-  useEffect(() => {
-    if (!selectedExists && newestId) setAddress(newestId)
-  }, [selectedExists, newestId, setAddress])
+  // Seleção efetiva derivada no render: o escolhido, se ainda existir; senão o mais recente.
+  const selectedId = list.some((address) => address.id === storedId) ? storedId : (list[0]?.id ?? null)
+  const selectedExists = selectedId !== null
 
   const showForm = adding || (addresses.isSuccess && list.length === 0)
 
@@ -35,7 +31,10 @@ export default function CheckoutAddressScreen() {
         showForm ? undefined : (
           <Button
             title="Continuar para pagamento"
-            onPress={() => router.push('/checkout/payment')}
+            onPress={() => {
+              if (selectedId) setAddress(selectedId)
+              router.push('/checkout/payment')
+            }}
             disabled={!selectedExists}
             fullWidth
           />

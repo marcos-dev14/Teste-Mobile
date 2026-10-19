@@ -1,132 +1,65 @@
-# 🛒 Teste Prático - Desenvolvedor Mobile Full Stack
+# Vesti — mini e-commerce (v2)
 
-## 📌 Descrição Geral
+Aplicativo mobile de e-commerce (Expo / React Native) com API própria (Node.js + Fastify + PostgreSQL).
+Esta versão é uma reengenharia completa do teste prático original (NestJS + Prisma + NativeWind). O histórico da v1 está no branch `main`.
 
-O objetivo deste teste é desenvolver uma aplicação **mobile de e-commerce** seguindo um design pré-definido no **Figma**. A aplicação deve permitir que os usuários naveguem por produtos, adicionem itens ao carrinho e finalizem suas compras.
+| Camada | Tecnologia |
+|---|---|
+| App | Expo SDK 52 · React Native 0.76 · Expo Router 4 · TypeScript · React Query · Zustand · Reanimated 3 · expo-image · expo-secure-store |
+| API | Node.js 24 · Fastify 5 · Zod 4 · @fastify/jwt · helmet · CORS · rate limit · pino |
+| Banco | PostgreSQL 16 · `pg` (SQL explícito, sem ORM) · migrations SQL versionadas com checksum |
+| Testes | Vitest + Postgres real (API) · jest-expo + Testing Library (app) |
 
-A aplicação foi desenvolvida utilizando **React Native (Expo)** para o frontend e **Node.js (NestJS)** para o backend, utilizando **Prisma** para a camada de acesso ao banco de dados.
+## Funcionalidades
+- Catálogo com busca no servidor (sem diferenciar acentos), ordenação, paginação infinita e grade responsiva.
+- Detalhe do produto com variações de cor, estoque por cor e galeria.
+- Sacola persistida no aparelho, com preços, estoque e totais **calculados pelo servidor**.
+- Cadastro e login com sessão segura (access token em memória e refresh token rotativo no SecureStore).
+- Checkout em 3 etapas (entrega → pagamento → revisão) com pedido transacional e idempotente.
+- Histórico e detalhe de pedidos; gerenciamento de endereços.
+- Tema claro/escuro, acessibilidade (rótulos, papéis, áreas de toque ≥ 44 dp), estados de carregamento/erro/vazio/offline.
 
-## ⚙️ Tecnologias Utilizadas
+## Início rápido
+```powershell
+# 1) Banco
+cd server
+docker compose up -d
 
-### 📱 **Frontend (Mobile)**
-- **[React Native](https://reactnative.dev/)** com **[Expo](https://expo.dev/)**
-- **[Expo Router](https://expo.github.io/router/)** para navegação
-- **[React Hook Form](https://react-hook-form.com/)** para gerenciamento de formulários
-- **[Zod](https://zod.dev/)** para validação de formulários
-- **[React Query](https://tanstack.com/query/latest)** para requisições e cache de dados
-- **[Tailwindcss](https://tailwindcss.com/)** com **[NativeWind](https://www.nativewind.dev/)** para estilização
+# 2) API
+copy .env.example .env    # defina JWT_SECRET (instruções no arquivo)
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev               # http://0.0.0.0:3333
 
-### 🖥️ **Backend (API)**
-- **[Node.js](https://nodejs.org/)** com **[NestJS](https://nestjs.com/)**
-- **[Prisma ORM](https://www.prisma.io/)** para acesso ao banco de dados
-- **[PostgreSQL](https://www.postgresql.org/)** como banco de dados
-- **[Docker](https://www.docker.com/)** para rodar o PostgreSQL e o backend
-
-### 🛠️ **Outros**
-- **TypeScript** em todo o projeto
-- Testes automatizados com **Jest**
-- Gerenciamento de estado adequado para performance e estabilidade
-
-## 🚀 **Como Rodar o Projeto**
-
-## 🔹 **1. Clonar o repositório**
-```sh
-git clone https://github.com/marcos-dev14/Teste-Mobile.git
-cd Teste-Mobile
+# 3) App (em outro terminal, com o emulador aberto)
+cd mobile
+npm install
+npx expo start            # pressione "a" para abrir no emulador Android
 ```
+Conta de demonstração (somente desenvolvimento): `demo@vesti.dev` / `vesti1234`.
 
-## **Configuração do backend**
+Guia completo, verificação de rede emulador ↔ API e troubleshooting: **[docs/05-execucao-local.md](docs/05-execucao-local.md)**.
 
-1. **Navegue até o diretório do server:**
-  ```sh
-  cd .\server
-  ```
+## Comandos
+| Onde | Comando | O que faz |
+|---|---|---|
+| server | `npm run dev` | API com recarga automática |
+| server | `npm run build` / `npm start` | build e execução compilada |
+| server | `npm run db:migrate` / `db:status` / `db:seed` | migrations e dados de desenvolvimento |
+| server | `npm run typecheck` / `lint` / `test` | qualidade (testes usam apenas o banco `ecommerce_test`) |
+| mobile | `npx expo start` | Metro + Expo Go |
+| mobile | `npm run typecheck` / `lint` / `test` | qualidade |
 
-2. **Copie o arquivo `.env.example` para `.env` e configure as variáveis de ambiente:**
-  ```sh
-  cp .env.example .env
-  ```
-3. **Suba o banco de dados com Docker:**
-  ```sh
-  docker-compose up -d
-  ```
+## Documentação
+| Documento | Conteúdo |
+|---|---|
+| [01 — Auditoria](docs/01-auditoria.md) | Problemas do sistema original, com evidência e criticidade |
+| [02 — Arquitetura](docs/02-arquitetura.md) | ADRs, contrato da API e plano por etapas |
+| [03 — Convenções](docs/03-convencoes.md) | Padrões de código e Definition of Done |
+| [04 — Segurança e performance](docs/04-seguranca-e-performance.md) | Modelo de ameaças, revisão, medições |
+| [05 — Execução local](docs/05-execucao-local.md) | Passo a passo, emulador, validação ponta a ponta |
+| [06 — Pendências e futuro](docs/06-pendencias-e-futuro.md) | Limitações conhecidas e próximos passos |
 
-4. **Instale as dependências:**
-  ```sh
-  npm install
-  ```
-
-5. **Execute as migrações do Prisma:**
-  ```sh
-  npx prisma migrate dev
-  ```
-
-6. **Criação dos produtos e da conta de login banco de dados:**
-  ```sh
-  npm run seed
-  ```
-
-7. **Inicie o servidor:**
-  ```sh
-  npm run start ou npm run start:dev
-  ```
-
-8. **Comando para rodar os testes:**
-  ```sh
-  npm run test
-  ```
-
-## **Configuração do mobile**
-
-1. **Navegue até o diretório do mobile:**
-  ```sh
-  cd ..\mobile\
-  ```
-
-2. **Instale as dependências:**
-  ```sh
-  npm install
-  ```
-3. **Acesse o arquivo axios.ts no campinho src/lib/axios.ts e configure o endereço do backend com o IP da sua máquina e a porta 3000:**
-  ```sh
-  baseURL: "http://192.168.0.106:3000",
-  ```
-4. **Inicie o projeto mobile:**
-  ```sh
-  npx expo start
-  ```
-
-Abra o Expo Go no celular ou use um emulador para testar o app.
-
-## **Documentação Técnica e Funcionalidades Extras**
-
-## Backend
-
-PostgreSQL: Foi escolhido como banco de dados relacional devido à sua robustez, escalabilidade e suporte.
-
-Docker: Utilizei o para garantir a consistência entre ambientes de desenvolvimento e produção.
-
-Pasta DTO: Organiza e valida dados transferidos entre partes da aplicação.
-
-Tabelas: Criadas para usuário, produto, endereço e pedido, garantindo estruturação dos dados.
-
-
-## Mobile
-
-Expo Router: Facilita a navegação entre telas.
-
-TailwindCSS + NativeWind: Agiliza a criação de layouts.
-
-Pasta Theme: Centraliza as cores do projeto para consistência visual.
-
-React Query: Gerencia requisições à API, substituindo useState e melhorando performance.
-
-React Hook Form + Zod: Combinação eficiente para validação e criação de formulários.
-
-Contextos: Dois contextos criados (usuário e carrinho) para gerenciar dados globais.
-
-Pasta API: Centraliza chamadas à API, integradas com React Query.
-
-Async Storage: Persiste dados do usuário e carrinho, evitando logins repetidos e mantendo o carrinho ao fechar o app.
-
-Adaptações no Figma: Tela de criação de usuário adicionada e textos traduzidos para português, optei em traduzir para facilitar a compreensão dos usuários e seguir um padrão de linguagem.
+## Equipe de agentes (Claude Code)
+Agentes especializados em `.claude/agents/`: arquiteto, mobile, UI/UX, motion, backend, banco de dados, segurança, performance e revisor full stack. Skills reutilizáveis em `.claude/skills/` documentam os procedimentos de cada área.

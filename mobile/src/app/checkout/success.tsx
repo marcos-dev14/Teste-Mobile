@@ -5,6 +5,13 @@ import Animated, { ReduceMotion, ZoomIn } from 'react-native-reanimated'
 
 import { Button, Icon, makeStyles, Screen, Text, useStyles } from '@/ui'
 
+/** Sai da confirmação para as abas, mesmo quando a tela foi aberta sem pilha (deep link). */
+function leaveTo(href: '/' | { pathname: '/orders/[id]'; params: { id: string } }) {
+  if (router.canDismiss()) router.dismissAll()
+  if (href === '/') router.navigate('/')
+  else router.push(href)
+}
+
 export default function OrderSuccessScreen() {
   const styles = useStyles(styleFactory)
   const { orderId, number } = useLocalSearchParams<{ orderId: string; number?: string }>()
@@ -12,7 +19,7 @@ export default function OrderSuccessScreen() {
   // Voltar a partir da confirmação leva ao início, nunca de volta ao checkout.
   useEffect(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      router.dismissAll()
+      leaveTo('/')
       return true
     })
     return () => subscription.remove()
@@ -40,12 +47,11 @@ export default function OrderSuccessScreen() {
         <Button
           title="Ver detalhes do pedido"
           onPress={() => {
-            router.dismissAll()
-            router.push({ pathname: '/orders/[id]', params: { id: orderId } })
+            leaveTo({ pathname: '/orders/[id]', params: { id: orderId } })
           }}
           fullWidth
         />
-        <Button title="Continuar comprando" variant="ghost" onPress={() => router.dismissAll()} fullWidth />
+        <Button title="Continuar comprando" variant="ghost" onPress={() => leaveTo('/')} fullWidth />
       </View>
     </Screen>
   )

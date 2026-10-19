@@ -32,9 +32,11 @@ export const errorHandlerPlugin = fp(async (app: FastifyInstance) => {
       })
     }
 
-    // Erro de validação (o validatorCompiler devolve o ZodError; o Fastify anexa o contexto).
-    if (error instanceof z.ZodError) {
-      const context = (error as z.ZodError & { validationContext?: string }).validationContext
+    // Erro de validação de ENTRADA: o Fastify anexa `validationContext` (body, querystring…).
+    // Um ZodError sem contexto vem do serializerCompiler (resposta fora do contrato): é bug do
+    // servidor e cai no 500 abaixo, com log, sem expor campos da resposta.
+    const context = error instanceof z.ZodError ? (error as z.ZodError & { validationContext?: string }).validationContext : undefined
+    if (error instanceof z.ZodError && context) {
       return send(reply, request, 400, {
         code: 'VALIDATION_ERROR',
         message: 'Dados inválidos.',

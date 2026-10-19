@@ -25,6 +25,12 @@ export const toUserDto = (user: repo.UserRecord): UserDto => ({
   createdAt: user.createdAt.toISOString(),
 })
 
+/**
+ * Janela de tolerância para refresh duplicado (timeout do cliente, app encerrado antes de salvar).
+ * Dentro dela, reapresentar o token anterior substitui o sucessor em vez de revogar a família.
+ */
+export const REFRESH_REUSE_GRACE_SECONDS = 30
+
 const invalidCredentials = () => unauthorized('E-mail ou senha incorretos.', 'INVALID_CREDENTIALS')
 const invalidRefresh = () => unauthorized('Sessão expirada. Entre novamente.', 'INVALID_REFRESH_TOKEN')
 
@@ -79,8 +85,21 @@ export function createAuthService(deps: AuthServiceDeps) {
     /** Rotação com detecção de reuso: apresentar um token já rotacionado revoga a família inteira. */
     async refresh(refreshToken: string): Promise<TokensDto> {
       const outcome = await withTransaction(pool, async (tx) => {
-        const current = await repo.findRefreshTokenForUpdate(tx, hashToken(refreshToken))
+        const current = await repo.findRefreshTokenForUpdate(tx, hashToken(refreshToken), REFRESH_REUSE_GRACE_SECONDS)
         if (!current) return { kind: 'invalid' as const }
+        if (
+          current.revoked &&
+          current.rotatedWithinGrace &&
+          current.replacedBy &&
+          !current.expired &&
+          // Reconfere com o sucessor travado: um refresh concorrente pode tê-lo rotacionado.
+          (await repo.lockActiveRefreshToken(tx, current.replacedBy))
+        ) {
+          // Duplicata benigna: o sucessor emitido há instantes nunca chegou ao cliente. Ele é substituído.
+          const { tokens, tokenId } = await issueTokens(tx, current.userId, current.familyId)
+          await repo.markRefreshTokenRotated(tx, current.replacedBy, tokenId)
+          return { kind: 'ok' as const, tokens }
+        }
         if (current.revoked) {
           const revoked = await repo.revokeRefreshTokenFamily(tx, current.familyId)
           return { kind: 'reused' as const, userId: current.userId, revoked }

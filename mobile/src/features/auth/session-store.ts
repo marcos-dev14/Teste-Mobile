@@ -14,6 +14,8 @@ interface SessionState {
   user: User | null
   /** Access token apenas em memória (vida curta). O refresh token fica no SecureStore. */
   accessToken: string | null
+  /** Como a última sessão terminou: 'user' (logout explícito) ou 'expired' (servidor recusou o refresh). */
+  endedBy: 'user' | 'expired' | null
 }
 
 interface PersistedSession {
@@ -27,6 +29,7 @@ export const useSession = create<SessionState>(() => ({
   status: 'loading',
   user: null,
   accessToken: null,
+  endedBy: null,
 }))
 
 async function readPersisted(): Promise<PersistedSession | null> {
@@ -44,14 +47,19 @@ async function persist(session: PersistedSession): Promise<void> {
   await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(session))
 }
 
-async function clearSession(): Promise<void> {
-  useSession.setState({ status: 'anonymous', user: null, accessToken: null })
+/** Incrementado a cada login/logout: resultados de refresh iniciados antes são descartados. */
+let generation = 0
+
+async function clearSession(endedBy: 'user' | 'expired' = 'expired'): Promise<void> {
+  generation += 1
+  useSession.setState({ status: 'anonymous', user: null, accessToken: null, endedBy })
   await SecureStore.deleteItemAsync(STORAGE_KEY).catch(() => {})
 }
 
 async function startSession({ user, tokens }: AuthResponse): Promise<void> {
+  generation += 1
   await persist({ refreshToken: tokens.refreshToken, user })
-  useSession.setState({ status: 'authenticated', user, accessToken: tokens.accessToken })
+  useSession.setState({ status: 'authenticated', user, accessToken: tokens.accessToken, endedBy: null })
 }
 
 let refreshing: Promise<string | null> | null = null
@@ -63,6 +71,7 @@ let refreshing: Promise<string | null> | null = null
  */
 export function refreshAccessToken(): Promise<string | null> {
   refreshing ??= (async () => {
+    const startedAt = generation
     const saved = await readPersisted()
     if (!saved) {
       await clearSession()
@@ -70,11 +79,13 @@ export function refreshAccessToken(): Promise<string | null> {
     }
     try {
       const { tokens } = await authApi.refresh(saved.refreshToken)
+      // Logout (ou novo login) aconteceu durante o refresh: não ressuscitar a sessão antiga.
+      if (generation !== startedAt) return null
       await persist({ refreshToken: tokens.refreshToken, user: saved.user })
       useSession.setState({ status: 'authenticated', accessToken: tokens.accessToken })
       return tokens.accessToken
     } catch (error) {
-      if (isApiError(error) && error.status === 401) {
+      if (isApiError(error) && error.status === 401 && generation === startedAt) {
         await clearSession()
         return null
       }
@@ -118,7 +129,7 @@ export const session = {
   /** Revoga no servidor (melhor esforço) e limpa o dispositivo mesmo offline. */
   async signOut(): Promise<void> {
     const saved = await readPersisted()
-    await clearSession()
+    await clearSession('user')
     if (saved) await authApi.logout(saved.refreshToken).catch(() => {})
   },
 }

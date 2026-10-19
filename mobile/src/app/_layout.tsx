@@ -1,7 +1,7 @@
 import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
 import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native'
-import { QueryClientProvider, useQueryClient } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { useFonts } from 'expo-font'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
@@ -11,7 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { session, useSession } from '@/features/auth/session-store'
-import { useCheckout } from '@/features/checkout/store'
+import { useSessionCleanup } from '@/features/auth/use-session-cleanup'
 import { createQueryClient, wireQueryLifecycle } from '@/lib/query-client'
 import { ThemeProvider, ToastProvider, useTheme } from '@/ui'
 
@@ -57,15 +57,8 @@ export default function RootLayout() {
   )
 }
 
-/** Ao trocar/encerrar a sessão, descarta dados do usuário anterior em cache. */
 function SessionEffects() {
-  const client = useQueryClient()
-  const userId = useSession((state) => state.user?.id ?? null)
-  useEffect(() => {
-    if (userId) return
-    client.removeQueries({ queryKey: ['user'] })
-    useCheckout.getState().reset()
-  }, [userId, client])
+  useSessionCleanup()
   return null
 }
 
