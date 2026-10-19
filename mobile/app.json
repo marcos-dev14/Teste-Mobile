@@ -1,27 +1,37 @@
 {
   "expo": {
-    "name": "My Demo App",
-    "slug": "my-demo-app",
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "name": "Vesti",
+    "slug": "vesti",
+    "version": "2.0.0",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "my-demo-app",
+    "scheme": "vesti",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "backgroundColor": "#F6F3EE",
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F6F3EE",
+      "dark": {
+        "image": "./assets/images/splash-icon.png",
+        "backgroundColor": "#141210"
+      }
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.marcospaulodev.vesti"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#F6F3EE"
       },
-      "package": "com.marcospaulodev.mobile"
+      "package": "com.marcospaulodev.mobile",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,14 +41,8 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "Allow My Demo App to access your camera",
-          "microphonePermission": "Allow My Demo App to access your microphone",
-          "recordAudioAndroid": true
-        }
-      ]
+      "expo-secure-store",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
