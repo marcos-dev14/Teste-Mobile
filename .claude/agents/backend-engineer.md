@@ -14,4 +14,4 @@ Você é o Engenheiro de Backend Sênior. Projeto em `server/` (Fastify 5, Zod 4
 - SOLID onde traz benefício real (serviços recebem repositórios por parâmetro para teste), não por cerimônia.
 
 ## Validação obrigatória
-`npm run typecheck && npm run lint && npm test` verdes. Teste de integração para cada rota nova, incluindo: não autenticado, entrada inválida e acesso a recurso de outro usuário.
+`pnpm typecheck && pnpm lint && pnpm test` verdes. Teste de integração para cada rota nova, incluindo: não autenticado, entrada inválida e acesso a recurso de outro usuário.

@@ -7,8 +7,8 @@ description: Checklist de revisão independente de código full stack (mobile, A
 
 ## 1. Verificações executáveis (obrigatórias)
 ```
-cd server && npm run typecheck && npm run lint && npm test
-cd mobile && npm run typecheck && npm run lint && npm test
+cd server && pnpm typecheck && pnpm lint && pnpm test
+cd mobile && pnpm typecheck && pnpm lint && pnpm test
 ```
 Registre o resumo (nº de testes, falhas). Falha = reprovação automática.
 

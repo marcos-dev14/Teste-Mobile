@@ -28,7 +28,7 @@ Premissa: cliente e rede são hostis. O servidor decide identidade, preço, esto
 - [ ] App: tokens apenas no SecureStore; nada sensível em logs/console; deep links não executam ações sem confirmação.
 
 ## Dependências
-`npm audit --omit=dev --audit-level=high` em `server/` e `mobile/`. Classifique: **runtime alcançável** (corrigir/atualizar), **apenas build/dev** (registrar, atualizar quando o SDK permitir). Justifique formalmente o que ficar.
+`pnpm audit --prod --audit-level high` em `server/` e `mobile/`. Classifique: **runtime alcançável** (corrigir/atualizar), **apenas build/dev** (registrar, atualizar quando o SDK permitir). Justifique formalmente o que ficar.
 
 ## Erros comuns
 - Confiar em validação do app. Validar só tipo, não faixa (quantidade negativa).
@@ -36,4 +36,4 @@ Premissa: cliente e rede são hostis. O servidor decide identidade, preço, esto
 - Logar o body de login.
 
 ## Validação
-`npm test` (inclui suíte de segurança) verde; `docs/04-seguranca-e-performance.md` atualizado com achados e status.
+`pnpm test` (inclui suíte de segurança) verde; `docs/04-seguranca-e-performance.md` atualizado com achados e status.

@@ -14,7 +14,7 @@ description: Estratégia e procedimentos de teste do projeto — unitários e in
 | Ponta a ponta | roteiro manual guiado no emulador + `curl` | `docs/05-execucao-local.md` | fluxo de compra real |
 
 ## Backend
-- `npm test` executa migrations no banco de teste (`DATABASE_URL_TEST`) uma vez (`test/global-setup.ts`) e cada arquivo limpa as tabelas com `TRUNCATE … RESTART IDENTITY CASCADE` **somente** no banco de teste (o helper aborta se o nome do banco não terminar em `_test`).
+- `pnpm test` executa migrations no banco de teste (`DATABASE_URL_TEST`) uma vez (`test/global-setup.ts`) e cada arquivo limpa as tabelas com `TRUNCATE … RESTART IDENTITY CASCADE` **somente** no banco de teste (o helper aborta se o nome do banco não terminar em `_test`).
 - Fábricas em `test/helpers.ts`: `createUser`, `login`, `seedCatalog`. Nada de depender da ordem dos testes.
 - Concorrência: dispare N pedidos em paralelo (`Promise.all`) pelo último item em estoque; esperado exatamente 1 sucesso e N-1 `409 INSUFFICIENT_STOCK`, estoque final 0.
 
@@ -32,4 +32,4 @@ Roteiro: abrir app → catálogo carrega da API → buscar "calça" → ordenar 
 - Rodar testes de integração contra o banco de desenvolvimento.
 
 ## Validação
-`server: npm test` e `mobile: npm test` verdes; roteiro e2e executado com resultado registrado (ou limitação explícita).
+`server: pnpm test` e `mobile: pnpm test` verdes; roteiro e2e executado com resultado registrado (ou limitação explícita).

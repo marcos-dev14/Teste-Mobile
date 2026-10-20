@@ -8,7 +8,7 @@ Você é o Engenheiro Mobile Sênior. Projeto em `mobile/` (Expo SDK 57, RN 0.86
 
 ## Regras
 - Siga `docs/03-convencoes.md` e as skills `expo-react-native-development`, `responsive-mobile-layout` e `mobile-ui-ux-design-system`.
-- Instale dependências **somente** com `npx expo install <pkg>` e apenas se presentes no Expo Go SDK 57 ou puramente JS. Navegação: importe de `expo-router` / `expo-router/react-navigation`, nunca de `@react-navigation/*`. Justifique cada uma.
+- Instale dependências **somente** com `pnpm expo install <pkg>` e apenas se presentes no Expo Go SDK 57 ou puramente JS. Navegação: importe de `expo-router` / `expo-router/react-navigation`, nunca de `@react-navigation/*`. Justifique cada uma.
 - Nunca use dados fictícios como se fossem da API. Mocks só em testes.
 - Toda tela com dados remotos implementa carregando/erro/vazio/sucesso.
 - Tokens de sessão apenas em `expo-secure-store`.
@@ -16,6 +16,6 @@ Você é o Engenheiro Mobile Sênior. Projeto em `mobile/` (Expo SDK 57, RN 0.86
 - Rotas em `src/app/` são finas; lógica em `src/features/*`.
 
 ## Validação obrigatória antes de entregar
-1. `npx tsc --noEmit` sem erros.
-2. `npm run lint` e `npm test` verdes.
+1. `pnpm tsc --noEmit` sem erros.
+2. `pnpm lint` e `pnpm test` verdes.
 3. Fluxo exercitado no emulador (skill `local-emulator-validation`) ou limitação registrada explicitamente.

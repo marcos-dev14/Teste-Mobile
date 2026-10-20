@@ -19,11 +19,11 @@
 | `mobile/assets/images/brand-*.png` | Camadas usadas pelo app (`Logo`, splash animada) |
 | `mobile/assets/brand/metrics.json` | Geometria do lockup consumida por `src/ui/brand/brand-assets.ts` |
 
-Todos são gerados a partir de uma única geometria por `mobile/assets/brand/build-brand.js`:
+Todos são gerados a partir de uma única geometria por `mobile/assets/brand/build-brand.js`. As ferramentas do script ficam fora do `package.json` (instaladas numa pasta temporária e resolvidas via `NODE_PATH`):
 ```powershell
 cd mobile
-npm install --no-save @resvg/resvg-js@2.6.2 opentype.js@1.3.4
-node assets/brand/build-brand.js
+pnpm --dir "$env:TEMP\vesti-brand-tools" add @resvg/resvg-js@2.6.2 opentype.js@1.3.4
+$env:NODE_PATH = "$env:TEMP\vesti-brand-tools\node_modules"; node assets/brand/build-brand.js
 ```
 Não edite os PNGs à mão; altere o script e gere novamente.
 
@@ -48,7 +48,7 @@ Não edite os PNGs à mão; altere o script e gere novamente.
 2. **Animada** (`src/ui/brand/animated-splash.tsx`): uma camada JS idêntica à nativa é montada **sobre o app já carregando**. Quando o símbolo é desenhado, ela esconde a nativa (troca invisível) e anima: o símbolo desliza para a esquerda enquanto o nome é revelado da esquerda para a direita; depois a camada some com leve ampliação (≈ 1,1 s no total, sem espera artificial). Se a imagem não carregar em 1 s, segue mesmo assim.
 3. As entradas de tela ficam bloqueadas por um portão (`EntranceGateProvider`) até a splash começar a sair, para a primeira tela não "gastar" a entrada por baixo dela. Os dados da Home já são buscados durante a splash.
 
-**Expo Go:** o Expo Go mostra o próprio carregador (ícone do app sobre a cor de fundo da splash) e não aplica a splash do plugin. A continuidade exata nativa → animada só é vista em build de desenvolvimento/produção (`npx expo run:android` ou EAS).
+**Expo Go:** o Expo Go mostra o próprio carregador (ícone do app sobre a cor de fundo da splash) e não aplica a splash do plugin. A continuidade exata nativa → animada só é vista em build de desenvolvimento/produção (`pnpm expo run:android` ou EAS).
 
 ## Entrada de telas (sem skeleton)
 O conteúdo **real** entra em grupos: sobe alguns dp e é revelado por uma máscara que avança da esquerda para a direita. Não há placeholders que imitam o layout.

@@ -7,14 +7,14 @@ description: Procedimentos de persistência com PostgreSQL e node-postgres neste
 
 ## Ambiente
 - Banco local: `docker compose up -d` em `server/` → container `mp-ecommerce-postgres`, `127.0.0.1:5442`. Banco de teste: `ecommerce_test` (criado pelo script de init do container).
-- Comandos (`server/`): `npm run db:migrate` · `npm run db:seed` · `npm run db:status`.
+- Comandos (`server/`): `pnpm db:migrate` · `pnpm db:seed` · `pnpm db:status`.
 
 ## Migrations
 1. Crie `server/db/migrations/NNNN_descricao.sql` (próximo número, 4 dígitos). Uma intenção por arquivo.
 2. Inclua constraints (`NOT NULL`, `CHECK`, `UNIQUE`, FK com `ON DELETE` explícito) e índices de FKs na mesma migration.
 3. Mudanças em tabela com dados: aditivas primeiro (nova coluna nullable → backfill → `SET NOT NULL` em migration posterior).
 4. Nunca edite migration aplicada — o runner compara SHA-256 e aborta. Corrija com nova migration.
-5. Rode `npm run db:migrate` duas vezes (segunda deve ser no-op) e os testes.
+5. Rode `pnpm db:migrate` duas vezes (segunda deve ser no-op) e os testes.
 
 ## Consultas
 - Sempre parametrizadas (`$1`). Identificadores dinâmicos (ex.: coluna de ordenação) só a partir de **whitelist** no código.

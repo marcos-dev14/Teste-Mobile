@@ -28,15 +28,15 @@ docker compose up -d
 
 # 2) API
 copy .env.example .env    # defina JWT_SECRET (instruções no arquivo)
-npm install
-npm run db:migrate
-npm run db:seed
-npm run dev               # http://0.0.0.0:3333
+pnpm install
+pnpm db:migrate
+pnpm db:seed
+pnpm dev               # http://0.0.0.0:3333
 
 # 3) App (em outro terminal, com o emulador aberto)
 cd mobile
-npm install
-npx expo start            # pressione "a" para abrir no emulador Android
+pnpm install
+pnpm expo start            # pressione "a" para abrir no emulador Android
 ```
 Conta de demonstração (somente desenvolvimento): `demo@vesti.dev` / `vesti1234`.
 
@@ -45,12 +45,12 @@ Guia completo, verificação de rede emulador ↔ API e troubleshooting: **[docs
 ## Comandos
 | Onde | Comando | O que faz |
 |---|---|---|
-| server | `npm run dev` | API com recarga automática |
-| server | `npm run build` / `npm start` | build e execução compilada |
-| server | `npm run db:migrate` / `db:status` / `db:seed` | migrations e dados de desenvolvimento |
-| server | `npm run typecheck` / `lint` / `test` | qualidade (testes usam apenas o banco `ecommerce_test`) |
-| mobile | `npx expo start` | Metro + Expo Go |
-| mobile | `npm run typecheck` / `lint` / `test` | qualidade |
+| server | `pnpm dev` | API com recarga automática |
+| server | `pnpm build` / `pnpm start` | build e execução compilada |
+| server | `pnpm db:migrate` / `db:status` / `db:seed` | migrations e dados de desenvolvimento |
+| server | `pnpm typecheck` / `lint` / `test` | qualidade (testes usam apenas o banco `ecommerce_test`) |
+| mobile | `pnpm expo start` | Metro + Expo Go |
+| mobile | `pnpm typecheck` / `lint` / `test` | qualidade |
 
 ## Documentação
 | Documento | Conteúdo |

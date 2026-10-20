@@ -17,7 +17,7 @@ Princípio central: **o cliente não é confiável**. Identidade vem do token; p
 ## 2. Decisões (ADRs resumidos)
 
 ### ADR-01 — Monorepo simples, sem workspaces
-`server/` e `mobile/` continuam como projetos npm independentes. Workspaces trariam hoisting de módulos nativos no Metro/autolinking sem ganho proporcional para 2 pacotes. Os contratos ficam tipados dos dois lados (`server/src/modules/*/schemas.ts` e `mobile/src/lib/api/types.ts`) e são verificados por **testes de contrato** no backend (as respostas são serializadas pelos schemas Zod, que removem campos não declarados).
+`server/` e `mobile/` continuam como projetos pnpm independentes (cada um com seu `pnpm-lock.yaml`). Workspaces trariam hoisting de módulos nativos no Metro/autolinking sem ganho proporcional para 2 pacotes. Os contratos ficam tipados dos dois lados (`server/src/modules/*/schemas.ts` e `mobile/src/lib/api/types.ts`) e são verificados por **testes de contrato** no backend (as respostas são serializadas pelos schemas Zod, que removem campos não declarados).
 
 ### ADR-02 — Fastify 5 + Zod 4, sem framework de DI
 - NestJS → Fastify (requisito). Sem container de DI: composição explícita em `buildApp()` com funções-fábrica (`createOrdersService({ db, ... })`). Facilita teste e leitura.
@@ -78,7 +78,7 @@ O original coletava número de cartão e CVV e os descartava (S12). A nova vers�
 - Configuração validada com Zod no boot (`src/config/env.ts`): app não sobe com `JWT_SECRET` curto ou `DATABASE_URL` ausente.
 
 ### ADR-09 — Mobile: arquitetura
-- **Expo SDK 57** (RN 0.86, React 19, New Architecture obrigatória), atualizado a partir do SDK 52 para rodar no Expo Go atual (o do iOS só aceita a versão mais recente). Versões sempre as de `npx expo install --check`; `npx expo-doctor` sem falhas.
+- **Expo SDK 57** (RN 0.86, React 19, New Architecture obrigatória), atualizado a partir do SDK 52 para rodar no Expo Go atual (o do iOS só aceita a versão mais recente). Versões sempre as de `pnpm expo install --check`; `pnpm dlx expo-doctor` sem falhas.
 - **Remover**: NativeWind/Tailwind (camada de interop em runtime; substituída por design system tipado com `StyleSheet`), Skia, expo-camera, drawer, react-content-loader, masked-view, AsyncStorage para sessão.
 - **Adicionar** (todas presentes no Expo Go): `expo-secure-store`, `expo-image` (cache em disco, placeholder, transição), `expo-haptics`, `zustand` (carrinho com seletores e persistência), fontes Google (`Fraunces` display + `Inter` texto).
 - Estrutura por feature:
@@ -122,9 +122,9 @@ O original coletava número de cartão e CVV e os descartava (S12). A nova vers�
 |---|---|---|
 | 1. Auditoria | `docs/01`, `docs/02` | Problemas com evidência e criticidade; ADRs e contrato definidos |
 | 2. Equipe de IA | `.claude/agents/*.md` (9), `.claude/skills/*/SKILL.md` (12) | Arquivos válidos com frontmatter; cada skill com procedimento, critérios, erros comuns e validação |
-| 3. Backend | Fastify + `pg` + migrations + testes | `npm run typecheck`, `npm run lint`, `npm test` verdes; migrations aplicam do zero; nenhum arquivo/dependência Prisma ou Nest |
+| 3. Backend | Fastify + `pg` + migrations + testes | `pnpm typecheck`, `pnpm lint`, `pnpm test` verdes; migrations aplicam do zero; nenhum arquivo/dependência Prisma ou Nest |
 | 4. Fundação mobile | design system, navegação, http client, sessão | `tsc --noEmit` sem erros; testes de componentes base verdes |
 | 5. Funcionalidades | todas as telas do escopo, integradas à API real | fluxos executados no emulador contra o backend local |
-| 6. Segurança/performance | `docs/04-seguranca-e-performance.md` | testes de IDOR, manipulação de preço, concorrência de estoque, refresh reuse verdes; medições registradas; `npm audit --omit=dev` sem críticas/altas no server |
+| 6. Segurança/performance | `docs/04-seguranca-e-performance.md` | testes de IDOR, manipulação de preço, concorrência de estoque, refresh reuse verdes; medições registradas; `pnpm audit --prod` sem críticas/altas no server |
 | 7. Revisão independente | relatório do revisor | achados corrigidos ou justificados; testes reexecutados |
 | 8. Validação local | `README.md` raiz, `docs/05-execucao-local.md` | banco → migrations → seed → API → app no emulador; checagem documentada da conectividade |

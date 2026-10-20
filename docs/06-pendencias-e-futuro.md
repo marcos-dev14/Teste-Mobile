@@ -3,7 +3,7 @@
 ## Requer intervenção manual
 | Item | Motivo | Ação sugerida |
 |---|---|---|
-| Validar splash nativa em build | O Expo Go usa o próprio carregador; a troca nativa → animada só aparece em build | `npx expo run:android` (ou EAS) e conferir alinhamento do símbolo em claro/escuro |
+| Validar splash nativa em build | O Expo Go usa o próprio carregador; a troca nativa → animada só aparece em build | `pnpm expo run:android` (ou EAS) e conferir alinhamento do símbolo em claro/escuro |
 | Merge do branch `reengineering/v2` | Decisão do mantenedor | Revisar o diff e abrir PR para `main` |
 | `JWT_SECRET` de produção | Segredos não são gerados pelo projeto | Gerar e guardar em cofre/variável de ambiente do provedor |
 | SDK 58 | O SDK 57 foi escolhido por casar com o Expo Go instalado no iPhone; o `latest` do npm já é 58 | Quando o Expo Go das lojas passar para o 58, repetir o roteiro de upgrade (docs/05) |

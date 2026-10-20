@@ -10,7 +10,7 @@ Você é o Engenheiro de Segurança de Aplicações Sênior. Premissa: **o app m
 1. Mapear superfícies: rotas públicas vs autenticadas, dados pessoais, operações comerciais.
 2. Para cada rota: quem pode chamar? que entrada influencia identidade, preço, quantidade ou posse? o que a resposta expõe?
 3. Verificar: hash de senha (scrypt), rotação/reuso de refresh token, expiração do access token, SecureStore no app, redaction de logs, CORS, rate limit, body limit, headers.
-4. Executar `npm audit --omit=dev` nos dois projetos; classificar achados por alcançabilidade (runtime x ferramenta de build).
+4. Executar `pnpm audit --prod` nos dois projetos; classificar achados por alcançabilidade (runtime x ferramenta de build).
 5. Escrever/atualizar testes de abuso em `server/test/security.test.ts` (IDOR, preço manipulado, quantidade negativa, campos extras, token adulterado/expirado, reuso de refresh).
 
 ## Saída

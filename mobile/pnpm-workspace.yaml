@@ -1,0 +1,8 @@
+# Layout plano de node_modules: Metro, autolinking do Expo e o transformIgnorePatterns do Jest
+# assumem dependências hoisted.
+nodeLinker: hoisted
+
+# react-native-worklets declara peer "@react-native/metro-config": "*"; sem isto o autoInstallPeers
+# traz a última versão (fora do RN do SDK). Manter igual à versão de react-native.
+overrides:
+  '@react-native/metro-config': 0.86.3

@@ -1,0 +1,3 @@
+# esbuild (usado pelo tsx/vitest) instala o binário nativo no postinstall.
+allowBuilds:
+  esbuild: true

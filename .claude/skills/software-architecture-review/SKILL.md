@@ -11,7 +11,7 @@ Base: `docs/02-arquitetura.md` (ADRs, contrato) e `docs/03-convencoes.md`.
 1. **Levante fatos**: leia o código afetado; liste módulos, dependências e chamadas envolvidas. Nada de suposição sem marcar como tal.
 2. **Formule o problema** em uma frase e o critério de sucesso mensurável.
 3. **Liste ≥ 2 opções** (inclua "não fazer nada"). Para cada: complexidade, risco, impacto em segurança/performance, custo de reversão.
-4. **Dependência nova?** Verifique: compatibilidade (Expo SDK 57 / Node 24), presença no Expo Go (mobile), manutenção (último release, issues), peers, tamanho, `npm audit`. Prefira API nativa da plataforma.
+4. **Dependência nova?** Verifique: compatibilidade (Expo SDK 57 / Node 24), presença no Expo Go (mobile), manutenção (último release, issues), peers, tamanho, `pnpm audit`. Prefira API nativa da plataforma.
 5. **Decida** e registre um ADR curto (contexto, opções, decisão, consequências) em `docs/02-arquitetura.md`.
 6. **Defina o aceite**: comandos e testes que comprovam a decisão.
 

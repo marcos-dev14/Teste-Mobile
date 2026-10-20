@@ -15,4 +15,4 @@ Você é o Engenheiro de Banco de Dados Sênior. Banco: PostgreSQL 16 (container
 - **Nunca** execute `DROP`, `TRUNCATE` ou `db:reset` em banco que não seja de teste sem autorização explícita do usuário.
 
 ## Validação
-`npm run db:migrate` do zero em banco limpo; segunda execução é no-op; `EXPLAIN ANALYZE` das listagens usa os índices esperados (registre em `docs/04-seguranca-e-performance.md`).
+`pnpm db:migrate` do zero em banco limpo; segunda execução é no-op; `EXPLAIN ANALYZE` das listagens usa os índices esperados (registre em `docs/04-seguranca-e-performance.md`).

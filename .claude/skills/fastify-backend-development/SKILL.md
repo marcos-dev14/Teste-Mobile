@@ -38,4 +38,4 @@ server/test/             integração com Postgres real (app.inject)
 - Logar `request.body` inteiro.
 
 ## Validação
-`npm run typecheck && npm run lint && npm test` verdes; `curl` na rota contra a API local com e sem token.
+`pnpm typecheck && pnpm lint && pnpm test` verdes; `curl` na rota contra a API local com e sem token.

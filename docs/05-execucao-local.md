@@ -6,6 +6,7 @@ Ambiente validado: Windows 11, Node 24.14, Docker Desktop 29, Android SDK em `C:
 | Ferramenta | Versão mínima | Verificação |
 |---|---|---|
 | Node.js | 22.12 | `node -v` |
+| pnpm | 12.8 (fixado em `packageManager`; `corepack enable` instala a versão certa) | `pnpm -v` |
 | Docker Desktop | em execução | `docker info` |
 | Android SDK + emulador | AVD com imagem de páginas de **4 KB** | `emulator -list-avds` |
 
@@ -25,10 +26,10 @@ cd server
 copy .env.example .env
 # Gere um segredo e coloque em JWT_SECRET no .env:
 node -e "console.log(require('node:crypto').randomBytes(48).toString('base64url'))"
-npm install
-npm run db:migrate            # aplica migrations pendentes (idempotente)
-npm run db:seed               # catálogo + usuário demo (idempotente; recusado em produção)
-npm run dev                   # http://0.0.0.0:3333
+pnpm install
+pnpm db:migrate            # aplica migrations pendentes (idempotente)
+pnpm db:seed               # catálogo + usuário demo (idempotente; recusado em produção)
+pnpm dev                   # http://0.0.0.0:3333
 ```
 Usuário de demonstração (somente desenvolvimento): `demo@vesti.dev` / `vesti1234`.
 
@@ -47,8 +48,8 @@ adb shell "printf 'GET /health HTTP/1.0\r\n\r\n' | nc -w 3 10.0.2.2 3333"   # HT
 ## 4. App
 ```powershell
 cd mobile
-npm install
-npx expo start                # depois pressione "a" para abrir no emulador
+pnpm install
+pnpm expo start                # depois pressione "a" para abrir no emulador
 ```
 Na primeira vez, o Expo CLI instala o Expo Go compatível com o SDK 57 no emulador (o APK oficial também está em `https://api.expo.dev/v2/versions/latest` → `sdkVersions["57.0.0"].androidClientUrl`). Se o terminal não for interativo, abra diretamente:
 ```bash
@@ -65,8 +66,8 @@ Em modo de desenvolvimento, a URL efetiva aparece no rodapé da aba **Perfil**.
 
 ## 5. Testes
 ```powershell
-cd server; npm run typecheck; npm run lint; npm test     # usa somente o banco ecommerce_test
-cd mobile; npm run typecheck; npm run lint; npm test
+cd server; pnpm typecheck; pnpm lint; pnpm test     # usa somente o banco ecommerce_test
+cd mobile; pnpm typecheck; pnpm lint; pnpm test
 ```
 
 ## 6. Roteiro ponta a ponta executado (2026-10-19)
@@ -91,10 +92,10 @@ Achados desta validação, todos corrigidos no commit `cd892f8`: título grande 
 ## Troubleshooting
 | Sintoma | Causa provável | Ação |
 |---|---|---|
-| App mostra "Sem conexão" | API parada ou ouvindo só em 127.0.0.1 | `npm run dev` com `HOST=0.0.0.0` no `.env` |
+| App mostra "Sem conexão" | API parada ou ouvindo só em 127.0.0.1 | `pnpm dev` com `HOST=0.0.0.0` no `.env` |
 | Funciona no emulador e não no celular | Firewall do Windows | Liberar a porta 3333 para rede privada |
 | `ECONNREFUSED 127.0.0.1:5442` | Container parado | `docker compose up -d` |
 | "Project is incompatible with this version of Expo Go" | Expo Go de outro SDK | Instalar o Expo Go do SDK 57 (Android) ou atualizar o app (iOS) |
 | `Port 8081 is being used` | Metro anterior ainda aberto | Encerrar o processo `expo start` antigo |
-| `expo start --android` para pedindo confirmação | Atualização sugerida do Expo Go em terminal não interativo | `npx expo start` e pressionar `a`, ou abrir via `adb ... exp://` |
-| Bundle antigo | Cache do Metro | `npx expo start -c` |
+| `expo start --android` para pedindo confirmação | Atualização sugerida do Expo Go em terminal não interativo | `pnpm expo start` e pressionar `a`, ou abrir via `adb ... exp://` |
+| Bundle antigo | Cache do Metro | `pnpm expo start -c` |
