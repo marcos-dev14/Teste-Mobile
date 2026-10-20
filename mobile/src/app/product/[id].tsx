@@ -1,10 +1,13 @@
 import { router, useLocalSearchParams } from 'expo-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FlatList, ScrollView, useWindowDimensions, View } from 'react-native'
+import { useReducedMotion } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { MAX_CART_LINES, MAX_QUANTITY_PER_ITEM, quantityInCart } from '@/features/cart/cart-logic'
-import { useCartCount, useCartStore } from '@/features/cart/store'
+import { CartIconButton } from '@/features/cart/components/cart-icon-button'
+import { FlyToCart, type FlyToCartHandle } from '@/features/cart/components/fly-to-cart'
+import { useCartStore } from '@/features/cart/store'
 import { useProduct } from '@/features/catalog/hooks'
 import { isApiError } from '@/lib/api/errors'
 import type { ProductColor } from '@/lib/api/types'
@@ -32,6 +35,11 @@ import {
   useToast,
 } from '@/ui'
 
+/** Toques repetidos dentro deste intervalo são tratados como toque duplo acidental. */
+export const ADD_COOLDOWN_MS = 500
+/** Tempo em que o botão mostra "Na sacola" após adicionar. */
+const ADDED_FEEDBACK_MS = 1200
+
 export default function ProductScreen() {
   const styles = useStyles(styleFactory)
   const theme = useTheme()
@@ -42,7 +50,17 @@ export default function ProductScreen() {
   const { data: product, error, isPending, refetch } = useProduct(id)
   const cartItems = useCartStore((state) => state.items)
   const addToCart = useCartStore((state) => state.add)
-  const cartCount = useCartCount()
+  const reduceMotion = useReducedMotion()
+
+  const addButtonRef = useRef<View>(null)
+  const cartIconRef = useRef<View>(null)
+  const flyRef = useRef<FlyToCartHandle>(null)
+  const lastAddAt = useRef(0)
+  const addedTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [justAdded, setJustAdded] = useState(false)
+  const [bumpSignal, setBumpSignal] = useState(0)
+
+  useEffect(() => () => clearTimeout(addedTimer.current), [])
 
   const [colorId, setColorId] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
@@ -64,14 +82,7 @@ export default function ProductScreen() {
     setQuantity((current) => Math.max(1, Math.min(current, maxAddable || 1)))
   }, [maxAddable])
 
-  const cartLabel = cartCount ? `Abrir sacola, ${cartCount} itens` : 'Abrir sacola'
-  const cartButton = (
-    <IconButton
-      icon="bag-handle-outline"
-      accessibilityLabel={cartLabel}
-      onPress={() => router.navigate('/cart')}
-    />
-  )
+  const cartButton = <CartIconButton />
 
   if (isPending) {
     return (
@@ -105,6 +116,10 @@ export default function ProductScreen() {
   const soldOut = !color || color.stock === 0
   const handleAdd = () => {
     if (!color) return
+    // A sacola é local e síncrona: o risco não é requisição duplicada, e sim o toque duplo acidental somar unidades.
+    const now = Date.now()
+    if (now - lastAddAt.current < ADD_COOLDOWN_MS) return
+    lastAddAt.current = now
     if (inCart === 0 && cartItems.length >= MAX_CART_LINES) {
       toast.show({ tone: 'info', message: `A sacola aceita até ${MAX_CART_LINES} itens diferentes por pedido.` })
       return
@@ -128,6 +143,12 @@ export default function ProductScreen() {
       quantity,
     )
     void haptics.light()
+    // Feedback no ponto do toque, imediato; o voo leva o olhar até a sacola, que confirma com o "bump".
+    setJustAdded(true)
+    clearTimeout(addedTimer.current)
+    addedTimer.current = setTimeout(() => setJustAdded(false), ADDED_FEEDBACK_MS)
+    if (!reduceMotion) flyRef.current?.launch(addButtonRef.current, cartIconRef.current, color.hex)
+    // Toast complementar: anuncia o resultado ao leitor de tela e oferece o atalho para a sacola.
     toast.show({
       tone: 'success',
       message: `${quantity}× ${product.name} (${color.name}) na sacola`,
@@ -176,12 +197,7 @@ export default function ProductScreen() {
               accessibilityLabel="Voltar"
               onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
             />
-            <IconButton
-              icon="bag-handle-outline"
-              variant="surface"
-              accessibilityLabel={cartLabel}
-              onPress={() => router.navigate('/cart')}
-            />
+            <CartIconButton ref={cartIconRef} variant="surface" bumpSignal={bumpSignal} />
           </View>
         </View>
 
@@ -254,15 +270,17 @@ export default function ProductScreen() {
             {formatMoney(product.priceCents * (soldOut ? 1 : quantity))}
           </Text>
         </View>
-        <Button
-          title={soldOut ? 'Esgotado' : 'Adicionar à sacola'}
-          icon={soldOut ? undefined : 'bag-add-outline'}
-          disabled={soldOut}
-          onPress={handleAdd}
-          style={styles.addButton}
-          testID="add-to-cart"
-        />
+        <View ref={addButtonRef} collapsable={false} style={styles.addButton}>
+          <Button
+            title={soldOut ? 'Esgotado' : justAdded ? 'Na sacola' : 'Adicionar à sacola'}
+            icon={soldOut ? undefined : justAdded ? 'checkmark' : 'bag-add-outline'}
+            disabled={soldOut}
+            onPress={handleAdd}
+            testID="add-to-cart"
+          />
+        </View>
       </Reveal>
+      <FlyToCart ref={flyRef} onArrive={() => setBumpSignal((value) => value + 1)} />
     </Screen>
   )
 }
