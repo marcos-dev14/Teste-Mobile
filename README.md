@@ -48,6 +48,7 @@ Guia completo, verificação de rede emulador ↔ API e troubleshooting: **[docs
 | server | `pnpm dev` | API com recarga automática |
 | server | `pnpm build` / `pnpm start` | build e execução compilada |
 | server | `pnpm db:migrate` / `db:status` / `db:seed` | migrations e dados de desenvolvimento |
+| server | `pnpm db:cleanup` | descarta refresh tokens expirados há mais de 7 dias (agendar em produção) |
 | server | `pnpm typecheck` / `lint` / `test` | qualidade (testes usam apenas o banco `ecommerce_test`) |
 | mobile | `pnpm expo start` | Metro + Expo Go |
 | mobile | `pnpm typecheck` / `lint` / `test` | qualidade |
@@ -62,6 +63,7 @@ Guia completo, verificação de rede emulador ↔ API e troubleshooting: **[docs
 | [05 — Execução local](docs/05-execucao-local.md) | Passo a passo, emulador, validação ponta a ponta |
 | [06 — Pendências e futuro](docs/06-pendencias-e-futuro.md) | Limitações conhecidas e próximos passos |
 | [07 — Identidade visual e movimento](docs/07-identidade-visual-e-movimento.md) | Marca, splash animada e sistema de entrada de telas |
+| [Auditoria 2026-10](docs/audit/README.md) | Segurança, LGPD, checkout/Stripe, performance, backlog e bloqueios |
 
 ## Equipe de agentes (Claude Code)
 Agentes especializados em `.claude/agents/`: arquiteto, mobile, UI/UX, motion, backend, banco de dados, segurança, performance e revisor full stack. Skills reutilizáveis em `.claude/skills/` documentam os procedimentos de cada área.

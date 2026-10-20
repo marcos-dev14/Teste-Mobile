@@ -134,3 +134,15 @@ export async function revokeRefreshTokenFamily(db: Queryable, familyId: string):
   )
   return rowCount ?? 0
 }
+
+/**
+ * Descarte (retenção): remove tokens expirados há mais de `graceDays`. Enquanto o token é válido
+ * ele é mantido, mesmo revogado, para que a reapresentação ainda seja detectada como reuso.
+ */
+export async function deleteExpiredRefreshTokens(db: Queryable, graceDays: number): Promise<number> {
+  const { rowCount } = await db.query(
+    'DELETE FROM refresh_tokens WHERE expires_at < now() - make_interval(days => $1)',
+    [graceDays],
+  )
+  return rowCount ?? 0
+}

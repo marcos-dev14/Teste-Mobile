@@ -1,9 +1,13 @@
 import { loadDotEnv, parseEnv } from '../config/env.js'
+import { deleteExpiredRefreshTokens } from '../modules/auth/repository.js'
 import { migrate, migrationStatus } from './migrate.js'
 import { createPool } from './pool.js'
 import { seed } from './seed.js'
 
-const COMMANDS = ['migrate', 'status', 'seed'] as const
+const COMMANDS = ['migrate', 'status', 'seed', 'cleanup'] as const
+
+/** Dias após a expiração em que o refresh token ainda é mantido antes do descarte. */
+const EXPIRED_TOKEN_GRACE_DAYS = 7
 type Command = (typeof COMMANDS)[number]
 
 function isCommand(value: string | undefined): value is Command {
@@ -30,6 +34,9 @@ async function main(): Promise<void> {
         const when = item.appliedAt ? ` (${item.appliedAt.toISOString()})` : ''
         console.log(`${item.state === 'applied' ? '✔' : '…'} ${item.version}_${item.name}${when}`)
       }
+    } else if (command === 'cleanup') {
+      const removed = await deleteExpiredRefreshTokens(pool, EXPIRED_TOKEN_GRACE_DAYS)
+      console.log(`Refresh tokens expirados removidos: ${removed}.`)
     } else {
       if (env.NODE_ENV === 'production') {
         throw new Error('O seed de desenvolvimento não pode ser executado com NODE_ENV=production.')

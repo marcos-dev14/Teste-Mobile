@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "db:migrate": "tsx src/db/cli.ts migrate",
     "db:status": "tsx src/db/cli.ts status",
-    "db:seed": "tsx src/db/cli.ts seed"
+    "db:seed": "tsx src/db/cli.ts seed",
+    "db:cleanup": "tsx src/db/cli.ts cleanup"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",
