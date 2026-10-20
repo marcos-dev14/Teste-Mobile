@@ -33,7 +33,7 @@ export default function OrderSuccessScreen() {
         </Animated.View>
         <Reveal index={1} style={styles.copy}>
           <Text variant="display" align="center" accessibilityRole="header">
-            Pedido confirmado
+            Pedido recebido
           </Text>
           {number ? (
             <Text variant="headline" color="accent" align="center">
@@ -41,7 +41,8 @@ export default function OrderSuccessScreen() {
             </Text>
           ) : null}
           <Text variant="body" color="textMuted" align="center" style={styles.message}>
-            Recebemos seu pedido e ele já está em preparação. Você pode acompanhar o status em “Meus pedidos”.
+            {/* Sem confirmação de pagamento pelo servidor, o app não afirma que o pedido foi pago ou está em preparação. */}
+            Recebemos seu pedido. Neste ambiente de demonstração o pagamento é simulado: nenhuma cobrança foi feita. Acompanhe o status em “Meus pedidos”.
           </Text>
         </Reveal>
       </View>
