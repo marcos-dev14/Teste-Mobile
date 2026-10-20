@@ -3,7 +3,7 @@ import { Alert, ScrollView, View } from 'react-native'
 
 import { session, useSession } from '@/features/auth/session-store'
 import { env } from '@/lib/env'
-import { AppHeader, Button, ScreenTitle, Card, Divider, EmptyState, ListItem, makeStyles, Screen, Text, useStyles, useToast } from '@/ui'
+import { AppHeader, Button, ScreenTitle, Card, Divider, EmptyState, ListItem, Logo, makeStyles, Reveal, Screen, Text, useStyles, useToast } from '@/ui'
 
 export default function ProfileScreen() {
   const styles = useStyles(styleFactory)
@@ -21,10 +21,10 @@ export default function ProfileScreen() {
           actionLabel="Entrar"
           onAction={() => router.push('/sign-in')}
         />
-        <View style={styles.signUp}>
+        <Reveal index={1} style={styles.signUp}>
           <Button title="Criar conta" variant="ghost" size="md" onPress={() => router.push('/sign-up')} />
-        </View>
-        <AppInfo />
+        </Reveal>
+        <AppInfo index={2} />
       </Screen>
     )
   }
@@ -52,7 +52,7 @@ export default function ProfileScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <ScreenTitle title="Perfil" />
-        <View style={styles.identity}>
+        <Reveal index={1} style={styles.identity}>
           <View style={styles.avatar} accessibilityElementsHidden>
             <Text variant="headline" color="onPrimary">
               {initials}
@@ -64,27 +64,32 @@ export default function ProfileScreen() {
               {user.email}
             </Text>
           </View>
-        </View>
+        </Reveal>
 
-        <Card style={styles.card}>
-          <ListItem icon="receipt-outline" title="Meus pedidos" subtitle="Acompanhe suas compras" onPress={() => router.push('/orders')} />
-          <Divider inset={48} />
-          <ListItem icon="location-outline" title="Endereços" subtitle="Gerencie seus endereços de entrega" onPress={() => router.push('/addresses')} />
-        </Card>
+        <Reveal index={2}>
+          <Card style={styles.card}>
+            <ListItem icon="receipt-outline" title="Meus pedidos" subtitle="Acompanhe suas compras" onPress={() => router.push('/orders')} />
+            <Divider inset={48} />
+            <ListItem icon="location-outline" title="Endereços" subtitle="Gerencie seus endereços de entrega" onPress={() => router.push('/addresses')} />
+          </Card>
+        </Reveal>
 
-        <Card style={styles.card}>
-          <ListItem icon="log-out-outline" title="Sair" destructive onPress={confirmSignOut} />
-        </Card>
-        <AppInfo />
+        <Reveal index={3}>
+          <Card style={styles.card}>
+            <ListItem icon="log-out-outline" title="Sair" destructive onPress={confirmSignOut} />
+          </Card>
+        </Reveal>
+        <AppInfo index={4} />
       </ScrollView>
     </Screen>
   )
 }
 
-function AppInfo() {
+function AppInfo({ index }: { index: number }) {
   const styles = useStyles(styleFactory)
   return (
-    <View style={styles.info}>
+    <Reveal index={index} style={styles.info}>
+      <Logo variant="symbol" size={20} style={styles.infoLogo} />
       <Text variant="caption" color="textMuted" align="center">
         Vesti v{env.appVersion}
       </Text>
@@ -93,7 +98,7 @@ function AppInfo() {
           API: {env.apiUrl}
         </Text>
       ) : null}
-    </View>
+    </Reveal>
   )
 }
 
@@ -112,4 +117,5 @@ const styleFactory = makeStyles((t) => ({
   card: { paddingVertical: t.space.xxs },
   signUp: { alignItems: 'center', marginTop: -t.space.xxl },
   info: { gap: 2, paddingVertical: t.space.lg },
+  infoLogo: { alignSelf: 'center', marginBottom: t.space.xs },
 }))

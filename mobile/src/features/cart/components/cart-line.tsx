@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native'
 import Animated, { FadeOut, LinearTransition, ReduceMotion } from 'react-native-reanimated'
 
 import type { QuoteLine } from '@/lib/api/types'
-import { Badge, makeStyles, Price, ProductImage, QuantityStepper, Skeleton, Text, useStyles } from '@/ui'
+import { Badge, InlineLoader, makeStyles, Price, ProductImage, QuantityStepper, Text, useStyles } from '@/ui'
 
 import { MAX_QUANTITY_PER_ITEM, type CartItem } from '../cart-logic'
 
@@ -86,7 +86,7 @@ export const CartLine = memo(function CartLine({ item, quote, unavailable, onQua
               label={`Quantidade de ${name}`}
             />
           )}
-          {quote ? <Price cents={quote.lineTotalCents} /> : unavailable ? null : <Skeleton width={72} height={18} />}
+          {quote ? <Price cents={quote.lineTotalCents} /> : unavailable ? null : <InlineLoader />}
         </View>
       </View>
     </Animated.View>

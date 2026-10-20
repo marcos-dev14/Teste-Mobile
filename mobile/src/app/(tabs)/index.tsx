@@ -4,7 +4,7 @@ import { View } from 'react-native'
 import { useCurrentUser } from '@/features/auth/require-auth'
 import { ProductGrid } from '@/features/catalog/components/product-grid'
 import { useProductList } from '@/features/catalog/hooks'
-import { IconButton, makeStyles, PressableScale, Screen, Text, useStyles } from '@/ui'
+import { IconButton, Logo, makeStyles, PressableScale, Reveal, Screen, Text, useStyles } from '@/ui'
 
 export default function HomeScreen() {
   const styles = useStyles(styleFactory)
@@ -14,14 +14,12 @@ export default function HomeScreen() {
 
   const header = (
     <View style={styles.header}>
-      <View style={styles.topBar}>
-        <Text variant="title" accessibilityRole="header">
-          Vesti
-        </Text>
+      <Reveal index={0} style={styles.topBar}>
+        <Logo size={26} />
         <IconButton icon="search" accessibilityLabel="Buscar produtos" onPress={() => router.navigate('/search')} />
-      </View>
+      </Reveal>
 
-      <View style={styles.hero}>
+      <Reveal index={1} style={styles.hero}>
         <Text variant="overline" color="accent" uppercase>
           {user ? `Olá, ${user.name.split(' ')[0]}` : 'Coleção essencial'}
         </Text>
@@ -39,9 +37,9 @@ export default function HomeScreen() {
             Ver todos os produtos
           </Text>
         </PressableScale>
-      </View>
+      </Reveal>
 
-      <View style={styles.sectionTitle}>
+      <Reveal index={2} style={styles.sectionTitle}>
         <Text variant="headline" accessibilityRole="header">
           Destaques
         </Text>
@@ -50,7 +48,7 @@ export default function HomeScreen() {
             {total} {total === 1 ? 'peça' : 'peças'}
           </Text>
         ) : null}
-      </View>
+      </Reveal>
     </View>
   )
 
@@ -59,6 +57,7 @@ export default function HomeScreen() {
       <ProductGrid
         query={query}
         header={header}
+        entranceOffset={3}
         empty={{ title: 'Catálogo vazio', message: 'Nenhum produto disponível no momento.' }}
       />
     </Screen>

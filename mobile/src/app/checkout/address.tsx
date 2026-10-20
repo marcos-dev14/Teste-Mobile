@@ -5,9 +5,9 @@ import { View } from 'react-native'
 import { AddressOption } from '@/features/addresses/address-card'
 import { AddressForm } from '@/features/addresses/address-form'
 import { useAddresses } from '@/features/addresses/api'
-import { CheckoutLayout } from '@/features/checkout/checkout-layout'
+import { CheckoutLayout, CONTENT_ENTRANCE } from '@/features/checkout/checkout-layout'
 import { useCheckout } from '@/features/checkout/store'
-import { Button, ErrorState, makeStyles, Skeleton, Text, useStyles } from '@/ui'
+import { Button, ErrorState, LoadingState, makeStyles, Reveal, Text, useStyles } from '@/ui'
 
 export default function CheckoutAddressScreen() {
   const styles = useStyles(styleFactory)
@@ -42,14 +42,12 @@ export default function CheckoutAddressScreen() {
       }
     >
       {addresses.isPending ? (
-        <View style={styles.list}>
-          <Skeleton height={96} radius={20} />
-          <Skeleton height={96} radius={20} />
-        </View>
+        <LoadingState layout="inline" label="Carregando endereços" />
       ) : addresses.isError ? (
         <ErrorState error={addresses.error} onRetry={() => void addresses.refetch()} />
       ) : showForm ? (
-        <View style={styles.list}>
+        // Alternar lista e formulário é ação do usuário: cada bloco entra no máximo uma vez.
+        <Reveal index={CONTENT_ENTRANCE} once="address-form" style={styles.list}>
           <Text variant="body" color="textMuted">
             {list.length === 0 ? 'Cadastre o endereço de entrega para continuar.' : 'Novo endereço de entrega'}
           </Text>
@@ -62,19 +60,21 @@ export default function CheckoutAddressScreen() {
             }}
           />
           {list.length > 0 ? <Button title="Cancelar" variant="ghost" size="md" onPress={() => setAdding(false)} /> : null}
-        </View>
+        </Reveal>
       ) : (
-        <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel="Endereços de entrega">
-          {list.map((address) => (
-            <AddressOption
-              key={address.id}
-              address={address}
-              selected={address.id === selectedId}
-              onPress={() => setAddress(address.id)}
-            />
-          ))}
-          <Button title="Adicionar outro endereço" icon="add" variant="secondary" size="md" onPress={() => setAdding(true)} />
-        </View>
+        <Reveal index={CONTENT_ENTRANCE} once="address-list">
+          <View style={styles.list} accessibilityRole="radiogroup" accessibilityLabel="Endereços de entrega">
+            {list.map((address) => (
+              <AddressOption
+                key={address.id}
+                address={address}
+                selected={address.id === selectedId}
+                onPress={() => setAddress(address.id)}
+              />
+            ))}
+            <Button title="Adicionar outro endereço" icon="add" variant="secondary" size="md" onPress={() => setAdding(true)} />
+          </View>
+        </Reveal>
       )}
     </CheckoutLayout>
   )

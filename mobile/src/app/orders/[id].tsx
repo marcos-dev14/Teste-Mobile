@@ -6,7 +6,7 @@ import { RequireAuth } from '@/features/auth/require-auth'
 import { PAYMENT_LABELS, STATUS_LABELS, useOrder } from '@/features/orders/api'
 import { isApiError } from '@/lib/api/errors'
 import { formatDate, formatMoney, pluralize } from '@/lib/format'
-import { AppHeader, Badge, Card, Divider, EmptyState, ErrorState, makeStyles, Price, ProductImage, Screen, Skeleton, Text, useStyles } from '@/ui'
+import { AppHeader, Badge, Card, Divider, EmptyState, ErrorState, LoadingState, makeStyles, Price, ProductImage, Reveal, Screen, Text, useStyles } from '@/ui'
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -23,13 +23,7 @@ function OrderDetail({ id }: { id: string }) {
 
   let content
   if (isPending) {
-    content = (
-      <View style={styles.content}>
-        <Skeleton height={40} width="60%" />
-        <Skeleton height={160} radius={20} />
-        <Skeleton height={100} radius={20} />
-      </View>
-    )
+    content = <LoadingState label="Carregando pedido" />
   } else if (error || !order) {
     // 404 também para pedidos de outra pessoa: o servidor não revela que existem.
     content =
@@ -42,7 +36,7 @@ function OrderDetail({ id }: { id: string }) {
     const status = STATUS_LABELS[order.status]
     content = (
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.titleRow}>
+        <Reveal index={0} style={styles.titleRow}>
           <View style={styles.flex}>
             <Text variant="display" accessibilityRole="header">
               #{order.number}
@@ -52,49 +46,55 @@ function OrderDetail({ id }: { id: string }) {
             </Text>
           </View>
           <Badge label={status.label} tone={status.tone} />
-        </View>
+        </Reveal>
 
-        <Card style={styles.card}>
-          <Text variant="headline">{pluralize(order.itemCount, 'item', 'itens')}</Text>
-          {order.items.map((item) => (
-            <View
-              key={item.id}
-              style={styles.item}
-              accessible
-              accessibilityLabel={`${item.productName}, cor ${item.colorName}, ${item.quantity} unidades de ${formatMoney(item.unitPriceCents)}, total ${formatMoney(item.lineTotalCents)}`}
-            >
-              <View style={styles.thumb}>
-                <ProductImage uri={item.imageUrl} />
-              </View>
-              <View style={styles.flex}>
-                <Text variant="label" numberOfLines={2}>
-                  {item.productName}
-                </Text>
-                <View style={styles.colorRow}>
-                  <View style={[styles.dot, { backgroundColor: item.colorHex }]} />
-                  <Text variant="caption" color="textMuted">
-                    {item.colorName} · {item.quantity} × {formatMoney(item.unitPriceCents)}
-                  </Text>
+        <Reveal index={1}>
+          <Card style={styles.card}>
+            <Text variant="headline">{pluralize(order.itemCount, 'item', 'itens')}</Text>
+            {order.items.map((item) => (
+              <View
+                key={item.id}
+                style={styles.item}
+                accessible
+                accessibilityLabel={`${item.productName}, cor ${item.colorName}, ${item.quantity} unidades de ${formatMoney(item.unitPriceCents)}, total ${formatMoney(item.lineTotalCents)}`}
+              >
+                <View style={styles.thumb}>
+                  <ProductImage uri={item.imageUrl} />
                 </View>
+                <View style={styles.flex}>
+                  <Text variant="label" numberOfLines={2}>
+                    {item.productName}
+                  </Text>
+                  <View style={styles.colorRow}>
+                    <View style={[styles.dot, { backgroundColor: item.colorHex }]} />
+                    <Text variant="caption" color="textMuted">
+                      {item.colorName} · {item.quantity} × {formatMoney(item.unitPriceCents)}
+                    </Text>
+                  </View>
+                </View>
+                <Price cents={item.lineTotalCents} variant="bodyStrong" />
               </View>
-              <Price cents={item.lineTotalCents} variant="bodyStrong" />
-            </View>
-          ))}
-        </Card>
+            ))}
+          </Card>
+        </Reveal>
 
-        <Card style={styles.card}>
-          <Text variant="headline">Entrega</Text>
-          <AddressSummary address={order.shippingAddress} />
-        </Card>
+        <Reveal index={2}>
+          <Card style={styles.card}>
+            <Text variant="headline">Entrega</Text>
+            <AddressSummary address={order.shippingAddress} />
+          </Card>
+        </Reveal>
 
-        <Card style={styles.card}>
-          <Text variant="headline">Pagamento</Text>
-          <Text variant="body">{PAYMENT_LABELS[order.paymentMethod]}</Text>
-          <Divider />
-          <Row label="Subtotal" value={formatMoney(order.subtotalCents)} />
-          <Row label="Frete" value={order.shippingCents === 0 ? 'Grátis' : formatMoney(order.shippingCents)} />
-          <Row label="Total" value={formatMoney(order.totalCents)} strong />
-        </Card>
+        <Reveal index={3}>
+          <Card style={styles.card}>
+            <Text variant="headline">Pagamento</Text>
+            <Text variant="body">{PAYMENT_LABELS[order.paymentMethod]}</Text>
+            <Divider />
+            <Row label="Subtotal" value={formatMoney(order.subtotalCents)} />
+            <Row label="Frete" value={order.shippingCents === 0 ? 'Grátis' : formatMoney(order.shippingCents)} />
+            <Row label="Total" value={formatMoney(order.totalCents)} strong />
+          </Card>
+        </Reveal>
       </ScrollView>
     )
   }

@@ -1,8 +1,8 @@
 import { router } from 'expo-router'
 import type { ReactNode } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 
-import { AppHeader, IconButton, makeStyles, Screen, Text, useStyles } from '@/ui'
+import { AppHeader, IconButton, makeStyles, Reveal, Screen, Text, useStyles } from '@/ui'
 
 import { safeRedirect } from './require-auth'
 
@@ -29,16 +29,18 @@ export function AuthLayout({ title, subtitle, children, footer }: { title: strin
       />
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.heading}>
+          <Reveal index={0} style={styles.heading}>
             <Text variant="display" accessibilityRole="header">
               {title}
             </Text>
             <Text variant="body" color="textMuted">
               {subtitle}
             </Text>
-          </View>
-          {children}
-          <View style={styles.footer}>{footer}</View>
+          </Reveal>
+          <Reveal index={1}>{children}</Reveal>
+          <Reveal index={2} style={styles.footer}>
+            {footer}
+          </Reveal>
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>
