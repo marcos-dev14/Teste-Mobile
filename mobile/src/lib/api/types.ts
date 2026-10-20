@@ -115,8 +115,12 @@ export interface CartQuote {
 export interface Address {
   id: string
   fullName: string
+  /** Logradouro (rua, avenida…). */
   addressLine1: string
+  /** Nulo apenas em endereços cadastrados antes do preenchimento por CEP. */
+  number: string | null
   addressLine2: string | null
+  neighborhood: string | null
   city: string
   state: string
   zipCode: string
@@ -125,6 +129,18 @@ export interface Address {
 }
 
 export type NewAddress = Omit<Address, 'id' | 'createdAt'>
+
+/** Corpo de `POST /v1/addresses`: número e bairro são obrigatórios em endereços novos. */
+export type CreateAddressInput = Omit<NewAddress, 'number' | 'neighborhood'> & { number: string; neighborhood: string }
+
+/** Sugestão de `GET /v1/addresses/zip-codes/:zipCode` (dado de terceiro: sempre editável). */
+export interface ZipCodeLookup {
+  zipCode: string
+  street: string | null
+  neighborhood: string | null
+  city: string
+  state: string
+}
 
 // Pedidos -----------------------------------------------------------------------------
 

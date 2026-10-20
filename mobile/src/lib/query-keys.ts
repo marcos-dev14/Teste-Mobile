@@ -9,6 +9,8 @@ export const queryKeys = {
   },
   cartQuote: (items: PurchaseItem[]) => ['cart-quote', items] as const,
   addresses: (userId: string) => ['user', userId, 'addresses'] as const,
+  // Dado público de referência (sem userId); a resposta não depende de quem consulta.
+  zipCode: (digits: string) => ['zip-code', digits] as const,
   orders: {
     all: (userId: string) => ['user', userId, 'orders'] as const,
     detail: (userId: string, id: string) => ['user', userId, 'orders', id] as const,

@@ -11,7 +11,7 @@ const metrics = {
 }
 
 export function renderWithProviders(ui: ReactElement, options?: RenderOptions) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { gcTime: Infinity } } })
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <SafeAreaProvider initialMetrics={metrics}>
       <ThemeProvider scheme="light">
