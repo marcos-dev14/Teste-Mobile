@@ -3,10 +3,10 @@
 ## Requer intervenção manual
 | Item | Motivo | Ação sugerida |
 |---|---|---|
-| Ícone e splash do app | Os PNGs em `mobile/assets/images` ainda são do "My Demo App" original; gerar arte final exige design | Criar ícone/splash da marca Vesti e substituir os arquivos (mesmos nomes) |
+| Validar splash nativa em build | O Expo Go usa o próprio carregador; a troca nativa → animada só aparece em build | `npx expo run:android` (ou EAS) e conferir alinhamento do símbolo em claro/escuro |
 | Merge do branch `reengineering/v2` | Decisão do mantenedor | Revisar o diff e abrir PR para `main` |
 | `JWT_SECRET` de produção | Segredos não são gerados pelo projeto | Gerar e guardar em cofre/variável de ambiente do provedor |
-| Upgrade do Expo SDK (52 → atual) | Fora do escopo por regra de não atualizar indiscriminadamente; resolve a maior parte dos alertas do `npm audit` do mobile (toolchain) | Planejar migração com `npx expo install expo@latest --fix` e validação completa |
+| SDK 58 | O SDK 57 foi escolhido por casar com o Expo Go instalado no iPhone; o `latest` do npm já é 58 | Quando o Expo Go das lojas passar para o 58, repetir o roteiro de upgrade (docs/05) |
 
 ## Limitações conhecidas
 - **Pagamento simulado.** Nenhum dado de cartão é coletado; o método de pagamento só é registrado no pedido. Integração real exige PSP com tokenização (ex.: SDK do provedor) e webhook de confirmação para mudar o status para `paid`.
@@ -19,9 +19,12 @@
 - **Estoque reservado sem pagamento** (achado F1 da revisão de segurança): pedido `placed` baixa estoque imediatamente. Com pagamento real, implementar reserva com prazo (TTL) e devolução automática se o pagamento não confirmar, além de limite de pedidos em aberto por usuário.
 - **Cadastro revela e-mail existente** (F3): aceito por UX; eliminar exige confirmação por e-mail com resposta neutra.
 - **Access token válido até 15 min após logout** (F4): característica do desenho stateless; reduzir TTL ou adicionar `token_version` se o risco exigir.
-- **Medição numérica de FPS** (Perf Monitor/Profiler) não registrada; a fluidez foi verificada visualmente no emulador.
+- **Medição numérica de FPS** (Perf Monitor/Profiler) não registrada; a fluidez foi verificada visualmente no emulador, inclusive quadro a quadro em gravações das entradas de tela e da splash (docs/07).
+- **Splash no Expo Go:** o Expo Go mostra seu carregador com o ícone do app antes da splash animada; a continuidade exata com a splash nativa só é vista em build. A splash nativa não foi validada em build neste ambiente.
+- **Logo gerada por código vetorial** (`assets/brand/build-brand.js`), não por ferramenta de design/IA de imagem — não havia uma disponível no ambiente. A geometria é simples e pode ser refinada por um designer mantendo os nomes de arquivo.
 - **Testes de UI ponta a ponta automatizados** (Maestro/Detox) não foram adicionados; o roteiro e2e foi executado manualmente no emulador com captura de tela (docs/05).
-- **Lint do mobile** usa configuração flat própria (ESLint 9), porque o `eslint-config-expo` do SDK 52 exige ESLint 8, que está fora de suporte.
+- **Lint do mobile** usa configuração flat própria (ESLint 9), criada quando o `eslint-config-expo` do SDK 52 exigia ESLint 8. No SDK 57 a versão oficial (`~57.0.2`) já suporta ESLint 9 e pode substituí-la.
+- **Validação no iOS** não foi feita neste ambiente (Windows, sem simulador). O app foi validado no Android com o mesmo Expo Go/SDK 57.
 
 ## Funcionalidades propostas (não existiam no projeto original)
 | Proposta | Valor | Esforço estimado |

@@ -1,6 +1,6 @@
 # 05 — Execução local e validação no emulador
 
-Ambiente validado: Windows 11, Node 24.14, Docker Desktop 29, Android SDK em `C:\Android\Sdk`, AVD `Rentx_API30` (Android 11, x86_64), Expo Go 2.32.19 (SDK 52).
+Ambiente validado: Windows 11, Node 24.14, Docker Desktop 29, Android SDK em `C:\Android\Sdk`, AVD `Barber_App` (Android 17) e `Rentx_API30` (Android 11), Expo Go 57.0.9 (SDK 57). No iPhone, use o Expo Go da App Store (só a versão mais recente é suportada).
 
 ## Pré-requisitos
 | Ferramenta | Versão mínima | Verificação |
@@ -9,7 +9,7 @@ Ambiente validado: Windows 11, Node 24.14, Docker Desktop 29, Android SDK em `C:
 | Docker Desktop | em execução | `docker info` |
 | Android SDK + emulador | AVD com imagem de páginas de **4 KB** | `emulator -list-avds` |
 
-> **AVD com 16 KB (`ps16k`) não funciona com o Expo Go do SDK 52** (bibliotecas nativas do RN 0.76 não são alinhadas a 16 KB). Neste computador, `Barber_App` (Android 37, ps16k) não serve; use `Rentx_API30`.
+> **Prefira um AVD recente (`Barber_App`, Android 17).** Com o SDK 57 as imagens de 16 KB funcionam. No `Rentx_API30` (Android 11) o app roda, mas o Expo Go 57 pinta a barra de status de preto (ícones escuros somem); é comportamento do Expo Go nessa imagem — no Android 17 o edge-to-edge aparece correto.
 
 ## 1. Banco de dados
 ```powershell
@@ -36,7 +36,7 @@ Verificação: `curl http://127.0.0.1:3333/health/ready` → `{"status":"ok","db
 
 ## 3. Emulador
 ```powershell
-& "$env:ANDROID_HOME\emulator\emulator.exe" -avd Rentx_API30
+& "$env:ANDROID_HOME\emulator\emulator.exe" -avd Barber_App
 adb devices                   # emulator-5554  device
 ```
 Verifique se o emulador alcança a API do host (a imagem Android 11 não tem `curl`):
@@ -50,7 +50,7 @@ cd mobile
 npm install
 npx expo start                # depois pressione "a" para abrir no emulador
 ```
-Na primeira vez, o Expo CLI instala o Expo Go compatível com o SDK 52 no emulador. Se o terminal não for interativo, abra diretamente:
+Na primeira vez, o Expo CLI instala o Expo Go compatível com o SDK 57 no emulador (o APK oficial também está em `https://api.expo.dev/v2/versions/latest` → `sdkVersions["57.0.0"].androidClientUrl`). Se o terminal não for interativo, abra diretamente:
 ```bash
 adb shell am start -a android.intent.action.VIEW -d "exp://<IP-da-máquina>:8081" host.exp.exponent
 ```
@@ -94,7 +94,7 @@ Achados desta validação, todos corrigidos no commit `cd892f8`: título grande 
 | App mostra "Sem conexão" | API parada ou ouvindo só em 127.0.0.1 | `npm run dev` com `HOST=0.0.0.0` no `.env` |
 | Funciona no emulador e não no celular | Firewall do Windows | Liberar a porta 3333 para rede privada |
 | `ECONNREFUSED 127.0.0.1:5442` | Container parado | `docker compose up -d` |
-| Expo Go fecha ao abrir | AVD com páginas de 16 KB | Usar AVD com imagem de 4 KB (ex.: API 30–34) |
+| "Project is incompatible with this version of Expo Go" | Expo Go de outro SDK | Instalar o Expo Go do SDK 57 (Android) ou atualizar o app (iOS) |
 | `Port 8081 is being used` | Metro anterior ainda aberto | Encerrar o processo `expo start` antigo |
 | `expo start --android` para pedindo confirmação | Atualização sugerida do Expo Go em terminal não interativo | `npx expo start` e pressionar `a`, ou abrir via `adb ... exp://` |
 | Bundle antigo | Cache do Metro | `npx expo start -c` |
