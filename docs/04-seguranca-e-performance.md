@@ -38,10 +38,12 @@ Verificado pelo revisor de segurança com evidência: **S1–S14 e S16 resolvido
 | Segurança T3 | Baixa | `safeRedirect` aceitava formas exóticas (`/\evil.com`) | **Corrigido**: allowlist por regex (teste) |
 | Segurança T4 | Baixa | Segredo de exemplo passava na validação | **Corrigido**: recusado com `NODE_ENV=production` (`env.test.ts`) |
 
-## 4. Dependências (`npm audit --omit=dev`)
+## 4. Dependências (`pnpm audit --prod`)
+> Números abaixo medidos com `npm audit` antes da migração para pnpm; repita com `pnpm audit --prod` em `server/` e `mobile/`.
+
 - **server: 0 vulnerabilidades.** A troca de `bcrypt` por `scrypt` nativo eliminou `node-pre-gyp`/`tar`; NestJS e Prisma foram removidos.
 - **mobile: 61 alertas após o upgrade para o SDK 57 (eram 74 no SDK 52), quase todos no toolchain** (Metro, `@expo/cli`, jest, config plugins). Eles rodam só no desenvolvimento e no build e não vão para o bundle. Alcançáveis em runtime, segundo o revisor: `query-string`/`decode-uri-component` (DoS por deep link malformado, baixa severidade), `nanoid` (não alcançável) e `@babel/runtime` (ReDoS restrito).
-- **Tentativa de correção:** `npm audit fix` sem `--force` alterou o hoisting e quebrou a resolução do `expo-router` (`Cannot find module 'query-string'`). Foi revertido para manter o app funcional. **Justificativa formal:** o upgrade para o SDK 57 reduziu os alertas, mas os restantes dependem de correções upstream do Expo/React Native (o `npm audit fix --force` proposto rebaixaria pacotes para versões incompatíveis com o SDK).
+- **Tentativa de correção (ainda com npm):** `npm audit fix` sem `--force` alterou o hoisting e quebrou a resolução do `expo-router` (`Cannot find module 'query-string'`). Foi revertido para manter o app funcional. **Justificativa formal:** o upgrade para o SDK 57 reduziu os alertas, mas os restantes dependem de correções upstream do Expo/React Native (o `npm audit fix --force` proposto rebaixaria pacotes para versões incompatíveis com o SDK).
 
 ## 5. Performance
 

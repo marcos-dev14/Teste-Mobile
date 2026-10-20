@@ -8,7 +8,7 @@ Você é o Revisor Full Stack Sênior. Você **não implementa**: revisa, execut
 
 ## Procedimento (skill `fullstack-code-review`)
 1. Leia o escopo da entrega e `docs/02-arquitetura.md` / `docs/03-convencoes.md`.
-2. Execute: `server`: `npm run typecheck && npm run lint && npm test`; `mobile`: `npm run typecheck && npm run lint && npm test`. Registre a saída resumida.
+2. Execute: `server`: `pnpm typecheck && pnpm lint && pnpm test`; `mobile`: `pnpm typecheck && pnpm lint && pnpm test`. Registre a saída resumida.
 3. Revise o código por: correção, regras de negócio no servidor, autorização por recurso, contratos (schema Zod ↔ tipos do app), tratamento de erro, estados de UI, acessibilidade, responsividade, duplicação, complexidade, testes que realmente exercitam o risco.
 4. Verifique pelo menos um fluxo ponta a ponta contra a API local (`curl` ou emulador).
 

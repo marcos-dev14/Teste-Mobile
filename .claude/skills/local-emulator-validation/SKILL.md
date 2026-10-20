@@ -15,11 +15,11 @@ Ambiente de referência: Windows 11, Node 24, Docker Desktop, Android SDK em `C:
 cd server; docker compose up -d; docker compose ps   # status healthy
 # 2. API
 copy .env.example .env      # primeira vez; gere JWT_SECRET (ver README)
-npm install; npm run db:migrate; npm run db:seed; npm run dev
+pnpm install; pnpm db:migrate; pnpm db:seed; pnpm dev
 # 3. Emulador
 & "$env:ANDROID_HOME\emulator\emulator.exe" -avd Barber_App
 # 4. App
-cd ..\mobile; npm install; npx expo start --android
+cd ..\mobile; pnpm install; pnpm expo start --android
 ```
 
 ## Rede
@@ -47,7 +47,7 @@ O app resolve automaticamente (`mobile/src/lib/env.ts`): `EXPO_PUBLIC_API_URL` �
 | Funciona no emulador, não no celular | firewall do Windows | liberar porta 3333 para rede privada |
 | `ECONNREFUSED 127.0.0.1:5442` | container parado | `docker compose up -d` |
 | "Project is incompatible with this version of Expo Go" | Expo Go de outro SDK | instalar o Expo Go do SDK 57 |
-| Bundle antigo/cache | cache do Metro | `npx expo start -c` |
+| Bundle antigo/cache | cache do Metro | `pnpm expo start -c` |
 
 ## Validação
 Checagens 1–3 OK e roteiro da skill `integration-and-e2e-testing` executado; resultados registrados em `docs/05-execucao-local.md`.

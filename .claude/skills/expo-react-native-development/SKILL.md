@@ -25,7 +25,7 @@ mobile/src/
 6. Teste do componente/hook relevante em `__tests__`.
 
 ## Dependências
-- Sempre `npx expo install <pkg>` (resolve a versão do SDK). Verifique se o módulo nativo está no Expo Go SDK 57; se não estiver, exige dev build — discuta com o `software-architect` antes.
+- Sempre `pnpm expo install <pkg>` (resolve a versão do SDK). Verifique se o módulo nativo está no Expo Go SDK 57; se não estiver, exige dev build — discuta com o `software-architect` antes.
 - Proibido: NativeWind/Tailwind (removido), AsyncStorage para tokens, bibliotecas de UI completas.
 
 ## Rede local
@@ -38,4 +38,4 @@ mobile/src/
 - Ler `process.env.X` fora do prefixo `EXPO_PUBLIC_` (não é embutido no bundle).
 
 ## Validação
-`npm run typecheck`, `npm run lint`, `npm test` verdes; tela verificada no emulador (skill `local-emulator-validation`).
+`pnpm typecheck`, `pnpm lint`, `pnpm test` verdes; tela verificada no emulador (skill `local-emulator-validation`).
