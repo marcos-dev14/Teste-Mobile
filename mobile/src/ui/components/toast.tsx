@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets()
   const [toast, setToast] = useState<ToastState | null>(null)
   const [bottomOffset, setBottomOffset] = useState(0)
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const sequence = useRef(0)
 
   const show = useCallback((options: ToastOptions) => {

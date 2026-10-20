@@ -27,6 +27,8 @@ jest.mock('expo-haptics', () => ({
 
 jest.mock('expo-crypto', () => ({ randomUUID: () => require('crypto').randomUUID() }))
 
+// Reanimated 4 roda sobre react-native-worklets, cujo módulo nativo não existe no Jest.
+jest.mock('react-native-worklets', () => require('react-native-worklets/lib/module/mock'))
 require('react-native-reanimated').setUpTests()
 
 // O automock do jest-expo 52 não implementa ExpoFontLoader.getLoadedFonts como array; ícones viram texto simples.

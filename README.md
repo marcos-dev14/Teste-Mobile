@@ -5,7 +5,7 @@ Esta versão é uma reengenharia completa do teste prático original (NestJS + P
 
 | Camada | Tecnologia |
 |---|---|
-| App | Expo SDK 52 · React Native 0.76 · Expo Router 4 · TypeScript · React Query · Zustand · Reanimated 3 · expo-image · expo-secure-store |
+| App | Expo SDK 57 · React Native 0.86 · React 19 · Expo Router 57 · TypeScript 6 · React Query · Zustand · Reanimated 4 · expo-image · expo-secure-store |
 | API | Node.js 24 · Fastify 5 · Zod 4 · @fastify/jwt · helmet · CORS · rate limit · pino |
 | Banco | PostgreSQL 16 · `pg` (SQL explícito, sem ORM) · migrations SQL versionadas com checksum |
 | Testes | Vitest + Postgres real (API) · jest-expo + Testing Library (app) |
@@ -17,6 +17,7 @@ Esta versão é uma reengenharia completa do teste prático original (NestJS + P
 - Cadastro e login com sessão segura (access token em memória e refresh token rotativo no SecureStore).
 - Checkout em 3 etapas (entrega → pagamento → revisão) com pedido transacional e idempotente.
 - Histórico e detalhe de pedidos; gerenciamento de endereços.
+- Identidade visual própria (logo, ícone, splash animada) e entrada de telas que revela o conteúdo real, sem skeleton.
 - Tema claro/escuro, acessibilidade (rótulos, papéis, áreas de toque ≥ 44 dp), estados de carregamento/erro/vazio/offline.
 
 ## Início rápido
@@ -60,6 +61,7 @@ Guia completo, verificação de rede emulador ↔ API e troubleshooting: **[docs
 | [04 — Segurança e performance](docs/04-seguranca-e-performance.md) | Modelo de ameaças, revisão, medições |
 | [05 — Execução local](docs/05-execucao-local.md) | Passo a passo, emulador, validação ponta a ponta |
 | [06 — Pendências e futuro](docs/06-pendencias-e-futuro.md) | Limitações conhecidas e próximos passos |
+| [07 — Identidade visual e movimento](docs/07-identidade-visual-e-movimento.md) | Marca, splash animada e sistema de entrada de telas |
 
 ## Equipe de agentes (Claude Code)
 Agentes especializados em `.claude/agents/`: arquiteto, mobile, UI/UX, motion, backend, banco de dados, segurança, performance e revisor full stack. Skills reutilizáveis em `.claude/skills/` documentam os procedimentos de cada área.

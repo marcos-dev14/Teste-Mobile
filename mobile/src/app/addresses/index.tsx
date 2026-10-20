@@ -6,7 +6,7 @@ import { useAddresses, useDeleteAddress } from '@/features/addresses/api'
 import { RequireAuth } from '@/features/auth/require-auth'
 import { describeError } from '@/lib/api/errors'
 import type { Address } from '@/lib/api/types'
-import { AppHeader, ScreenTitle, Button, Card, EmptyState, ErrorState, IconButton, makeStyles, Screen, Skeleton, useStyles, useToast } from '@/ui'
+import { AppHeader, ScreenTitle, Button, Card, EmptyState, ErrorState, IconButton, LoadingState, makeStyles, Reveal, Screen, useStyles, useToast } from '@/ui'
 
 export default function AddressesScreen() {
   const styles = useStyles(styleFactory)
@@ -37,17 +37,19 @@ export default function AddressesScreen() {
           keyExtractor={(address) => address.id}
           contentContainerStyle={styles.list}
           ListHeaderComponent={<ScreenTitle title="Endereços" />}
-          renderItem={({ item }) => (
-            <Card style={styles.card}>
-              <View style={styles.flex}>
-                <AddressSummary address={item} />
-              </View>
-              <IconButton icon="trash-outline" accessibilityLabel={`Remover endereço ${item.addressLine1}`} color="danger" onPress={() => confirmRemove(item)} />
-            </Card>
+          renderItem={({ item, index }) => (
+            <Reveal index={1 + index} once={`address-${index}`}>
+              <Card style={styles.card}>
+                <View style={styles.flex}>
+                  <AddressSummary address={item} />
+                </View>
+                <IconButton icon="trash-outline" accessibilityLabel={`Remover endereço ${item.addressLine1}`} color="danger" onPress={() => confirmRemove(item)} />
+              </Card>
+            </Reveal>
           )}
           ListEmptyComponent={
             addresses.isPending ? (
-              <Skeleton height={100} radius={20} />
+              <LoadingState layout="inline" label="Carregando endereços" />
             ) : addresses.isError ? (
               <ErrorState error={addresses.error} onRetry={() => void addresses.refetch()} />
             ) : (
@@ -55,7 +57,9 @@ export default function AddressesScreen() {
             )
           }
           ListFooterComponent={
-            <Button title="Adicionar endereço" icon="add" variant="secondary" onPress={() => router.push('/addresses/new')} style={styles.add} />
+            <Reveal index={1 + Math.min(addresses.data?.length ?? 0, 4)} style={styles.add}>
+              <Button title="Adicionar endereço" icon="add" variant="secondary" onPress={() => router.push('/addresses/new')} />
+            </Reveal>
           }
         />
       </Screen>

@@ -34,7 +34,7 @@ function Harness() {
 describe('ProductGrid', () => {
   beforeEach(() => list.mockReset())
 
-  it('exibe skeleton e depois os produtos da API', async () => {
+  it('exibe indicador discreto e depois os produtos reais da API', async () => {
     list.mockResolvedValue(page([product]))
     renderWithProviders(<Harness />)
     expect(screen.getByTestId('product-grid-loading')).toBeTruthy()

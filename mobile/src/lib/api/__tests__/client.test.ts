@@ -12,7 +12,7 @@ describe('api client', () => {
   const fetchMock = jest.fn()
   beforeEach(() => {
     fetchMock.mockReset()
-    global.fetch = fetchMock as unknown as typeof fetch
+    globalThis.fetch = fetchMock as unknown as typeof fetch
     setAuthBridge(null)
   })
 

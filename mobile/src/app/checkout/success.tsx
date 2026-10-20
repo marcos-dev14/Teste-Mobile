@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { BackHandler, View } from 'react-native'
 import Animated, { ReduceMotion, ZoomIn } from 'react-native-reanimated'
 
-import { Button, Icon, makeStyles, Screen, Text, useStyles } from '@/ui'
+import { Button, Icon, makeStyles, Reveal, Screen, Text, useStyles } from '@/ui'
 
 /** Sai da confirmação para as abas, mesmo quando a tela foi aberta sem pilha (deep link). */
 function leaveTo(href: '/' | { pathname: '/orders/[id]'; params: { id: string } }) {
@@ -31,19 +31,21 @@ export default function OrderSuccessScreen() {
         <Animated.View entering={ZoomIn.springify().damping(14).reduceMotion(ReduceMotion.System)} style={styles.seal}>
           <Icon name="checkmark" size={44} color="onPrimary" />
         </Animated.View>
-        <Text variant="display" align="center" accessibilityRole="header">
-          Pedido confirmado
-        </Text>
-        {number ? (
-          <Text variant="headline" color="accent" align="center">
-            #{number}
+        <Reveal index={1} style={styles.copy}>
+          <Text variant="display" align="center" accessibilityRole="header">
+            Pedido confirmado
           </Text>
-        ) : null}
-        <Text variant="body" color="textMuted" align="center" style={styles.message}>
-          Recebemos seu pedido e ele já está em preparação. Você pode acompanhar o status em “Meus pedidos”.
-        </Text>
+          {number ? (
+            <Text variant="headline" color="accent" align="center">
+              #{number}
+            </Text>
+          ) : null}
+          <Text variant="body" color="textMuted" align="center" style={styles.message}>
+            Recebemos seu pedido e ele já está em preparação. Você pode acompanhar o status em “Meus pedidos”.
+          </Text>
+        </Reveal>
       </View>
-      <View style={styles.actions}>
+      <Reveal index={2} style={styles.actions}>
         <Button
           title="Ver detalhes do pedido"
           onPress={() => {
@@ -52,7 +54,7 @@ export default function OrderSuccessScreen() {
           fullWidth
         />
         <Button title="Continuar comprando" variant="ghost" onPress={() => leaveTo('/')} fullWidth />
-      </View>
+      </Reveal>
     </Screen>
   )
 }
@@ -68,6 +70,7 @@ const styleFactory = makeStyles((t) => ({
     justifyContent: 'center',
     marginBottom: t.space.md,
   },
+  copy: { alignItems: 'center', gap: t.space.md },
   message: { maxWidth: 340 },
   actions: { paddingHorizontal: t.layout.gutter, paddingBottom: t.space.md, gap: t.space.xs },
 }))

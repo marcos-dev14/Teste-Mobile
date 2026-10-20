@@ -23,7 +23,6 @@ export interface ColorTokens {
   danger: string
   dangerSoft: string
   star: string
-  skeleton: string
   overlay: string
   imagePlaceholder: string
 }
@@ -48,7 +47,6 @@ export const lightColors: ColorTokens = {
   danger: '#B3261E',
   dangerSoft: '#F9E1DE',
   star: '#B07A1E',
-  skeleton: '#E9E3DA',
   overlay: 'rgba(26, 23, 20, 0.45)',
   imagePlaceholder: '#ECE6DD',
 }
@@ -73,7 +71,6 @@ export const darkColors: ColorTokens = {
   danger: '#F2877E',
   dangerSoft: '#3A1F1D',
   star: '#E3B45C',
-  skeleton: '#2A2622',
   overlay: 'rgba(0, 0, 0, 0.6)',
   imagePlaceholder: '#26221E',
 }
@@ -132,6 +129,18 @@ export const layout = {
   productImageAspect: 4 / 5,
 } as const
 
+/**
+ * Paleta da marca (logo, ícone, splash). Fonte dos assets: `assets/brand/build-brand.js`.
+ * Na interface, use as cores semânticas acima; estas servem a superfícies de marca.
+ */
+export const brand = {
+  ink: '#1A1714',
+  cream: '#F6F3EE',
+  clay: '#A84B29',
+  clayBright: '#C8643C',
+  clayLight: '#E58A63',
+} as const
+
 export const motion = {
   duration: { fast: 120, base: 220, slow: 320 },
   spring: {
@@ -139,6 +148,20 @@ export const motion = {
     gentle: { damping: 20, stiffness: 180, mass: 0.8 },
   },
   pressScale: 0.97,
+  /** Desaceleração natural (cúbica "ease-out quint"), usada nas entradas. */
+  easeOut: [0.22, 1, 0.36, 1] as const,
+  /** Entrada de telas: conteúdo real sobe e é revelado da esquerda para a direita, em grupos. */
+  entrance: {
+    duration: 380,
+    offsetY: 14,
+    /** Leve deriva horizontal do conteúdo enquanto a máscara avança. */
+    offsetX: 8,
+    stagger: 45,
+    /** Teto de passos escalonados: a entrada inteira termina em ≤ ~740 ms. */
+    maxSteps: 8,
+    /** Movimento reduzido: só um fade curto, sem deslocamento nem máscara. */
+    reducedDuration: 140,
+  },
 } as const
 
 export const elevation = {

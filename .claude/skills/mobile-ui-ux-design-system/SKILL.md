@@ -12,10 +12,13 @@ Arquivos: `mobile/src/ui/theme/tokens.ts` (fonte única), `mobile/src/ui/theme/t
 - Tipografia: `Fraunces` (display/títulos: `display`, `title`), `Inter` (corpo, rótulos, números). Escala: `display 32/38`, `title 24/30`, `headline 18/24`, `body 15/22`, `label 13/18`, `caption 12/16`.
 - Espaçamento base 4 (`space[1..10]`), raios (`sm 8`, `md 12`, `lg 20`, `pill 999`), elevação discreta (sombra única `card`).
 
+## Marca
+- Logo: `<Logo />` (`src/ui/brand`), variantes `full` e `symbol`, cor pelo tema. Paleta de marca em `tokens.ts → brand`. Assets gerados por `assets/brand/build-brand.js` — guia em `docs/07-identidade-visual-e-movimento.md`.
+
 ## Procedimento
 1. Procure um componente existente antes de criar um novo. Variante > novo componente.
 2. Estilos via `useStyles((t) => ({...}))`; somente tokens.
-3. Cubra estados: padrão, pressionado (`PressableScale`), desabilitado, carregando, erro, foco (TextField).
+3. Cubra estados: padrão, pressionado (`PressableScale`), desabilitado, carregando (`LoadingState`/`InlineLoader`, nunca skeleton), erro, foco (TextField). Agrupe o conteúdo da tela em `Reveal` na ordem de leitura.
 4. Acessibilidade: `accessibilityRole`, `accessibilityLabel`/`Hint`, `accessibilityState` (`selected`, `disabled`, `busy`), tamanho de fonte dinâmico permitido (não bloquear `allowFontScaling`; limitar com `maxFontSizeMultiplier` em elementos densos).
 5. Verifique contraste nos dois temas (texto ≥ 4.5:1; ícones e texto grande ≥ 3:1).
 

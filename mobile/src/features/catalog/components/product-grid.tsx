@@ -1,11 +1,11 @@
 import type { InfiniteData, UseInfiniteQueryResult } from '@tanstack/react-query'
 import { useCallback, useMemo, type ReactElement } from 'react'
-import { ActivityIndicator, FlatList, RefreshControl, useWindowDimensions, View } from 'react-native'
+import { ActivityIndicator, FlatList, RefreshControl, useWindowDimensions } from 'react-native'
 
 import type { Paginated, ProductSummary } from '@/lib/api/types'
-import { EmptyState, ErrorState, makeStyles, useStyles, useTheme } from '@/ui'
+import { EmptyState, ErrorState, LoadingState, makeStyles, useStyles, useTheme } from '@/ui'
 
-import { ProductCard, ProductCardSkeleton } from './product-card'
+import { ProductCard } from './product-card'
 
 /** Colunas por largura disponível (celular → tablet). */
 export function columnsFor(width: number): number {
@@ -19,9 +19,11 @@ interface ProductGridProps {
   header?: ReactElement
   empty: { title: string; message?: string; actionLabel?: string; onAction?: () => void }
   bottomInset?: number
+  /** Quantos grupos do cabeçalho entram antes dos cards (continua a sequência da tela). */
+  entranceOffset?: number
 }
 
-export function ProductGrid({ query, header, empty, bottomInset = 0 }: ProductGridProps) {
+export function ProductGrid({ query, header, empty, bottomInset = 0, entranceOffset = 0 }: ProductGridProps) {
   const styles = useStyles(styleFactory)
   const theme = useTheme()
   const { width } = useWindowDimensions()
@@ -34,9 +36,9 @@ export function ProductGrid({ query, header, empty, bottomInset = 0 }: ProductGr
 
   const renderItem = useCallback(
     ({ item, index }: { item: ProductSummary; index: number }) => (
-      <ProductCard product={item} width={itemWidth} index={index} />
+      <ProductCard product={item} width={itemWidth} index={index} entranceOffset={entranceOffset} />
     ),
-    [itemWidth],
+    [itemWidth, entranceOffset],
   )
 
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query
@@ -44,15 +46,10 @@ export function ProductGrid({ query, header, empty, bottomInset = 0 }: ProductGr
     if (hasNextPage && !isFetchingNextPage) void fetchNextPage()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  // Sem conteúdo ainda: indicador discreto. Com dados em cache, o refetch mantém a grade na tela.
   let emptyComponent: ReactElement
   if (query.isPending) {
-    emptyComponent = (
-      <View style={[styles.row, { gap }]} testID="product-grid-loading">
-        {Array.from({ length: columns * 2 }, (_, index) => (
-          <ProductCardSkeleton key={index} width={itemWidth} />
-        ))}
-      </View>
-    )
+    emptyComponent = <LoadingState label="Carregando produtos" testID="product-grid-loading" />
   } else if (query.isError) {
     emptyComponent = <ErrorState error={query.error} onRetry={() => void query.refetch()} />
   } else {
@@ -97,5 +94,4 @@ export function ProductGrid({ query, header, empty, bottomInset = 0 }: ProductGr
 
 const styleFactory = makeStyles(() => ({
   content: { flexGrow: 1 },
-  row: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 24 },
 }))

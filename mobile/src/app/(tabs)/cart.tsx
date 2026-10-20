@@ -9,7 +9,9 @@ import { useCartQuote } from '@/features/cart/hooks'
 import { useCartStore } from '@/features/cart/store'
 import { describeError } from '@/lib/api/errors'
 import { pluralize } from '@/lib/format'
-import { AppHeader, Button, Card, Divider, EmptyState, makeStyles, Price, Screen, Skeleton, Text, useStyles, useTheme } from '@/ui'
+import { AppHeader, Button, Card, Divider, EmptyState, InlineLoader, makeStyles, Price, Reveal, Screen, Text, useStyles, useTheme } from '@/ui'
+
+const ANIMATED_LINES = 4
 
 export default function CartScreen() {
   const styles = useStyles(styleFactory)
@@ -29,15 +31,19 @@ export default function CartScreen() {
     [quote.data],
   )
 
+  // Linhas da primeira dobra entram em sequência após o título; alterar quantidade, remover ou
+  // adicionar itens depois não reanima nada (chaves por posição, reservadas na montagem).
   const renderItem = useCallback(
-    ({ item }: { item: (typeof items)[number] }) => (
-      <CartLine
-        item={item}
-        quote={linesByColor.get(item.colorId)}
-        unavailable={unavailable.has(item.colorId)}
-        onQuantityChange={setQuantity}
-        onRemove={remove}
-      />
+    ({ item, index }: { item: (typeof items)[number]; index: number }) => (
+      <Reveal index={1 + index} once={`cart-line-${index}`} disabled={index >= ANIMATED_LINES}>
+        <CartLine
+          item={item}
+          quote={linesByColor.get(item.colorId)}
+          unavailable={unavailable.has(item.colorId)}
+          onQuantityChange={setQuantity}
+          onRemove={remove}
+        />
+      </Reveal>
     ),
     [linesByColor, unavailable, setQuantity, remove],
   )
@@ -75,28 +81,30 @@ export default function CartScreen() {
         ItemSeparatorComponent={() => <Divider />}
         showsVerticalScrollIndicator={false}
         ListFooterComponent={
-          <Card style={styles.summary}>
-            {quote.isError ? (
-              <Text variant="label" color="danger" accessibilityLiveRegion="polite">
-                {describeError(quote.error).message}
+          <Reveal index={1 + Math.min(items.length, ANIMATED_LINES)} containerStyle={styles.summary}>
+            <Card style={styles.summaryCard}>
+              {quote.isError ? (
+                <Text variant="label" color="danger" accessibilityLiveRegion="polite">
+                  {describeError(quote.error).message}
+                </Text>
+              ) : null}
+              {data && !data.isPurchasable ? (
+                <Text variant="label" color="warning" accessibilityLiveRegion="polite">
+                  Ajuste os itens destacados para continuar.
+                </Text>
+              ) : null}
+              <SummaryRow label="Subtotal" cents={data?.subtotalCents} />
+              <SummaryRow label="Frete" text={data ? (data.shippingCents === 0 ? 'Grátis' : undefined) : undefined} cents={data?.shippingCents} />
+              <Divider />
+              <SummaryRow label="Total" cents={data?.totalCents} strong />
+              <Text variant="caption" color="textMuted">
+                Preços e estoque confirmados pelo servidor no momento da compra.
               </Text>
-            ) : null}
-            {data && !data.isPurchasable ? (
-              <Text variant="label" color="warning" accessibilityLiveRegion="polite">
-                Ajuste os itens destacados para continuar.
-              </Text>
-            ) : null}
-            <SummaryRow label="Subtotal" cents={data?.subtotalCents} />
-            <SummaryRow label="Frete" text={data ? (data.shippingCents === 0 ? 'Grátis' : undefined) : undefined} cents={data?.shippingCents} />
-            <Divider />
-            <SummaryRow label="Total" cents={data?.totalCents} strong />
-            <Text variant="caption" color="textMuted">
-              Preços e estoque confirmados pelo servidor no momento da compra.
-            </Text>
-          </Card>
+            </Card>
+          </Reveal>
         }
       />
-      <View style={[styles.footer, { borderTopColor: theme.colors.border }]}>
+      <Reveal index={2 + Math.min(items.length, ANIMATED_LINES)} style={[styles.footer, { borderTopColor: theme.colors.border }]}>
         <Button
           title={status === 'authenticated' ? 'Finalizar compra' : 'Entrar para finalizar'}
           icon="arrow-forward"
@@ -107,7 +115,7 @@ export default function CartScreen() {
           fullWidth
         />
         {quote.isError ? <Button title="Tentar novamente" variant="ghost" size="md" onPress={() => void quote.refetch()} /> : null}
-      </View>
+      </Reveal>
     </Screen>
   )
 }
@@ -126,7 +134,7 @@ function SummaryRow({ label, cents, text, strong }: { label: string; cents?: num
       ) : cents !== undefined ? (
         <Price cents={cents} variant={strong ? 'priceLarge' : 'bodyStrong'} />
       ) : (
-        <Skeleton width={80} height={18} />
+        <InlineLoader />
       )}
     </View>
   )
@@ -134,7 +142,8 @@ function SummaryRow({ label, cents, text, strong }: { label: string; cents?: num
 
 const styleFactory = makeStyles((t) => ({
   list: { paddingHorizontal: t.layout.gutter, paddingBottom: t.space.xl, gap: t.space.md },
-  summary: { marginTop: t.space.lg, gap: t.space.sm },
+  summary: { marginTop: t.space.lg },
+  summaryCard: { gap: t.space.sm },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   footer: {
     paddingHorizontal: t.layout.gutter,

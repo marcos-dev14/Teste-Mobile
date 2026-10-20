@@ -18,13 +18,14 @@ import {
   EmptyState,
   ErrorState,
   IconButton,
+  LoadingState,
   makeStyles,
   Price,
   ProductImage,
   QuantityStepper,
   RatingStars,
+  Reveal,
   Screen,
-  Skeleton,
   Text,
   useStyles,
   useTheme,
@@ -58,7 +59,6 @@ export default function ProductScreen() {
   const inCart = color ? quantityInCart(cartItems, color.id) : 0
   const maxAddable = color ? Math.max(0, Math.min(color.stock, MAX_QUANTITY_PER_ITEM) - inCart) : 0
   const images = useMemo(() => (color?.imageUrls.length ? color.imageUrls : (product?.imageUrls ?? [])), [color, product])
-  const contentWidth = Math.min(width, theme.layout.maxContentWidth)
 
   useEffect(() => {
     setQuantity((current) => Math.max(1, Math.min(current, maxAddable || 1)))
@@ -77,14 +77,7 @@ export default function ProductScreen() {
     return (
       <Screen>
         <AppHeader back right={cartButton} />
-        <View style={styles.loading} testID="product-loading">
-          <Skeleton height={(contentWidth * 5) / 4} radius={0} />
-          <View style={styles.section}>
-            <Skeleton width="70%" height={28} />
-            <Skeleton width="30%" height={24} />
-            <Skeleton height={60} />
-          </View>
-        </View>
+        <LoadingState label="Carregando produto" testID="product-loading" />
       </Screen>
     )
   }
@@ -148,31 +141,34 @@ export default function ProductScreen() {
     <Screen>
       <ScrollView contentContainerStyle={{ paddingBottom: 140 + insets.bottom }} showsVerticalScrollIndicator={false}>
         <View>
-          <FlatList
-            data={images}
-            horizontal
-            pagingEnabled
-            keyExtractor={(uri) => uri}
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(event) => setImageIndex(Math.round(event.nativeEvent.contentOffset.x / width))}
-            renderItem={({ item, index }) => (
-              <View style={{ width }}>
-                <ProductImage
-                  uri={item}
-                  rounded={false}
-                  priority={index === 0 ? 'high' : 'normal'}
-                  accessibilityLabel={`${product.name}, cor ${color?.name ?? ''}, foto ${index + 1} de ${images.length}`}
-                />
+          <Reveal index={0}>
+            <FlatList
+              data={images}
+              horizontal
+              pagingEnabled
+              keyExtractor={(uri) => uri}
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(event) => setImageIndex(Math.round(event.nativeEvent.contentOffset.x / width))}
+              renderItem={({ item, index }) => (
+                <View style={{ width }}>
+                  <ProductImage
+                    uri={item}
+                    rounded={false}
+                    priority={index === 0 ? 'high' : 'normal'}
+                    accessibilityLabel={`${product.name}, cor ${color?.name ?? ''}, foto ${index + 1} de ${images.length}`}
+                  />
+                </View>
+              )}
+            />
+            {images.length > 1 ? (
+              <View style={styles.dots} accessibilityElementsHidden>
+                {images.map((uri, index) => (
+                  <View key={uri} style={[styles.dot, index === imageIndex && styles.dotActive]} />
+                ))}
               </View>
-            )}
-          />
-          {images.length > 1 ? (
-            <View style={styles.dots} accessibilityElementsHidden>
-              {images.map((uri, index) => (
-                <View key={uri} style={[styles.dot, index === imageIndex && styles.dotActive]} />
-              ))}
-            </View>
-          ) : null}
+            ) : null}
+          </Reveal>
+          {/* Navegação fora da entrada: visível e tocável desde o primeiro quadro. */}
           <View style={styles.floatingHeader}>
             <IconButton
               icon="chevron-back"
@@ -190,15 +186,15 @@ export default function ProductScreen() {
         </View>
 
         <View style={[styles.section, styles.centered, { maxWidth: theme.layout.maxContentWidth }]}>
-          <View style={styles.titleBlock}>
+          <Reveal index={1} style={styles.titleBlock}>
             <Text variant="title" accessibilityRole="header">
               {product.name}
             </Text>
             {product.rating !== null ? <RatingStars rating={product.rating} /> : null}
             <Price cents={product.priceCents} variant="priceLarge" />
-          </View>
+          </Reveal>
 
-          <View style={styles.block}>
+          <Reveal index={2} style={styles.block}>
             <View style={styles.colorHeader}>
               <Text variant="label" color="textMuted">
                 Cor: <Text variant="label">{color?.name ?? '—'}</Text>
@@ -224,10 +220,10 @@ export default function ProductScreen() {
                 />
               ))}
             </View>
-          </View>
+          </Reveal>
 
           {!soldOut ? (
-            <View style={styles.block}>
+            <Reveal index={3} once="quantity" style={styles.block}>
               <Text variant="label" color="textMuted">
                 Quantidade
               </Text>
@@ -237,19 +233,19 @@ export default function ProductScreen() {
                   {inCart} já na sacola
                 </Text>
               ) : null}
-            </View>
+            </Reveal>
           ) : null}
 
-          <View style={styles.block}>
+          <Reveal index={4} style={styles.block}>
             <Text variant="headline">Sobre a peça</Text>
             <Text variant="body" color="textMuted">
               {product.description}
             </Text>
-          </View>
+          </Reveal>
         </View>
       </ScrollView>
 
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + theme.space.sm }]}>
+      <Reveal index={5} containerStyle={styles.bottomBar} style={[styles.bottomBarContent, { paddingBottom: insets.bottom + theme.space.sm }]}>
         <View>
           <Text variant="caption" color="textMuted">
             Total
@@ -266,13 +262,12 @@ export default function ProductScreen() {
           style={styles.addButton}
           testID="add-to-cart"
         />
-      </View>
+      </Reveal>
     </Screen>
   )
 }
 
 const styleFactory = makeStyles((t) => ({
-  loading: { gap: t.space.lg },
   floatingHeader: {
     position: 'absolute',
     top: t.space.xs,
@@ -290,11 +285,8 @@ const styleFactory = makeStyles((t) => ({
   block: { gap: t.space.xs },
   colorHeader: { flexDirection: 'row', alignItems: 'center', gap: t.space.xs },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', marginLeft: -t.space.xxs },
-  bottomBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
+  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  bottomBarContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.space.md,

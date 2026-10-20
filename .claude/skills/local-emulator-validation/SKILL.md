@@ -1,13 +1,13 @@
 ---
 name: local-emulator-validation
-description: Como subir banco, API e app e validar no emulador Android local (Windows, Expo Go SDK 52) — endereços de rede corretos, variáveis de ambiente, checagem de conectividade e troubleshooting. Use ao executar o projeto localmente ou validar um fluxo no emulador.
+description: Como subir banco, API e app e validar no emulador Android local (Windows, Expo Go SDK 57) — endereços de rede corretos, variáveis de ambiente, checagem de conectividade e troubleshooting. Use ao executar o projeto localmente ou validar um fluxo no emulador.
 ---
 
 # Validação no emulador local
 
-Ambiente de referência: Windows 11, Node 24, Docker Desktop, Android SDK em `C:\Android\Sdk`, AVD **`Rentx_API30`** (Android 11, x86_64).
+Ambiente de referência: Windows 11, Node 24, Docker Desktop, Android SDK em `C:\Android\Sdk`, AVD **`Barber_App`** (Android 17); `Rentx_API30` (Android 11) também roda.
 
-> O AVD `Barber_App` usa imagem Android 37 com páginas de 16 KB (`ps16k`). As bibliotecas nativas do Expo Go SDK 52 (RN 0.76) não são alinhadas a 16 KB → use o `Rentx_API30` (ou outro AVD com imagem de 4 KB).
+> No `Rentx_API30` o Expo Go 57 deixa a barra de status preta (ícones escuros somem). Para avaliar visual/edge-to-edge, use o `Barber_App`.
 
 ## Subida
 ```powershell
@@ -17,7 +17,7 @@ cd server; docker compose up -d; docker compose ps   # status healthy
 copy .env.example .env      # primeira vez; gere JWT_SECRET (ver README)
 npm install; npm run db:migrate; npm run db:seed; npm run dev
 # 3. Emulador
-& "$env:ANDROID_HOME\emulator\emulator.exe" -avd Rentx_API30
+& "$env:ANDROID_HOME\emulator\emulator.exe" -avd Barber_App
 # 4. App
 cd ..\mobile; npm install; npx expo start --android
 ```
@@ -46,7 +46,7 @@ O app resolve automaticamente (`mobile/src/lib/env.ts`): `EXPO_PUBLIC_API_URL` �
 | "Não foi possível conectar" no app | API parada ou ouvindo em 127.0.0.1 | `HOST=0.0.0.0` no `.env`; reinicie |
 | Funciona no emulador, não no celular | firewall do Windows | liberar porta 3333 para rede privada |
 | `ECONNREFUSED 127.0.0.1:5442` | container parado | `docker compose up -d` |
-| Expo Go fecha ao abrir | AVD 16 KB | usar `Rentx_API30` |
+| "Project is incompatible with this version of Expo Go" | Expo Go de outro SDK | instalar o Expo Go do SDK 57 |
 | Bundle antigo/cache | cache do Metro | `npx expo start -c` |
 
 ## Validação

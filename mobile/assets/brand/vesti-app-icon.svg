@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <rect width="1024" height="1024" fill="#1A1714"/>
+  <g transform="translate(291.84000000000003 306.0829090909091) scale(1.0007272727272727)">
+  <polygon points="0,0 120,0 280,432 160,432" fill="#F6F3EE"/>
+  <defs>
+    <clipPath id="s-front"><polygon points="0,0 120,0 280,432 160,432"/></clipPath>
+    <linearGradient id="s-fold" gradientUnits="userSpaceOnUse" x1="240" y1="216" x2="166" y2="189">
+      <stop offset="0" stop-color="#1A1714" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#1A1714" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#s-front)"><rect x="-40" y="-40" width="400" height="520" fill="url(#s-fold)"/></g>
+  <polygon points="440,0 320,0 160,432 280,432" fill="#C8643C"/>
+  </g>
+</svg>

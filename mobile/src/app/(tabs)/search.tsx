@@ -5,7 +5,7 @@ import { ProductGrid } from '@/features/catalog/components/product-grid'
 import { SortChips } from '@/features/catalog/components/sort-chips'
 import { useDebouncedValue, useProductList } from '@/features/catalog/hooks'
 import type { ProductSort } from '@/lib/api/types'
-import { AppHeader, IconButton, makeStyles, Screen, Text, TextField, useStyles } from '@/ui'
+import { AppHeader, IconButton, makeStyles, Reveal, Screen, Text, TextField, useStyles } from '@/ui'
 
 export default function SearchScreen() {
   const styles = useStyles(styleFactory)
@@ -17,23 +17,30 @@ export default function SearchScreen() {
 
   const header = (
     <View style={styles.header}>
-      <TextField
-        label="O que você procura?"
-        icon="search"
-        value={term}
-        onChangeText={setTerm}
-        placeholder="Camiseta, jeans, bolsa…"
-        returnKeyType="search"
-        autoCorrect={false}
-        clearButtonMode="while-editing"
-        maxLength={60}
-      />
-      <SortChips value={sort} onChange={setSort} />
+      <Reveal index={1}>
+        <TextField
+          label="O que você procura?"
+          icon="search"
+          value={term}
+          onChangeText={setTerm}
+          placeholder="Camiseta, jeans, bolsa…"
+          returnKeyType="search"
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+          maxLength={60}
+        />
+      </Reveal>
+      <Reveal index={2}>
+        <SortChips value={sort} onChange={setSort} />
+      </Reveal>
+      {/* Some e volta a cada busca: entra na sequência só da primeira vez. */}
       {total !== undefined && !query.isPending ? (
-        <Text variant="caption" color="textMuted" accessibilityLiveRegion="polite">
-          {total === 0 ? 'Nenhum resultado' : `${total} ${total === 1 ? 'resultado' : 'resultados'}`}
-          {search ? ` para “${search}”` : ''}
-        </Text>
+        <Reveal index={3} once="result-count">
+          <Text variant="caption" color="textMuted" accessibilityLiveRegion="polite">
+            {total === 0 ? 'Nenhum resultado' : `${total} ${total === 1 ? 'resultado' : 'resultados'}`}
+            {search ? ` para “${search}”` : ''}
+          </Text>
+        </Reveal>
       ) : null}
     </View>
   )
@@ -47,6 +54,7 @@ export default function SearchScreen() {
       <ProductGrid
         query={query}
         header={header}
+        entranceOffset={4}
         empty={{
           title: 'Nada por aqui',
           message: search ? `Não encontramos produtos para “${search}”. Tente outro termo.` : 'Nenhum produto disponível.',
