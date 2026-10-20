@@ -47,7 +47,7 @@ describe('pedidos', () => {
       itemCount: 3,
       subtotalCents: shirt.priceCents * 2 + jeans.priceCents,
       totalCents: shirt.priceCents * 2 + jeans.priceCents,
-      shippingAddress: expect.objectContaining({ zipCode: '01310-100' }),
+      shippingAddress: expect.objectContaining({ zipCode: '01310-100', number: '123', neighborhood: 'Bela Vista' }),
     })
     expect(order.number).toBeGreaterThanOrEqual(1001)
     expect(order.items).toHaveLength(2)
@@ -210,6 +210,26 @@ describe('pedidos', () => {
     const detail = (await ctx.app.inject({ method: 'GET', url: `/v1/orders/${order.id}`, headers: user.auth })).json()
     expect(detail.totalCents).toBe(shirt.priceCents)
     expect(detail.shippingAddress.city).toBe('São Paulo')
+  })
+
+  it('pedidos gravados antes da migration 0002 devolvem número e bairro nulos', async () => {
+    const user = await buyer()
+    const shirt = await getColor(ctx.pool, 'camiseta-basica')
+    const order = (
+      await placeOrder(user.auth, {
+        addressId: user.addressId,
+        paymentMethod: 'pix',
+        items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
+      })
+    ).json()
+    await ctx.pool.query(
+      `UPDATE orders SET shipping_address = shipping_address - 'number' - 'neighborhood' WHERE id = $1`,
+      [order.id],
+    )
+
+    const detail = await ctx.app.inject({ method: 'GET', url: `/v1/orders/${order.id}`, headers: user.auth })
+    expect(detail.statusCode).toBe(200)
+    expect(detail.json().shippingAddress).toMatchObject({ number: null, neighborhood: null, city: 'São Paulo' })
   })
 })
 

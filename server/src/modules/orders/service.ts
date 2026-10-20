@@ -99,7 +99,9 @@ export function createOrdersService({ pool }: { pool: Pool }) {
               shippingAddress: {
                 fullName: address.fullName,
                 addressLine1: address.addressLine1,
+                number: address.number,
                 addressLine2: address.addressLine2,
+                neighborhood: address.neighborhood,
                 city: address.city,
                 state: address.state,
                 zipCode: address.zipCode,

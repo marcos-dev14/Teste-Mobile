@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import Fastify, { type FastifyServerOptions } from 'fastify'
+import Fastify, { type FastifyRequest, type FastifyServerOptions } from 'fastify'
 import { z } from 'zod'
 
 import type { Env } from './config/env.js'
@@ -8,6 +8,7 @@ import type { Pool } from './db/pool.js'
 import { serializerCompiler, validatorCompiler } from './lib/zod-compiler.js'
 import { addressRoutes } from './modules/addresses/routes.js'
 import { createAddressesService } from './modules/addresses/service.js'
+import { createZipCodeLookup, type ZipCodeLookup } from './modules/addresses/zip-code.js'
 import { authRoutes } from './modules/auth/routes.js'
 import { createAuthService } from './modules/auth/service.js'
 import { cartRoutes } from './modules/cart/routes.js'
@@ -23,6 +24,8 @@ export interface BuildAppOptions {
   env: Env
   pool: Pool
   logger?: FastifyServerOptions['logger']
+  /** Substitui a consulta de CEP real (testes não acessam a rede). */
+  zipCodeLookup?: ZipCodeLookup
 }
 
 /** Campos nunca registrados em log, mesmo que algum serializador futuro os inclua. */
@@ -34,17 +37,30 @@ const REDACT_PATHS = [
   'res.headers["set-cookie"]',
 ]
 
+/** O CEP consultado não vai para o log: junto com o IP, indica onde a pessoa mora. */
+export const maskLoggedUrl = (url: string) => url.replace(/(\/addresses\/zip-codes\/)[^/?#]+/, '$1[redacted]')
+
 function defaultLogger(env: Env): FastifyServerOptions['logger'] {
   return {
     level: env.LOG_LEVEL,
     redact: { paths: REDACT_PATHS, censor: '[redacted]' },
+    serializers: {
+      // Mesmos campos do serializer padrão do Fastify, com a URL mascarada.
+      req: (request: FastifyRequest) => ({
+        method: request.method,
+        url: maskLoggedUrl(request.url),
+        host: request.host,
+        remoteAddress: request.ip,
+        remotePort: request.socket?.remotePort,
+      }),
+    },
     ...(env.NODE_ENV === 'development'
       ? { transport: { target: 'pino-pretty', options: { translateTime: 'HH:MM:ss', ignore: 'pid,hostname' } } }
       : {}),
   }
 }
 
-export async function buildApp({ env, pool, logger }: BuildAppOptions) {
+export async function buildApp({ env, pool, logger, zipCodeLookup }: BuildAppOptions) {
   // Mensagens padrão de validação em português (as mensagens customizadas dos schemas têm precedência).
   z.config(z.locales.pt())
 
@@ -82,7 +98,10 @@ export async function buildApp({ env, pool, logger }: BuildAppOptions) {
     refreshTokenTtlDays: env.REFRESH_TOKEN_TTL_DAYS,
   })
   const ordersService = createOrdersService({ pool })
-  const addressesService = createAddressesService({ pool })
+  const addressesService = createAddressesService({
+    pool,
+    zipCodeLookup: zipCodeLookup ?? createZipCodeLookup({ log: app.log }),
+  })
 
   await app.register(healthRoutes(pool))
   await app.register(

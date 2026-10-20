@@ -49,6 +49,51 @@ describe('endereços', () => {
     expect(response.statusCode).toBe(400)
   })
 
+  it('grava número e bairro, normaliza a UF e exige ambos em novos endereços', async () => {
+    const alice = await registerUser(ctx.app)
+    const created = await ctx.app.inject({
+      method: 'POST',
+      url: '/v1/addresses',
+      headers: alice.auth,
+      payload: { ...validAddress, state: ' sp ', number: 'S/N' },
+    })
+    expect(created.statusCode).toBe(201)
+    expect(created.json()).toMatchObject({ number: 'S/N', neighborhood: 'Bela Vista', state: 'SP' })
+
+    const withoutDetails: Partial<typeof validAddress> = { ...validAddress }
+    delete withoutDetails.number
+    delete withoutDetails.neighborhood
+    const missing = await ctx.app.inject({ method: 'POST', url: '/v1/addresses', headers: alice.auth, payload: withoutDetails })
+    expect(missing.statusCode).toBe(400)
+    const paths = missing.json().error.details.map((detail: { path: string }) => detail.path)
+    expect(paths).toEqual(expect.arrayContaining(['body.number', 'body.neighborhood']))
+  })
+
+  it('rejeita UF inexistente ou por extenso', async () => {
+    const alice = await registerUser(ctx.app)
+    for (const state of ['XX', 'São Paulo']) {
+      const response = await ctx.app.inject({
+        method: 'POST',
+        url: '/v1/addresses',
+        headers: alice.auth,
+        payload: { ...validAddress, state },
+      })
+      expect(response.statusCode).toBe(400)
+    }
+  })
+
+  it('endereços anteriores à migration 0002 continuam legíveis (número e bairro nulos)', async () => {
+    const alice = await registerUser(ctx.app)
+    await ctx.pool.query(
+      `INSERT INTO addresses (user_id, full_name, address_line1, city, state, zip_code, country)
+       VALUES ($1, 'Pessoa Antiga', 'Rua Velha, 10', 'Recife', 'Pernambuco', '50000-000', 'Brasil')`,
+      [alice.user.id],
+    )
+    const list = await ctx.app.inject({ method: 'GET', url: '/v1/addresses', headers: alice.auth })
+    expect(list.statusCode).toBe(200)
+    expect(list.json().data[0]).toMatchObject({ addressLine1: 'Rua Velha, 10', number: null, neighborhood: null })
+  })
+
   it('não remove endereço de outro usuário (404)', async () => {
     const alice = await registerUser(ctx.app)
     const bob = await registerUser(ctx.app)

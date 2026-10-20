@@ -1,10 +1,11 @@
 import type { Pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
-import { conflict, notFound } from '../../lib/errors.js'
+import { AppError, conflict, notFound } from '../../lib/errors.js'
 import * as repo from './repository.js'
-import { MAX_ADDRESSES_PER_USER, type AddressDto, type CreateAddressBody } from './schemas.js'
+import { MAX_ADDRESSES_PER_USER, type AddressDto, type CreateAddressBody, type ZipCodeLookupDto } from './schemas.js'
+import { ZipCodeLookupUnavailable, type ZipCodeLookup } from './zip-code.js'
 
-export function createAddressesService({ pool }: { pool: Pool }) {
+export function createAddressesService({ pool, zipCodeLookup }: { pool: Pool; zipCodeLookup: ZipCodeLookup }) {
   return {
     list: (userId: string): Promise<AddressDto[]> => repo.listAddresses(pool, userId),
 
@@ -18,6 +19,18 @@ export function createAddressesService({ pool }: { pool: Pool }) {
         throw conflict('ADDRESS_LIMIT', `Você pode ter no máximo ${MAX_ADDRESSES_PER_USER} endereços.`)
       }
       return address
+    },
+
+    /** Sugestão de preenchimento: o formulário continua editável e o `create` valida tudo de novo. */
+    async lookupZipCode(digits: string): Promise<ZipCodeLookupDto> {
+      try {
+        const result = await zipCodeLookup(digits)
+        if (!result) throw notFound('CEP não encontrado.', 'ZIP_CODE_NOT_FOUND')
+        return result
+      } catch (error) {
+        if (!(error instanceof ZipCodeLookupUnavailable)) throw error
+        throw new AppError(503, 'ZIP_CODE_LOOKUP_UNAVAILABLE', 'Consulta de CEP indisponível. Preencha o endereço manualmente.')
+      }
     },
 
     async remove(userId: string, addressId: string): Promise<void> {

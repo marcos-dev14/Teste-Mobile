@@ -28,7 +28,10 @@ export const orderStatusSchema = z.enum(['placed', 'paid', 'shipped', 'delivered
 export const shippingAddressSchema = z.object({
   fullName: z.string(),
   addressLine1: z.string(),
+  // Ausentes nas cópias gravadas antes da migration 0002.
+  number: z.string().nullable().default(null),
   addressLine2: z.string().nullable(),
+  neighborhood: z.string().nullable().default(null),
   city: z.string(),
   state: z.string(),
   zipCode: z.string(),
