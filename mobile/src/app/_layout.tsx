@@ -1,94 +1,93 @@
-import "@/styles/global.css"
-
-import { useEffect } from "react"
-import { StatusBar } from "expo-status-bar"
-import { GestureHandlerRootView } from "react-native-gesture-handler"
-import { Slot, Stack } from "expo-router"
+import { Fraunces_600SemiBold } from '@expo-google-fonts/fraunces'
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter'
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { useFonts } from 'expo-font'
+import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
-import { 
-  useFonts,
-  NotoSans_400Regular,
-  NotoSans_500Medium,
-  NotoSans_600SemiBold,
-  NotoSans_700Bold,
-  NotoSans_300Light
-} from "@expo-google-fonts/noto-sans" 
-import { QueryClientProvider } from "@tanstack/react-query"
+import { StatusBar } from 'expo-status-bar'
+import { useEffect, useMemo, useState } from 'react'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 
-import { queryClient } from "@/lib/queryClient"
-import { CartContextProvider } from "@/context/cart-context"
-import { UserProvider } from "@/context/user-context"
+import { session, useSession } from '@/features/auth/session-store'
+import { useSessionCleanup } from '@/features/auth/use-session-cleanup'
+import { createQueryClient, wireQueryLifecycle } from '@/lib/query-client'
+import { ThemeProvider, ToastProvider, useTheme } from '@/ui'
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync()
 
-export default function Layout() {
-  const [ fontsLoaded, fontError ] = useFonts({
-    NotoSans_300Light,
-    NotoSans_400Regular,
-    NotoSans_500Medium,
-    NotoSans_600SemiBold,
-    NotoSans_700Bold,
+export default function RootLayout() {
+  const [queryClient] = useState(createQueryClient)
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces_600SemiBold,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   })
+  const sessionStatus = useSession((state) => state.status)
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError]);
+    wireQueryLifecycle()
+    void session.bootstrap()
+  }, [])
 
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+  // Sem espera artificial: o splash some assim que fontes e sessão local estão prontas.
+  const ready = (fontsLoaded || !!fontError) && sessionStatus !== 'loading'
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync()
+  }, [ready])
+
+  if (!ready) return null
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <CartContextProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <Stack>
-              <Stack.Screen
-                  name="index"
-                  options={{
-                    headerShown: false,
-                  }}
-                />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <ToastProvider>
+              <SessionEffects />
+              <ThemedNavigation />
+            </ToastProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
+  )
+}
 
-              <Stack.Screen
-                name="login"
-                options={{
-                  headerShown: false,
-                }}
-              />
+function SessionEffects() {
+  useSessionCleanup()
+  return null
+}
 
-              <Stack.Screen
-                name="register"
-                options={{
-                  headerShown: false,
-                }}
-              />
+function ThemedNavigation() {
+  const theme = useTheme()
+  const navigationTheme = useMemo(() => {
+    const base = theme.scheme === 'dark' ? DarkTheme : DefaultTheme
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        background: theme.colors.bg,
+        card: theme.colors.surface,
+        text: theme.colors.text,
+        border: theme.colors.border,
+        primary: theme.colors.accent,
+      },
+    }
+  }, [theme])
 
-              <Stack.Screen
-                name="(tabs)"
-                options={{
-                  headerShown: false,
-                  animation: 'fade_from_bottom',
-                }}
-              />
-
-              <Stack.Screen
-                name="(drawer)"
-                options={{
-                  headerShown: false,
-                }}
-              />
-
-              <Slot />
-            </Stack>
-
-            <StatusBar style="dark" translucent backgroundColor="transparent" />
-          </GestureHandlerRootView>
-        </CartContextProvider>
-      </UserProvider>
-    </QueryClientProvider>
+  return (
+    <NavigationThemeProvider value={navigationTheme}>
+      <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.bg }, animation: 'slide_from_right' }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="sign-in" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="sign-up" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="checkout/success" options={{ gestureEnabled: false, animation: 'fade' }} />
+      </Stack>
+    </NavigationThemeProvider>
   )
 }
