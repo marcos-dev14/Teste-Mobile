@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
-import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native'
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { RequireAuth } from '@/features/auth/require-auth'
-import { AppHeader, makeStyles, ScreenTitle, Screen, useStyles } from '@/ui'
+import { AppHeader, makeStyles, Reveal, ScreenTitle, Screen, useStyles } from '@/ui'
 
 import { CheckoutSteps } from './checkout-steps'
+
+/** Posição de entrada do primeiro bloco de conteúdo das etapas (depois do progresso e do título). */
+export const CONTENT_ENTRANCE = 2
 
 /** Estrutura comum das etapas: cabeçalho, progresso, conteúdo rolável e ação fixa no rodapé. */
 export function CheckoutLayout({ step, title, children, footer }: { step: 0 | 1 | 2; title: string; children: ReactNode; footer?: ReactNode }) {
@@ -17,11 +20,17 @@ export function CheckoutLayout({ step, title, children, footer }: { step: 0 | 1 
         <AppHeader back title="Checkout" fallbackHref="/cart" />
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            <CheckoutSteps current={step} />
-            <ScreenTitle title={title} />
+            <Reveal index={0}>
+              <CheckoutSteps current={step} />
+            </Reveal>
+            <ScreenTitle title={title} entranceIndex={1} />
             {children}
           </ScrollView>
-          {footer ? <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>{footer}</View> : null}
+          {footer ? (
+            <Reveal index={CONTENT_ENTRANCE + 3} style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
+              {footer}
+            </Reveal>
+          ) : null}
         </KeyboardAvoidingView>
       </Screen>
     </RequireAuth>

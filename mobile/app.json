@@ -7,17 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "vesti",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "backgroundColor": "#F6F3EE",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F6F3EE",
-      "dark": {
-        "image": "./assets/images/splash-icon.png",
-        "backgroundColor": "#141210"
-      }
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.marcospaulodev.vesti"
@@ -25,7 +15,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#F6F3EE"
+        "backgroundColor": "#1A1714"
       },
       "package": "com.marcospaulodev.mobile",
       "blockedPermissions": [
@@ -40,6 +30,19 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 96,
+          "resizeMode": "contain",
+          "backgroundColor": "#F6F3EE",
+          "dark": {
+            "image": "./assets/images/splash-icon-dark.png",
+            "backgroundColor": "#141210"
+          }
+        }
+      ],
       "expo-font",
       "expo-secure-store",
       "expo-asset"

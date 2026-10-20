@@ -63,7 +63,7 @@ describe('session store', () => {
     mocked.logout.mockResolvedValue(undefined)
 
     const pending = refreshAccessToken()
-    await new Promise((resolve) => setImmediate(resolve))
+    await new Promise<void>((resolve) => setImmediate(resolve))
     await session.signOut()
     resolveRefresh({ tokens: tokens(9) })
 

@@ -23,7 +23,7 @@ Referência única para agentes, skills e pessoas. Skills em `.claude/skills/` a
 - Rotas em `src/app/` são finas: compõem componentes de `src/features/*` e `src/ui/*`.
 - Nenhuma cor, tamanho de fonte, raio ou espaçamento literal fora de `src/ui/theme/tokens.ts` (exceção: valores derivados de layout, como larguras calculadas).
 - Estilos com `useStyles(factory)` (memoizado por tema). Nada de estilos inline recriados a cada render em listas.
-- Toda tela com dados remotos trata **carregando (skeleton) · erro (com "tentar novamente") · vazio · sucesso**.
+- Toda tela com dados remotos trata **carregando (`LoadingState`, sem skeleton) · erro (com "tentar novamente") · vazio · sucesso**.
 - Todo elemento tocável tem `accessibilityRole` e `accessibilityLabel` (quando não há texto), área mínima de 44×44 dp (`hitSlop` se necessário).
 - Animações via Reanimated em propriedades de transform/opacity; respeitar `useReducedMotion()`.
 - Chamadas HTTP somente via `src/lib/api/client.ts`; tipos de contrato em `src/lib/api/types.ts`.

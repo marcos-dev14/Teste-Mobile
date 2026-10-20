@@ -6,7 +6,7 @@ Base: auditoria em [01-auditoria.md](01-auditoria.md). Cada decisão referencia 
 
 ```
 ┌──────────────────────────┐   HTTPS/HTTP (dev)    ┌───────────────────────────────┐     SQL     ┌──────────────┐
-│ App Expo (SDK 52)        │ ───────────────────▶ │ API Fastify 5 (Node 24, TS)   │ ──────────▶ │ PostgreSQL 16│
+│ App Expo (SDK 57)        │ ───────────────────▶ │ API Fastify 5 (Node 24, TS)   │ ──────────▶ │ PostgreSQL 16│
 │ Expo Router · RQ · Zustand│  Bearer access JWT   │ módulos: auth, products, cart,│  pg (pool)  │ migrations   │
 │ SecureStore (tokens)     │ ◀─────────────────── │ addresses, orders, health     │             │ SQL versionad│
 └──────────────────────────┘   JSON + erros padrão └───────────────────────────────┘             └──────────────┘
@@ -78,9 +78,9 @@ O original coletava número de cartão e CVV e os descartava (S12). A nova vers�
 - Configuração validada com Zod no boot (`src/config/env.ts`): app não sobe com `JWT_SECRET` curto ou `DATABASE_URL` ausente.
 
 ### ADR-09 — Mobile: arquitetura
-- **Manter Expo SDK 52** (RN 0.76, New Architecture já habilitada). Somente patches recomendados por `npx expo install --check`. Upgrade de SDK é decisão separada (pendência).
+- **Expo SDK 57** (RN 0.86, React 19, New Architecture obrigatória), atualizado a partir do SDK 52 para rodar no Expo Go atual (o do iOS só aceita a versão mais recente). Versões sempre as de `npx expo install --check`; `npx expo-doctor` sem falhas.
 - **Remover**: NativeWind/Tailwind (camada de interop em runtime; substituída por design system tipado com `StyleSheet`), Skia, expo-camera, drawer, react-content-loader, masked-view, AsyncStorage para sessão.
-- **Adicionar** (todas presentes no Expo Go SDK 52): `expo-secure-store`, `expo-image` (cache em disco, placeholder, transição), `expo-haptics`, `zustand` (carrinho com seletores e persistência), fontes Google (`Fraunces` display + `Inter` texto).
+- **Adicionar** (todas presentes no Expo Go): `expo-secure-store`, `expo-image` (cache em disco, placeholder, transição), `expo-haptics`, `zustand` (carrinho com seletores e persistência), fontes Google (`Fraunces` display + `Inter` texto).
 - Estrutura por feature:
   ```
   src/app/            rotas finas (Expo Router)
@@ -94,8 +94,8 @@ O original coletava número de cartão e CVV e os descartava (S12). A nova vers�
 
 ### ADR-10 — Design system e animações
 - Identidade nova "**Vesti**": editorial, tons quentes neutros, tipografia serifada para títulos, acento terracota. Tokens em `src/ui/theme/tokens.ts` (cores semânticas claro/escuro, tipografia, espaçamento base 4, raios, elevação, durações).
-- Componentes: `Text`, `Button`, `IconButton`, `TextField`, `Screen`, `AppHeader`, `ProductCard`, `Price`, `Badge`, `Chip`, `QuantityStepper`, `ColorSwatch`, `Skeleton`, `EmptyState`, `ErrorState`, `Toast`, `PressableScale`, `RatingStars`, `Divider`, `ListItem`.
-- Animações com **Reanimated 3** (já instalado): feedback de toque por escala na UI thread, entrada escalonada de cards, bounce do badge do carrinho, skeleton shimmer, toast. Todas respeitam `useReducedMotion()` (fallback para transições instantâneas/opacity). Haptics leves em ações de carrinho.
+- Componentes: `Text`, `Button`, `IconButton`, `TextField`, `Screen`, `AppHeader`, `ProductCard`, `Price`, `Badge`, `Chip`, `QuantityStepper`, `ColorSwatch`, `LoadingState`, `Reveal`, `Logo`, `EmptyState`, `ErrorState`, `Toast`, `PressableScale`, `RatingStars`, `Divider`, `ListItem`.
+- Animações com **Reanimated 4** (sobre `react-native-worklets`; callbacks para o JS com `scheduleOnRN`): feedback de toque por escala na UI thread, entrada de telas com revelação do conteúdo real (`Reveal`, ver docs/07), splash animada, bounce do badge do carrinho, toast. Todas respeitam `useReducedMotion()` (fallback para transições instantâneas/opacity). Haptics leves em ações de carrinho.
 
 ## 3. Contrato da API (v1, prefixo `/v1`)
 

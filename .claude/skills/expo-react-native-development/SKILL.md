@@ -1,6 +1,6 @@
 ---
 name: expo-react-native-development
-description: Como desenvolver no app Expo (SDK 52, RN 0.76, Expo Router 4) deste projeto — estrutura por feature, dados com React Query, estado com Zustand, cliente HTTP tipado, sessão segura e instalação de dependências compatíveis. Use ao criar ou alterar telas, hooks e integrações no mobile.
+description: Como desenvolver no app Expo (SDK 57, RN 0.86, React 19, Expo Router 57) deste projeto — estrutura por feature, dados com React Query, estado com Zustand, cliente HTTP tipado, sessão segura e instalação de dependências compatíveis. Use ao criar ou alterar telas, hooks e integrações no mobile.
 ---
 
 # Desenvolvimento Expo / React Native
@@ -20,12 +20,12 @@ mobile/src/
 1. Confirme o endpoint e o tipo em `src/lib/api/types.ts` (espelha `server/src/modules/*/schemas.ts`).
 2. Função de API em `features/<x>/api.ts` usando `apiClient` (nunca `fetch`/axios direto).
 3. Hook em `features/<x>/hooks.ts` com query key de `src/lib/query-keys.ts`. Dados do usuário: key inclui `userId`.
-4. Tela em `src/app/...` usando `<Screen>`, componentes de `src/ui` e os quatro estados (skeleton, `ErrorState` com retry, `EmptyState`, conteúdo).
+4. Tela em `src/app/...` usando `<Screen>`, componentes de `src/ui` e os quatro estados (`LoadingState`, `ErrorState` com retry, `EmptyState`, conteúdo revelado com `Reveal`).
 5. Mutação: `useMutation` + `invalidateQueries` das chaves afetadas + feedback (`toast`) + tratamento de `ApiError` por `code`.
 6. Teste do componente/hook relevante em `__tests__`.
 
 ## Dependências
-- Sempre `npx expo install <pkg>` (resolve a versão do SDK). Verifique se o módulo nativo está no Expo Go SDK 52; se não estiver, exige dev build — discuta com o `software-architect` antes.
+- Sempre `npx expo install <pkg>` (resolve a versão do SDK). Verifique se o módulo nativo está no Expo Go SDK 57; se não estiver, exige dev build — discuta com o `software-architect` antes.
 - Proibido: NativeWind/Tailwind (removido), AsyncStorage para tokens, bibliotecas de UI completas.
 
 ## Rede local

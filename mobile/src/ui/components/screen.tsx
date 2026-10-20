@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { View, type StyleProp, type ViewStyle } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { ScreenEntrance } from '../motion/screen-entrance'
 import { makeStyles, useStyles } from '../theme/theme-provider'
 
 export interface ScreenProps {
@@ -13,6 +14,7 @@ export interface ScreenProps {
   testID?: string
 }
 
+/** Raiz de toda tela: fundo, área segura e coordenação da entrada (`Reveal`). */
 export function Screen({ children, edges = ['top'], background = 'bg', style, testID }: ScreenProps) {
   const styles = useStyles(styleFactory)
   const insets = useSafeAreaInsets()
@@ -29,7 +31,7 @@ export function Screen({ children, edges = ['top'], background = 'bg', style, te
         style,
       ]}
     >
-      {children}
+      <ScreenEntrance>{children}</ScreenEntrance>
     </View>
   )
 }

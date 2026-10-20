@@ -2,6 +2,7 @@ import { router } from 'expo-router'
 import type { ReactNode } from 'react'
 import { View } from 'react-native'
 
+import { Reveal } from '../motion/reveal'
 import { makeStyles, useStyles } from '../theme/theme-provider'
 import { IconButton } from './icon-button'
 import { Text } from './text'
@@ -38,8 +39,9 @@ export function AppHeader({ title, largeTitle, subtitle, back, fallbackHref = '/
           <View style={[styles.side, styles.right]}>{right}</View>
         </View>
       ) : null}
+      {/* A barra (voltar/ações) fica estável; só o título entra, como primeiro grupo da tela. */}
       {largeTitle ? (
-        <View style={styles.large}>
+        <Reveal index={0} style={styles.large}>
           <Text variant="display" accessibilityRole="header">
             {largeTitle}
           </Text>
@@ -48,7 +50,7 @@ export function AppHeader({ title, largeTitle, subtitle, back, fallbackHref = '/
               {subtitle}
             </Text>
           ) : null}
-        </View>
+        </Reveal>
       ) : null}
     </View>
   )
@@ -64,10 +66,10 @@ const styleFactory = makeStyles((t) => ({
 }))
 
 /** Título de tela para uso dentro de conteúdo que já aplica a margem lateral (listas, formulários). */
-export function ScreenTitle({ title, subtitle }: { title: string; subtitle?: string }) {
+export function ScreenTitle({ title, subtitle, entranceIndex = 0 }: { title: string; subtitle?: string; entranceIndex?: number }) {
   const styles = useStyles(titleStyleFactory)
   return (
-    <View style={styles.container}>
+    <Reveal index={entranceIndex} style={styles.container}>
       <Text variant="display" accessibilityRole="header">
         {title}
       </Text>
@@ -76,7 +78,7 @@ export function ScreenTitle({ title, subtitle }: { title: string; subtitle?: str
           {subtitle}
         </Text>
       ) : null}
-    </View>
+    </Reveal>
   )
 }
 

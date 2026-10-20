@@ -2,6 +2,7 @@ import { View } from 'react-native'
 
 import { describeError } from '@/lib/api/errors'
 
+import { Reveal } from '../motion/reveal'
 import { makeStyles, useStyles } from '../theme/theme-provider'
 import { Button } from './button'
 import { Icon, type IconName } from './icon'
@@ -19,23 +20,26 @@ interface StateLayoutProps {
 
 function StateLayout({ icon, title, message, actionLabel, onAction, tone = 'neutral', testID }: StateLayoutProps) {
   const styles = useStyles(styleFactory)
+  // Entrada discreta (mesmo padrão das telas), sem bloquear a ação de tentar novamente.
   return (
-    <View style={styles.container} testID={testID} accessibilityLiveRegion="polite">
-      <View style={[styles.iconWrap, tone === 'danger' && styles.iconDanger]}>
-        <Icon name={icon} size={28} color={tone === 'danger' ? 'danger' : 'textMuted'} />
-      </View>
-      <Text variant="title" align="center" accessibilityRole="header">
-        {title}
-      </Text>
-      {message ? (
-        <Text variant="body" color="textMuted" align="center" style={styles.message}>
-          {message}
+    <Reveal containerStyle={styles.grow} style={styles.grow} testID={testID}>
+      <View style={styles.container} accessibilityLiveRegion="polite">
+        <View style={[styles.iconWrap, tone === 'danger' && styles.iconDanger]}>
+          <Icon name={icon} size={28} color={tone === 'danger' ? 'danger' : 'textMuted'} />
+        </View>
+        <Text variant="title" align="center" accessibilityRole="header">
+          {title}
         </Text>
-      ) : null}
-      {actionLabel && onAction ? (
-        <Button title={actionLabel} onPress={onAction} variant="secondary" size="md" style={styles.action} />
-      ) : null}
-    </View>
+        {message ? (
+          <Text variant="body" color="textMuted" align="center" style={styles.message}>
+            {message}
+          </Text>
+        ) : null}
+        {actionLabel && onAction ? (
+          <Button title={actionLabel} onPress={onAction} variant="secondary" size="md" style={styles.action} />
+        ) : null}
+      </View>
+    </Reveal>
   )
 }
 
@@ -72,6 +76,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
 }
 
 const styleFactory = makeStyles((t) => ({
+  grow: { flexGrow: 1 },
   container: {
     flexGrow: 1,
     alignItems: 'center',

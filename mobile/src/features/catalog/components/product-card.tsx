@@ -1,30 +1,33 @@
 import { router } from 'expo-router'
 import { memo } from 'react'
 import { View } from 'react-native'
-import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated'
 
 import type { ProductSummary } from '@/lib/api/types'
 import { formatMoney } from '@/lib/format'
-import { Badge, makeStyles, PressableScale, Price, ProductImage, RatingStars, Skeleton, Text, useStyles } from '@/ui'
+import { Badge, makeStyles, PressableScale, Price, ProductImage, RatingStars, Reveal, Text, useStyles } from '@/ui'
 
-/** Entradas escalonadas só na primeira "dobra": itens além disso aparecem sem animação. */
+/** Só a primeira "dobra" entra animada; o resto da lista (e as próximas páginas) aparece pronto. */
 const ANIMATED_ITEMS = 6
 
 interface ProductCardProps {
   product: ProductSummary
   width: number
   index: number
+  /** Posição do primeiro card na sequência de entrada da tela (depois do cabeçalho). */
+  entranceOffset?: number
 }
 
-export const ProductCard = memo(function ProductCard({ product, width, index }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product, width, index, entranceOffset = 0 }: ProductCardProps) {
   const styles = useStyles(styleFactory)
-  const entering =
-    index < ANIMATED_ITEMS
-      ? FadeInDown.delay(index * 40).duration(260).reduceMotion(ReduceMotion.System)
-      : undefined
 
+  // A chave por posição (não por produto) impede reanimar ao rolar de volta, filtrar ou paginar.
   return (
-    <Animated.View entering={entering} style={{ width }}>
+    <Reveal
+      index={entranceOffset + index}
+      once={`product-card-${index}`}
+      disabled={index >= ANIMATED_ITEMS}
+      containerStyle={{ width }}
+    >
       <PressableScale
         onPress={() => router.push({ pathname: '/product/[id]', params: { id: product.id } })}
         accessibilityRole="button"
@@ -55,22 +58,9 @@ export const ProductCard = memo(function ProductCard({ product, width, index }: 
           </View>
         </View>
       </PressableScale>
-    </Animated.View>
+    </Reveal>
   )
 })
-
-export function ProductCardSkeleton({ width }: { width: number }) {
-  const styles = useStyles(styleFactory)
-  return (
-    <View style={{ width }}>
-      <Skeleton height={(width * 5) / 4} radius={12} />
-      <View style={styles.info}>
-        <Skeleton width="80%" height={14} />
-        <Skeleton width="40%" height={16} />
-      </View>
-    </View>
-  )
-}
 
 const styleFactory = makeStyles((t) => ({
   card: { gap: t.space.xs },

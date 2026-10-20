@@ -8,14 +8,14 @@ import { useCurrentUser } from '@/features/auth/require-auth'
 import { toPurchaseItems } from '@/features/cart/cart-logic'
 import { useCartQuote } from '@/features/cart/hooks'
 import { useCartStore } from '@/features/cart/store'
-import { CheckoutLayout } from '@/features/checkout/checkout-layout'
+import { CheckoutLayout, CONTENT_ENTRANCE } from '@/features/checkout/checkout-layout'
 import { idempotencyKeyFor, useCheckout } from '@/features/checkout/store'
 import { PAYMENT_LABELS, usePlaceOrder } from '@/features/orders/api'
 import { describeError, isApiError } from '@/lib/api/errors'
 import { formatMoney, pluralize } from '@/lib/format'
 import { queryKeys } from '@/lib/query-keys'
 import { haptics } from '@/lib/haptics'
-import { Button, Card, Divider, ErrorState, makeStyles, Price, ProductImage, Skeleton, Text, useStyles, useToast } from '@/ui'
+import { Button, Card, Divider, ErrorState, InlineLoader, LoadingState, makeStyles, Price, ProductImage, Reveal, Text, useStyles, useToast } from '@/ui'
 
 export default function CheckoutReviewScreen() {
   const styles = useStyles(styleFactory)
@@ -94,57 +94,65 @@ export default function CheckoutReviewScreen() {
     >
       {quote.isError ? <ErrorState error={quote.error} onRetry={() => void quote.refetch()} /> : null}
 
-      <Card style={styles.card}>
-        <Text variant="headline">Itens</Text>
-        {data ? (
-          data.lines.map((line) => (
-            <View key={line.colorId} style={styles.line}>
-              <View style={styles.thumb}>
-                <ProductImage uri={line.imageUrl} recyclingKey={line.colorId} />
-              </View>
-              <View style={styles.flex}>
-                <Text variant="label" numberOfLines={2}>
-                  {line.productName}
-                </Text>
-                <Text variant="caption" color="textMuted">
-                  {line.colorName} · {line.quantity}×
-                </Text>
-                {line.status !== 'ok' ? (
-                  <Text variant="caption" color="danger">
-                    Só {line.availableStock} em estoque
+      <Reveal index={CONTENT_ENTRANCE}>
+        <Card style={styles.card}>
+          <Text variant="headline">Itens</Text>
+          {data ? (
+            data.lines.map((line) => (
+              <View key={line.colorId} style={styles.line}>
+                <View style={styles.thumb}>
+                  <ProductImage uri={line.imageUrl} recyclingKey={line.colorId} />
+                </View>
+                <View style={styles.flex}>
+                  <Text variant="label" numberOfLines={2}>
+                    {line.productName}
                   </Text>
-                ) : null}
+                  <Text variant="caption" color="textMuted">
+                    {line.colorName} · {line.quantity}×
+                  </Text>
+                  {line.status !== 'ok' ? (
+                    <Text variant="caption" color="danger">
+                      Só {line.availableStock} em estoque
+                    </Text>
+                  ) : null}
+                </View>
+                <Price cents={line.lineTotalCents} variant="bodyStrong" />
               </View>
-              <Price cents={line.lineTotalCents} variant="bodyStrong" />
-            </View>
-          ))
-        ) : (
-          <Skeleton height={64} />
-        )}
-      </Card>
+            ))
+          ) : (
+            <LoadingState layout="inline" label="Calculando itens" />
+          )}
+        </Card>
+      </Reveal>
 
-      <Card style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text variant="headline">Entrega</Text>
-          <Button title="Alterar" variant="ghost" size="md" onPress={() => router.navigate('/checkout/address')} />
-        </View>
-        {address ? <AddressSummary address={address} /> : <Skeleton height={60} />}
-      </Card>
+      <Reveal index={CONTENT_ENTRANCE + 1}>
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text variant="headline">Entrega</Text>
+            <Button title="Alterar" variant="ghost" size="md" onPress={() => router.navigate('/checkout/address')} />
+          </View>
+          {address ? <AddressSummary address={address} /> : <LoadingState layout="inline" label="Carregando endereço" />}
+        </Card>
+      </Reveal>
 
-      <Card style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text variant="headline">Pagamento</Text>
-          <Button title="Alterar" variant="ghost" size="md" onPress={() => router.navigate('/checkout/payment')} />
-        </View>
-        <Text variant="body">{PAYMENT_LABELS[paymentMethod]}</Text>
-      </Card>
+      <Reveal index={CONTENT_ENTRANCE + 2}>
+        <Card style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text variant="headline">Pagamento</Text>
+            <Button title="Alterar" variant="ghost" size="md" onPress={() => router.navigate('/checkout/payment')} />
+          </View>
+          <Text variant="body">{PAYMENT_LABELS[paymentMethod]}</Text>
+        </Card>
+      </Reveal>
 
-      <Card style={styles.card}>
-        <Row label={data ? `Subtotal (${pluralize(data.itemCount, 'item', 'itens')})` : 'Subtotal'} cents={data?.subtotalCents} />
-        <Row label="Frete" cents={data?.shippingCents} free={data?.shippingCents === 0} />
-        <Divider />
-        <Row label="Total" cents={data?.totalCents} strong />
-      </Card>
+      <Reveal index={CONTENT_ENTRANCE + 3}>
+        <Card style={styles.card}>
+          <Row label={data ? `Subtotal (${pluralize(data.itemCount, 'item', 'itens')})` : 'Subtotal'} cents={data?.subtotalCents} />
+          <Row label="Frete" cents={data?.shippingCents} free={data?.shippingCents === 0} />
+          <Divider />
+          <Row label="Total" cents={data?.totalCents} strong />
+        </Card>
+      </Reveal>
     </CheckoutLayout>
   )
 }
@@ -163,7 +171,7 @@ function Row({ label, cents, strong, free }: { label: string; cents?: number; st
       ) : cents !== undefined ? (
         <Price cents={cents} variant={strong ? 'priceLarge' : 'bodyStrong'} />
       ) : (
-        <Skeleton width={80} height={18} />
+        <InlineLoader />
       )}
     </View>
   )

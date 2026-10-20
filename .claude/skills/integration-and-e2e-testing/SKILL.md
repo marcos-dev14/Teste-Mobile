@@ -20,7 +20,7 @@ description: Estratégia e procedimentos de teste do projeto — unitários e in
 
 ## Mobile
 - Renderize com `renderWithProviders` (`QueryClient` sem retry, tema, safe area mock). Mocke a rede no nível de `apiClient`, não do axios interno.
-- Teste estados: skeleton → conteúdo; erro → botão "Tentar novamente" refaz a query; lista vazia.
+- Teste estados: indicador de carregamento → conteúdo real; erro → botão "Tentar novamente" refaz a query; lista vazia.
 - Store do carrinho testada como função pura (add/merge/limite/remove).
 
 ## Ponta a ponta (emulador)

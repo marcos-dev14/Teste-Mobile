@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 432" width="440" height="432">
+  <polygon points="0,0 120,0 280,432 160,432" fill="#F3EEE7"/>
+  <defs>
+    <clipPath id="d-front"><polygon points="0,0 120,0 280,432 160,432"/></clipPath>
+    <linearGradient id="d-fold" gradientUnits="userSpaceOnUse" x1="240" y1="216" x2="166" y2="189">
+      <stop offset="0" stop-color="#1A1714" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#1A1714" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#d-front)"><rect x="-40" y="-40" width="400" height="520" fill="url(#d-fold)"/></g>
+  <polygon points="440,0 320,0 160,432 280,432" fill="#E58A63"/>
+</svg>
