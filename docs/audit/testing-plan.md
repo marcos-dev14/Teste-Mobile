@@ -5,10 +5,11 @@
 | Projeto | Comando | Antes | Depois |
 |---|---|---|---|
 | server | `pnpm typecheck` · `lint` · `build` | ✅ | ✅ |
-| server | `pnpm test` (Vitest + Postgres real) | 65/65 | **81/81** |
-| server | `pnpm audit --prod` | 0 vulnerabilidades | 0 (nenhuma dependência nova) |
+| server | `pnpm test` (Vitest + Postgres real) | 65/65 | **136/136** (cartão, Pix, boleto, webhooks, CPF/CNPJ) |
+| server | `pnpm audit --prod` | 0 vulnerabilidades | 0 (com `stripe` 23.0.0) |
 | mobile | `pnpm typecheck` · `lint` | ✅ | ✅ |
-| mobile | `pnpm test` (jest-expo) | 58/58 | **70/70** |
+| mobile | `pnpm test` (jest-expo) | 58/58 | **86/86** |
+| mobile | `npx expo config` | — | ✅ (quebrava com o config plugin do Stripe sem opções; corrigido — incluir na CI) |
 | mobile | `pnpm audit --prod` | 5 (2 high, 3 moderate) | inalterado (nenhuma dependência nova) |
 
 Verificações manuais executadas:
@@ -16,7 +17,9 @@ Verificações manuais executadas:
 - API compilada contra o banco de desenvolvimento: sem token → 401; CEP → 200 (634 ms a frio, ~2 ms em cache); inexistente → 404 `ZIP_CODE_NOT_FOUND`; UF `XX` → 400; log de requisições mostra `/v1/addresses/zip-codes/[redacted]` (nenhuma ocorrência do CEP).
 - Migration `0002` aplicada no banco de desenvolvimento; `pnpm db:cleanup` executado.
 
-**Não executado**: app no emulador/aparelho (animações e formulário só foram verificados por testes de componente — a fluidez precisa ser conferida em build de release, ver §4), testes de carga, testes de pagamento (bloqueados).
+- Stripe em modo de teste, ponta a ponta pela API compilada: aprovado → `paid`; recusado → segue pendente; cancelamento → PI `canceled` e estoque devolvido; reserva vencida → cancelada pela rotina; pagar pedido já pago → 409. Nenhuma chave nem client secret apareceu no log (ver checkout-stripe §5).
+
+**Não executado**: app no emulador/aparelho (animações, formulário e painel de cartão só foram verificados por testes de componente; precisam ser conferidos no aparelho, ver §4), 3DS, webhook com segredo real (falta a Stripe CLI), testes de carga.
 
 ## 2. Novos testes
 
@@ -46,3 +49,5 @@ Verificações manuais executadas:
 - Toque durante o voo (segundo item) reinicia a animação sem travar.
 - "Reduzir movimento" ligado: sem voo nem bump, só badge e botão mudam.
 - Teclado no formulário: foco salta para "Número" após o CEP; "Próximo" percorre na ordem visual.
+- Painel de cartão (Expo Go ou build) — textos em português, tema claro/escuro, teclado não cobre o botão "Pagar": cartão `4242 4242 4242 4242` → tela "Pagamento aprovado"; `4000 0000 0000 0002` → erro e "Pagar agora" continua disponível; `4000 0025 0000 3155` → autenticação 3DS e retorno ao app; fechar a folha → "Pedido aguardando pagamento" com prazo; "Cancelar pedido" → "Pedido cancelado"; tema escuro.
+- Pix: contagem regressiva visível e em destaque nos últimos 5 min; com `teste+fill_never@…`, ao zerar o QR some, aparece "O tempo para pagar acabou" e em até ~1–2 min o pedido vira "expirado" com o estoque devolvido. Diálogo "Cancelar pedido?" no visual do app (tema claro/escuro, voltar do Android fecha sem cancelar).

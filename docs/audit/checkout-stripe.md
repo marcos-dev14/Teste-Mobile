@@ -1,104 +1,143 @@
-# Checkout, pagamento e Stripe (somente Test Mode)
+# Checkout e pagamentos — Stripe (somente modo de teste)
 
-## 1. Fluxo atual (inspecionado)
+Atualizado em 2026-10-21. Cartão, Pix e boleto implementados e validados **contra o Stripe em modo de teste**, incluindo webhooks reais. Nenhuma chave `live` existe no projeto e o código as recusa em três pontos.
 
-| Etapa | Onde | Autoridade | Situação |
-|---|---|---|---|
-| Seleção de cor/quantidade | `app/product/[id].tsx` | App (limitado por estoque exibido) | ✅ servidor revalida |
-| Sacola | Zustand local + `POST /v1/cart/quote` | **Servidor** (preço, estoque, totais) | ✅ |
-| Endereço | `POST /v1/addresses` | Servidor (posse) | ✅ |
-| Frete | `SHIPPING_CENTS = 0` em `orders/pricing.ts` | Servidor | ℹ️ não há regra de frete (não inventar) |
-| Descontos | — | — | ℹ️ não existem |
-| Pagamento | Tela `checkout/payment` só escolhe o método | — | ❌ **nenhuma cobrança** |
-| Criação do pedido | `POST /v1/orders` (transação, `FOR UPDATE`, idempotência + fingerprint) | Servidor | ✅ |
-| Estoque | Baixado **na criação** do pedido, sem prazo | Servidor | ⚠️ S-02: pedidos nunca pagos prendem estoque |
-| Confirmação | `checkout/success`: "Pedido confirmado… em preparação" | **App** | ❌ S-01 → texto corrigido nesta rodada |
-| Status | Sempre `placed` | — | ❌ nada transiciona |
-| Cancelamento/reembolso | — | — | ❌ inexistente |
+## 1. Métodos disponíveis e limitações
 
-Testes que já cobrem o fluxo atual (`server/test/orders.test.ts`, `security.test.ts`): preço manipulado pelo cliente (400), estoque insuficiente (409), corrida pela última unidade (1×201, 5×409), repetição com mesma chave (200, mesmo pedido), mesma chave com outro conteúdo (409), pedido de outra conta (404), endereço de outra conta (404).
+Evidência obtida pela API do Stripe com a chave de teste do projeto (2026-10-21):
 
-## 2. Bloqueio
+| Verificação | Resultado |
+|---|---|
+| País / moeda da conta | `BR` / `brl` |
+| Configuração de métodos padrão | cartão, Pix e boleto **disponíveis e ativos** |
+| PaymentIntent com cada método (`allowed_payment_method_types`) | aceito para `card`, `pix`, `boleto` |
+| Confirmação de Pix no servidor | `requires_action` + `next_action.pix_display_qr_code` |
+| Confirmação de boleto no servidor | `requires_action` + `next_action.boleto_display_details` |
+| `charges_enabled` | **false** — a conta **não está ativada para cobranças reais** (não afeta o modo de teste) |
 
-**Não há conta/chaves Stripe no ambiente** (`grep` sem resultados; `.env.example` sem variáveis). Implementar sem chaves de teste impediria validar o fluxo de ponta a ponta (DoD §11). Necessário (B-05): `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_PUBLISHABLE_KEY=pk_test_…`, `STRIPE_WEBHOOK_SECRET=whsec_…` (do `stripe listen` local) e a confirmação de quais métodos a conta tem habilitados (cartão; Pix e boleto dependem de conta Stripe Brasil).
+Limitações (documentação oficial: docs.stripe.com/payments/pix e /payments/boleto):
 
-## 3. Fluxo proposto
+| Método | Exige do pagador | Vencimento | Cancelamento | Confirmação |
+|---|---|---|---|---|
+| Cartão | dados digitados nos campos do Stripe.js (iframes do Stripe numa WebView do painel; não passam pela API nem pelo JS do app) | reserva de 30 min | a qualquer momento antes de pagar | imediata |
+| Pix | nome, e-mail, **CPF/CNPJ** | 60 s a 14 dias (usamos o fim da reserva, 30 min) | antes de vencer | segundos após o pagamento |
+| Boleto | nome, e-mail, **CPF/CNPJ**, **endereço** | 0 a 60 dias (usamos 3) | **não é possível com o boleto em aberto** | `succeeded` **1 dia útil** após o pagamento; vencido → `payment_failed` 1 dia útil após o vencimento |
 
-```
-App                                   API                                         Stripe (test)
- │ POST /v1/orders (Idempotency-Key)   │ transação: trava, recalcula, reserva estoque │
- │ ──────────────────────────────────▶ │ order.status = pending_payment               │
- │                                     │ reserved_until = now()+30 min                │
- │                                     │ PaymentIntent.create(amount=total do banco,  │
- │                                     │   currency=brl, metadata.order_id,           │
- │                                     │   idempotencyKey = "order:<id>") ──────────▶ │
- │ ◀── { order, payment: { clientSecret, customerEphemeralKey?, publishableKey } }    │
- │ PaymentSheet (UI do Stripe; cartão nunca passa pela API)  ─────────────────────────▶│
- │ resultado do SDK = só "dica" de UX ──▶ tela "Processando pagamento" + polling       │
- │                                     │ ◀── webhook payment_intent.succeeded (assinado)
- │                                     │ verifica assinatura (raw body), dedupe por event.id,
- │                                     │ confere amount/currency/order_id, transição monotônica
- │ GET /v1/orders/:id  ──────────────▶ │ status = paid  → app mostra "Pagamento aprovado"
-```
+**Cartão (2026-10-22):** o PaymentSheet foi substituído por um painel próprio do app (`card-payment-sheet.tsx`). Número, validade e CVC são campos separados, com títulos e tema do app, feitos com Stripe.js Elements (`cardNumber`, `cardExpiry`, `cardCvc`, `locale: pt-BR`) numa WebView (`stripe-card-fields.tsx`): cada campo é um iframe do Stripe, então o cartão não passa pelo JS do app nem pela API (PCI SAQ A). A confirmação usa `confirmCardPayment(..., { handleActions: false })`; se o banco pedir 3DS, o app chama `handleNextAction` do SDK nativo (tela cheia). Recusa não fecha o painel (o cliente troca de cartão no mesmo pedido). A página só carrega `js.stripe.com` e Google Fonts; navegação no quadro principal é bloqueada.
 
-### Máquina de estados
+**Pix (2026-10-22):** contagem regressiva até o vencimento (= fim da reserva, 30 min); ao zerar, o QR some e o app consulta a cada 15 s até a rotina do servidor (a cada minuto) expirar o pedido e devolver o estoque.
 
-Pedido (`orders.status`):
+**Web:** o SDK `@stripe/stripe-react-native` é só nativo. Na web o Metro usa `mobile/src/features/payments/payment-sheet.web.ts`: cartão informa que está disponível apenas no app; Pix e boleto funcionam (gerados pelo servidor).
+
+Pix em produção exige conta Stripe Brasil elegível e ativada; não há como confirmar essa elegibilidade em modo de teste (pendência P-PROD-1).
+
+## 2. Fluxo implementado
 
 ```
-pending_payment ──(payment_intent.succeeded)──▶ paid ──▶ shipped ──▶ delivered
-       │                                          │
-       ├──(payment_failed: permanece; usuário pode tentar de novo até expirar)
-       ├──(reserva expirou / usuário cancelou / payment_intent.canceled)──▶ cancelled  (+ devolve estoque, cancela PI)
-                                                   └──(charge.refunded total)──▶ refunded (+ devolve estoque se não enviado)
+App                                        API                                            Stripe (test)
+ │ GET /v1/payment-methods ─────────────▶ │ métodos habilitados (PAYMENT_METHODS)          │
+ │ POST /v1/orders {paymentMethod}        │ transação: trava usuário e cores, recalcula     │
+ │   (Idempotency-Key) ─────────────────▶ │ preços/estoque, reserva estoque:                │
+ │                                        │  cartão/Pix 30 min · boleto vencimento + 4 dias │
+ │ POST /v1/orders/:id/payment            │ PaymentIntent (total do banco, brl, só o        │
+ │   cartão: sem corpo                    │  método do pedido, metadata.order_id,           │
+ │   Pix/boleto: { taxId } ────────────▶  │  idempotência por pedido) ────────────────────▶ │
+ │                                        │ Pix/boleto: confirma no servidor com nome e     │
+ │                                        │  e-mail da conta, CPF/CNPJ (não gravado) e,     │
+ │                                        │  no boleto, o endereço de entrega do pedido ──▶ │
+ │ ◀── cartão: { clientSecret, publishableKey (pk_test_) }                                  │
+ │ ◀── Pix: { qrCodeData, qrCodeImageUrl, hostedInstructionsUrl, expiresAt }                │
+ │ ◀── boleto: { number, pdfUrl, hostedVoucherUrl, expiresAt }                              │
+ │ cartão: Stripe.js    ──────────────────────────────────────────────────────────────────▶ │
+ │ POST /v1/orders/:id/payment/sync ────▶ │ lê o PaymentIntent no Stripe e aplica o estado  │
+ │   (após o Stripe.js;    Pix a cada 5 s;│                                                 │
+ │    processando a cada 3 s)             │ ◀── webhooks assinados (dedupe por event.id)    │
+ │                                        │ rotina a cada 60 s: reserva vencida → expired   │
 ```
 
-Regras:
-- Transições só **para frente** (tabela de transições permitidas no serviço + `UPDATE … WHERE status = <esperado>`): evento atrasado (`processing` depois de `succeeded`) é ignorado; `succeeded` depois de `cancelled` → registrar alerta e reembolsar automaticamente (pagamento de pedido já cancelado).
-- `paid` **só** via webhook verificado (ou reconciliação server-side consultando o PaymentIntent na API do Stripe) — nunca pela resposta do SDK no app.
-- Pedidos legados `placed` permanecem como estão (migration não reescreve dados).
+O app **nunca** decide que um pedido foi pago: `paid` só vem do PaymentIntent lido pelo servidor (webhook verificado ou reconciliação).
 
-### Modelo de dados (migration `0003_payments.sql`, aditiva)
-- `orders.status` passa a aceitar `pending_payment`, `refunded`; coluna `reserved_until timestamptz`.
-- `payments(id, order_id UNIQUE, provider 'stripe', provider_payment_intent_id UNIQUE, status, amount_cents, currency, last_event_at, created_at, updated_at)`.
-- `payment_events(provider_event_id PRIMARY KEY, type, received_at, processed_at)` → deduplicação de webhooks.
+## 3. Estados
 
-### Garantias de "somente teste"
-- `env.ts`: `STRIPE_SECRET_KEY` deve casar com `^(sk|rk)_test_`; `STRIPE_PUBLISHABLE_KEY` com `^pk_test_`. Chave `live` → **app não sobe** (teste unitário obrigatório).
-- Nenhuma chave no app além da publicável de teste, entregue pela API.
+**Pedido** (`orders.status`):
 
-## 4. Backlog do pagamento
-
-| ID | Task | P | Depende |
-|---|---|---|---|
-| PAY-01 | Texto honesto na confirmação (pedido recebido ≠ pago) | P1 | — (**feito**) |
-| PAY-02 | Migration de estados + `payments` + `payment_events` | P1 | B-05 |
-| PAY-03 | Criação de PaymentIntent no `POST /orders`, guarda de chave `test` | P1 | PAY-02 |
-| PAY-04 | Webhook `/v1/webhooks/stripe` (raw body, assinatura, dedupe, transição monotônica, valor/moeda conferidos) | P1 | PAY-02 |
-| PAY-05 | Expiração de reserva: job que cancela `pending_payment` vencidos, devolve estoque e cancela o PI | P1 | PAY-02 |
-| PAY-06 | App: `@stripe/stripe-react-native` (incluído no Expo Go) com PaymentSheet; tela de processamento com polling do pedido | P1 | PAY-03 |
-| PAY-07 | Cancelamento pelo cliente enquanto `pending_payment`; reembolso de teste para `paid` | P2 | PAY-04 |
-| PAY-08 | Limite de pedidos `pending_payment` por usuário (ex.: 3) | P2 | PAY-02 |
-| PAY-09 | Reconciliação: endpoint/rotina que consulta o PI quando o webhook não chega | P2 | PAY-04 |
-
-## 5. Testes obrigatórios (Stripe Test Mode)
-
-| Cenário | Como | Esperado |
+| Estado | Significado | Libera o pedido? |
 |---|---|---|
-| Aprovado | cartão `4242 4242 4242 4242` | webhook `succeeded` → `paid`; estoque permanece baixado |
-| Recusado | `4000 0000 0000 0002` | `payment_failed`; pedido segue `pending_payment`; nova tentativa possível |
-| Autenticação 3DS | `4000 0025 0000 3155` | sheet pede autenticação; só `paid` após webhook |
-| Pendente | Pix/boleto de teste (se habilitados) ou PI em `processing` | pedido `pending_payment`, app mostra "aguardando" |
-| Abandono | fechar o sheet | pedido `pending_payment`; expira em 30 min → `cancelled` + estoque devolvido |
-| Timeout na confirmação | derrubar a rede após confirmar | app consulta `GET /orders/:id`; não duplica pedido (mesma `Idempotency-Key`) |
-| Webhook duplicado | reenviar o mesmo `event.id` | 200, sem efeito |
-| Assinatura inválida | header alterado | 400, nada muda |
-| Fora de ordem | `processing` após `succeeded` | ignorado; continua `paid` |
-| Repetição da compra | mesma chave | mesmo pedido e mesmo PI |
-| Preço alterado pelo cliente | campo `price` | 400 (já coberto) |
-| Estoque alterado | estoque zerado entre cotação e pedido | 409 (já coberto) |
-| Pedido de outra conta | `GET /orders/:id` alheio | 404 (já coberto) |
-| Stripe indisponível | mock do cliente lançando erro | transação revertida, estoque devolvido, 503 |
-| Chave live | `STRIPE_SECRET_KEY=sk_live_…` | boot falha |
+| `pending_payment` | aguardando pagamento (inclui Pix/boleto gerado, pagamento em processamento e tentativa recusada) | não |
+| `paid` | Stripe confirmou `succeeded` com valor e moeda conferidos | **sim** |
+| `cancelled` | cancelado pelo cliente (PaymentIntent cancelado, estoque devolvido) | não |
+| `expired` | reserva venceu sem pagamento, ou boleto venceu (estoque devolvido) | não |
+| `refunded` | reembolsado (inclusive automático: pagamento que chegou após cancelamento/expiração) | não |
+| `placed` | pedidos anteriores à integração | — |
 
-Ferramentas: Stripe CLI (`stripe listen --forward-to localhost:3333/v1/webhooks/stripe`, `stripe trigger payment_intent.succeeded`) e testes de integração com cliente Stripe injetado + `stripe.webhooks.generateTestHeaderString` para assinar eventos sem rede.
+**Pagamento** (exposto em `paymentStatus` e `paymentFailureCode`): o status do PaymentIntent. "Em processamento" = `processing`; "recusado/falhou" = `requires_payment_method` com `paymentFailureCode` (ex.: `card_declined`, `payment_intent_payment_attempt_failed` para Pix expirado).
+
+Regras: estados finais do pagamento (`succeeded`, `canceled`) são definitivos (evento atrasado não regride); valor, moeda e `metadata.order_id` precisam bater; boleto vencido (`payment_failed`) expira o pedido na hora; Pix vencido permite gerar novo QR enquanto a reserva valer.
+
+## 4. Alterações
+
+**Backend** (`server/`): migrations `0003_payments.sql` e `0004_async_payment_methods.sql` (aditivas); `src/modules/payments/{gateway,service,repository,routes}.ts`; `src/modules/orders/*` (métodos por configuração, reserva por método, `expired`, `paymentFailureCode`); `src/lib/tax-id.ts` (CPF/CNPJ com dígitos verificadores); `src/config/env.ts`; `src/app.ts` (redação de `req.body.taxId` nos logs; rotina de expiração).
+
+**App** (`mobile/`): `src/features/payments/*` (painel de cartão com campos do Stripe.js, API, painel de Pix/boleto, ações do pedido pendente); `src/app/checkout/{payment,review,success}.tsx`; `src/app/orders/[id].tsx`; `src/lib/tax-id.ts`; `src/features/checkout/store.ts` (CPF só em memória); dependências `@stripe/stripe-react-native` 0.64 e `expo-clipboard` (ambas no Expo Go); `app.json` (config plugin do Stripe com opções explícitas — sem elas a configuração do Expo não avaliava).
+
+## 5. Variáveis de ambiente (`server/.env`; valores nunca versionados)
+
+| Variável | Obrigatória | Descrição |
+|---|---|---|
+| `STRIPE_SECRET_KEY` | sim (fora dos testes) | `sk_test_…` / `rk_test_…`. Chave `live` derruba o boot |
+| `STRIPE_PUBLISHABLE_KEY` | sim (fora dos testes) | `pk_test_…`; entregue ao app pela API |
+| `STRIPE_WEBHOOK_SECRET` | não | `whsec_…`. Sem ela o webhook responde 503 e vale a reconciliação |
+| `PAYMENT_METHODS` | não | `credit_card,pix,boleto` (padrão). Habilite só o que a conta oferece |
+| `PAYMENT_RESERVATION_MINUTES` | não | reserva de cartão e Pix (padrão 30); o Pix vence junto |
+| `BOLETO_EXPIRES_AFTER_DAYS` | não | vencimento do boleto, 0–60 (padrão 3) |
+| `BOLETO_CONFIRMATION_GRACE_DAYS` | não | dias extras de reserva após o vencimento (padrão 4) |
+
+## 6. Webhooks de teste
+
+```powershell
+cd server
+$env:STRIPE_API_KEY = "<sk_test_...>"     # ou: stripe login
+npx -y @stripe/cli listen --print-secret   # copie o whsec_ para STRIPE_WEBHOOK_SECRET no .env
+npx -y @stripe/cli listen --forward-to localhost:3333/v1/webhooks/stripe `
+  --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.processing,payment_intent.canceled,payment_intent.requires_action,charge.refunded
+```
+
+Simulação em modo de teste (Pix e boleto): CPF `000.000.000-00` e o **e-mail da conta** controla o resultado — `…succeed_immediately@…` (pago em segundos), `…expire_immediately@…` (expira em segundos), `…fill_never@…` (nunca paga), qualquer outro (pago em ~3 min). Cartões: `4242 4242 4242 4242` (aprovado), `4000 0000 0000 0002` (recusado), `4000 0025 0000 3155` (3DS).
+
+## 7. Testes e resultados (2026-10-21)
+
+**Automatizados**: servidor 136/136 (`test/payments.test.ts`, `test/payments-async.test.ts`, `test/payment-methods.test.ts`, `src/lib/tax-id.test.ts`, `src/modules/payments/gateway.test.ts`); app 86/86 (`src/features/payments/__tests__/*`, `src/lib/__tests__/tax-id.test.ts`).
+
+**Reais** (API compilada + Stripe modo de teste + `stripe listen`, sem chamar a reconciliação nos cenários de webhook):
+
+| Cenário | Resultado |
+|---|---|
+| Pix pago (`succeed_immediately`) | ✅ QR + copia-e-cola; `paid` pelo webhook |
+| Pix expirado (`expire_immediately`) | ✅ segue `pending_payment` com `payment_intent_payment_attempt_failed`; novo QR gerado; cancelamento → `cancelled` |
+| Boleto pago | ✅ número + PDF; `paid` pelo webhook |
+| Cancelar boleto em aberto | ✅ 409 `ORDER_NOT_CANCELLABLE` |
+| Boleto vencido (`expire_immediately`) | ✅ `expired`, PI `canceled`, estoque devolvido |
+| Cartão (chave publicável + client secret, como o PaymentSheet) | ✅ `paid` pelo webhook |
+| Webhook com assinatura falsa | ✅ 400 |
+| Webhook `payment_intent.canceled` vindo do Dashboard/API | ✅ pedido encerrado sozinho |
+| Estoque ao fim | ✅ exato (pagos baixam; cancelados/expirados devolvem) |
+| CPF no banco / CPF, e-mail, chaves, `whsec_`, client secret no log | ✅ nenhuma ocorrência |
+| Pix com vencimento = reserva (`fill_never`) | ✅ diferença de 0 s |
+
+**Achados do teste real, corrigidos**: (1) recusa de cancelamento sem código de erro (boleto em aberto; Pix mudando de estado) virava 503 — agora é tratada como "não cancelável agora" e o estado real é relido; (2) mensagem de erro do provedor no log podia ecoar CPF/e-mail — agora é mascarada; (3) config plugin do Stripe sem opções quebrava a configuração do Expo.
+
+**Não validado neste ambiente**: painel de cartão, QR Code e boleto **renderizados no aparelho** (cobertos por testes de componente); 3DS; webhooks entregues fora de ordem pelo Stripe real (cobertos por testes com eventos assinados); comportamento sob carga.
+
+## 8. Pendências para uma futura ativação em produção
+
+| ID | Pendência |
+|---|---|
+| P-PROD-1 | Ativar a conta Stripe (`charges_enabled`), confirmar elegibilidade de Pix e boleto para a empresa e habilitá-los no Dashboard live |
+| P-PROD-2 | Decisão explícita do responsável para trocar `sk_test_`/`pk_test_` por `live`: hoje o código **recusa** chaves live (env, adaptador e app) e aceita CPFs de teste fora de produção — remover essas travas é uma mudança consciente e revisada |
+| P-PROD-3 | Endpoint de webhook live no Dashboard (HTTPS público) com o `whsec_` live em cofre de segredos |
+| P-PROD-4 | Revisar prazos de boleto e reserva com o negócio (estoque fica reservado por até 7 dias) |
+| P-PROD-5 | Rotina de expiração como job agendado único (hoje roda no processo da API) |
+| P-PROD-6 | LGPD: CPF/CNPJ passa a ser tratado (enviado ao Stripe, EUA) — política de privacidade, base legal e transferência internacional (`privacy-lgpd.md`) |
+| P-PROD-7 | Reembolso solicitado pelo cliente e política de cancelamento após pagamento (CDC, direito de arrependimento) |
+| P-PROD-8 | Monitorar reembolsos automáticos que falharem (hoje: log de erro para ação manual) |
+| P-PROD-9 | Gerar novas chaves de teste: a secreta atual foi compartilhada em conversa |

@@ -15,7 +15,7 @@ Esta versão é uma reengenharia completa do teste prático original (NestJS + P
 - Detalhe do produto com variações de cor, estoque por cor e galeria.
 - Sacola persistida no aparelho, com preços, estoque e totais **calculados pelo servidor**.
 - Cadastro e login com sessão segura (access token em memória e refresh token rotativo no SecureStore).
-- Checkout em 3 etapas (entrega → pagamento → revisão) com pedido transacional e idempotente.
+- Checkout em 3 etapas (entrega → pagamento → revisão) com pedido transacional e idempotente e pagamento por **cartão, Pix e boleto via Stripe, somente em modo de teste** (painel próprio com o campo seguro do Stripe para cartão; QR Code/copia-e-cola e boleto gerados pelo servidor; confirmação sempre pelo servidor via webhook ou reconciliação; estoque reservado até o prazo de pagamento). Detalhes: [docs/audit/checkout-stripe.md](docs/audit/checkout-stripe.md).
 - Histórico e detalhe de pedidos; gerenciamento de endereços.
 - Identidade visual própria (logo, ícone, splash animada) e entrada de telas que revela o conteúdo real, sem skeleton.
 - Tema claro/escuro, acessibilidade (rótulos, papéis, áreas de toque ≥ 44 dp), estados de carregamento/erro/vazio/offline.
@@ -27,7 +27,7 @@ cd server
 docker compose up -d
 
 # 2) API
-copy .env.example .env    # defina JWT_SECRET (instruções no arquivo)
+copy .env.example .env    # defina JWT_SECRET e as chaves de TESTE do Stripe (instruções no arquivo)
 pnpm install
 pnpm db:migrate
 pnpm db:seed
@@ -48,7 +48,9 @@ Guia completo, verificação de rede emulador ↔ API e troubleshooting: **[docs
 | server | `pnpm dev` | API com recarga automática |
 | server | `pnpm build` / `pnpm start` | build e execução compilada |
 | server | `pnpm db:migrate` / `db:status` / `db:seed` | migrations e dados de desenvolvimento |
-| server | `pnpm db:cleanup` | descarta refresh tokens expirados há mais de 7 dias (agendar em produção) |
+| server | `pnpm db:cleanup` | descarta refresh tokens expirados há mais de 7 dias |
+| server | `pnpm jobs:run` | manutenção (expira pedidos vencidos, repete reembolsos devidos, descarta sessões) — agendar a cada minuto em produção |
+| server | `pnpm db:integrity` | verificações de integridade somente leitura (código de saída 1 em anomalia) |
 | server | `pnpm typecheck` / `lint` / `test` | qualidade (testes usam apenas o banco `ecommerce_test`) |
 | mobile | `pnpm expo start` | Metro + Expo Go |
 | mobile | `pnpm typecheck` / `lint` / `test` | qualidade |

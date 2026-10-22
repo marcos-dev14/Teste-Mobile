@@ -43,7 +43,7 @@ Linha de base executada em 2026-10-20: `server` → typecheck ✅, lint ✅, **6
 | S-12 | Preventivo | — | Sem CI: nada impede merge com teste/lint/audit falhando | ausência de workflows | QA-04 |
 | S-13 | Preventivo | — | Sem monitoramento de erros em produção | ausência de SDK | OBS-01 (exige avaliação de fornecedor/LGPD) |
 
-**Não encontrado** (verificado): SSRF (até esta auditoria a API não fazia chamadas de saída), upload de arquivos (não existe), XSS (API JSON com CSP `none`; app nativo sem WebView), webhooks (não existem), papéis administrativos (removidos na v2), credenciais versionadas.
+**Não encontrado** (verificado): upload de arquivos (não existe), XSS (API JSON com CSP `none`; app nativo sem WebView), papéis administrativos (removidos na v2), credenciais versionadas. *(Atualizado em 2026-10-21: a API hoje faz chamadas de saída — ViaCEP/BrasilAPI com host fixo, sem redirecionamento e com limite de resposta; Stripe — e recebe webhooks com verificação de assinatura. Revisão completa em [final-security-audit.md](final-security-audit.md).)*
 
 ## 3. Novas superfícies introduzidas nesta rodada e controles
 
@@ -61,5 +61,5 @@ Linha de base executada em 2026-10-20: `server` → typecheck ✅, lint ✅, **6
 | Decisões críticas no servidor | ✅ preço, estoque, posse; ⚠️ "pedido confirmado" era decisão do app → corrigido (S-01) |
 | Deep links | ⚠️ esquema `vesti://` sem App Links/Universal Links verificados; redirect com allowlist; S-03 |
 | Separação de ambientes | ⚠️ só `EXPO_PUBLIC_API_URL`; sem `eas.json`/perfis de build → QA-04/REL |
-| Capturas de tela | ✅ não necessário hoje (sem dado de cartão no app). Com Stripe, o PaymentSheet coleta o cartão em UI própria |
+| Capturas de tela | ✅ não necessário hoje (sem dado de cartão no app). Com Stripe, o cartão é digitado nos campos do Stripe.js (iframes do Stripe numa WebView); o app não tem acesso ao número |
 | Backup Android | ℹ️ `allowBackup` padrão: AsyncStorage (sacola) entra no backup; SecureStore é excluído pelo plugin. Aceitável |

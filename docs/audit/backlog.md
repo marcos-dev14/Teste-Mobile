@@ -9,14 +9,16 @@ Status: ✅ concluído e validado · 🟡 parcial · ⛔ bloqueado · ⬜ a faze
 | ID | Título | Agente | P | Risco | Esf. | Depende | Status |
 |---|---|---|---|---|---|---|---|
 | PAY-01 | Confirmação honesta: pedido recebido ≠ pago | A3/A6 | P1 | Baixo | P | — | ✅ |
-| PAY-02 | Estados de pedido/pagamento + tabelas de pagamento | A3 | P1 | Alto | M | B-05 | ⛔ |
-| PAY-03 | PaymentIntent no `POST /orders` + guarda `sk_test_` | A3 | P1 | Alto | M | PAY-02 | ⛔ |
-| PAY-04 | Webhook Stripe assinado, idempotente, monotônico | A3/A1 | P1 | Alto | M | PAY-02 | ⛔ |
-| PAY-05 | Reserva de estoque com expiração | A3/A5 | P1 | Médio | M | PAY-02 | ⛔ |
-| PAY-06 | PaymentSheet no app + tela de processamento | A3/A6 | P1 | Médio | M | PAY-03 | ⛔ |
-| PAY-07 | Cancelamento pelo cliente e reembolso de teste | A3 | P2 | Médio | M | PAY-04 | ⛔ |
-| PAY-08 | Limite de pedidos pendentes por usuário | A1/A3 | P2 | Baixo | P | PAY-02 | ⛔ |
-| PAY-09 | Reconciliação quando o webhook não chega | A3 | P2 | Médio | M | PAY-04 | ⛔ |
+| PAY-02 | Estados de pedido/pagamento + tabelas de pagamento | A3 | P1 | Alto | M | — | ✅ |
+| PAY-03 | PaymentIntent por pedido + guarda `sk_test_`/`pk_test_` | A3 | P1 | Alto | M | PAY-02 | ✅ |
+| PAY-04 | Webhook Stripe assinado, idempotente, monotônico | A3/A1 | P1 | Alto | M | PAY-02 | ✅ validado com `stripe listen` |
+| PAY-05 | Reserva de estoque com expiração | A3/A5 | P1 | Médio | M | PAY-02 | ✅ |
+| PAY-06 | Painel de cartão do app (campos do Stripe.js) + tela de resultado | A3/A6 | P1 | Médio | M | PAY-03 | 🟡 falta rodar no aparelho |
+| PAY-07 | Cancelamento pelo cliente e reembolso automático | A3 | P2 | Médio | M | PAY-04 | ✅ |
+| PAY-08 | Limite de pedidos pendentes por usuário | A1/A3 | P2 | Baixo | P | PAY-02 | ✅ |
+| PAY-09 | Reconciliação quando o webhook não chega | A3 | P2 | Médio | M | PAY-04 | ✅ |
+| PAY-10 | Pix e boleto via Stripe | A3 | P2 | Médio | M | — | ✅ modo de teste (produção: checkout-stripe §8) |
+| PAY-11 | Parcelamento no cartão | A3 | P2 | Médio | G | B-07 | ⛔ Stripe Brasil não oferece |
 | LGPD-01 | Política de privacidade no app e em URL | A4/A6 | P1 | Baixo | P | B-01 | 🟡 rascunho |
 | LGPD-02 | Exclusão de conta | A4/A1 | P1 | Alto | M | B-02 | ⛔ |
 | LGPD-03 | Exportação de dados do titular | A4 | P2 | Baixo | P | — | ⬜ |
@@ -46,7 +48,7 @@ Status: ✅ concluído e validado · 🟡 parcial · ⛔ bloqueado · ⬜ a faze
 | OBS-01 | Monitoramento de crash/erros | A6/A1 | P2 | Baixo | P | B-03 | ⛔ |
 | OBS-02 | Métricas de latência/erro por rota | A5 | P2 | Baixo | M | — | ⬜ |
 | QA-01 | E2E (Maestro) dos fluxos de compra | A7 | P2 | — | M | — | ⬜ |
-| QA-02 | Suíte de testes do Stripe (ver checkout-stripe §5) | A7 | P1 | — | M | PAY-02…06 | ⛔ |
+| QA-02 | Suíte de testes do Stripe (ver checkout-stripe §7) | A7 | P1 | — | M | PAY-02…10 | 🟡 falta 3DS e telas no aparelho |
 | QA-04 | CI (typecheck, lint, test, audit) | A7 | P2 | Baixo | P | — | ⬜ |
 | QA-05 | Handle aberto no Jest | A7 | P3 | Baixo | P | — | 🟡 timer do toast corrigido; aviso persiste na suíte completa |
 
@@ -57,8 +59,14 @@ Status: ✅ concluído e validado · 🟡 parcial · ⛔ bloqueado · ⬜ a faze
 - **Solução**: título "Pedido recebido" e aviso de que o pagamento é simulado neste ambiente; status "Recebido" mantido. **Arquivos**: `mobile/src/app/checkout/success.tsx`.
 - **Aceite**: nenhum texto do app afirma pagamento/preparação sem confirmação do servidor. **Testes**: teste de componente da tela. **Rollback**: reverter o arquivo.
 
-### PAY-02…PAY-09 ⛔
-Especificação completa (contratos, máquina de estados, migration, testes) em [checkout-stripe.md](checkout-stripe.md). **Bloqueio B-05** (chaves de teste). **Rollback**: migrations aditivas; feature desligada sem as variáveis Stripe (pedido volta ao fluxo simulado).
+### PAY-02…PAY-10
+Implementação, contratos, máquina de estados e resultados dos testes em [checkout-stripe.md](checkout-stripe.md). **Arquivos**: `server/db/migrations/0003_payments.sql`, `server/src/modules/payments/*`, `server/src/modules/orders/*`, `server/src/config/env.ts`, `server/src/app.ts`; `mobile/src/features/payments/*`, `mobile/src/app/checkout/{payment,review,success}.tsx`, `mobile/src/app/orders/[id].tsx`. **Rollback**: migration aditiva; as chaves existem apenas no `.env`.
+
+### PAY-11 — Parcelamento no cartão ⛔
+- **Problema**: compra só à vista no cartão; no Brasil o cliente espera parcelar.
+- **Evidência (2026-10-22, modo de teste)**: conta Stripe `country: BR`. Um PaymentIntent em BRL com `payment_method_options.card.installments.enabled=true` é aceito, mas `available_plans` vem **vazio** também com o cartão de teste brasileiro (`pm_card_br`). A documentação do Stripe só descreve parcelamento para México, Japão e Mastercard Installments.
+- **Opções**: (a) confirmar com o suporte do Stripe se há previsão para o Brasil; (b) usar um adquirente/gateway com parcelamento nacional (decisão de negócio; muda integração, taxas, webhooks e a auditoria de pagamento); (c) **não** simular parcelas com cobranças mensais (não é parcelamento do emissor: risco de inadimplência e de estoque, e confunde o cliente).
+- **Bloqueio**: B-07.
 
 ### LGPD-01 — Política de privacidade 🟡
 - **Problema**: não existe política nem link no app (P-04). **Evidência**: `grep` sem resultados.

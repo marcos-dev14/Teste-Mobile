@@ -39,5 +39,5 @@ O autocannon reporta p97.5, não p95. Essas medições são de um único aparelh
 ## 4. Logs
 
 - Já redigidos: `authorization`, `cookie`, `password`, `refreshToken`, `set-cookie`.
-- Nunca registrar: CEP/endereço consultado, corpo de `POST /addresses`, futuros dados de pagamento (o PaymentSheet não envia cartão à API) e payload completo de webhooks.
+- Nunca registrar: CEP/endereço consultado, corpo de `POST /addresses`, futuros dados de pagamento (o cartão vai dos campos do Stripe.js direto ao Stripe, nunca à API) e payload completo de webhooks.
 - Definir retenção (SEC-05) quando o destino dos logs em produção for escolhido.

@@ -12,13 +12,16 @@
 | Refresh token | Login | Manter sessão | Hash em `refresh_tokens`; token no SecureStore | — | — | **Era indefinida** → `pnpm db:cleanup` remove 7 dias após expirar |
 | Nome do destinatário, CEP, logradouro, número, bairro, complemento, cidade, UF, país | Endereços / checkout | Entrega | `addresses`; **cópia** em `orders.shipping_address` (JSONB) | O titular; operadores | ViaCEP/BrasilAPI recebem **somente o CEP**, a partir do servidor (sem IP nem identidade do usuário) | `addresses`: até o titular excluir; cópia no pedido: indefinida |
 | Histórico de compras (itens, valores, datas, método escolhido) | Checkout | Execução do contrato, histórico | `orders`, `order_items` | O titular; operadores | — | Indefinida (`ON DELETE RESTRICT` impede apagar o usuário) |
-| IP, URL, user-agent, `requestId` | Toda requisição | Segurança, diagnóstico | Logs pino (stdout) | Quem acessa os logs | Depende de onde os logs forem enviados (não definido) | Não definida |
+| IP, método, URL (CEP mascarado), `requestId` | Toda requisição | Segurança, diagnóstico | Logs pino (stdout) | Quem acessa os logs | Depende de onde os logs forem enviados (não definido) | Não definida |
+| **CPF/CNPJ do pagador** | Pix e boleto (etapa de pagamento ou geração do Pix/boleto) | Exigido pelo Stripe para Pix e boleto | **Não armazenado**: atravessa a API até o Stripe; no app só em memória durante o checkout; redigido dos logs (`req.body.taxId`) e mascarado em mensagens de erro do provedor | — | **Stripe** (EUA) | Política do Stripe |
+| Nome, e-mail e (boleto) endereço de entrega enviados como dados de cobrança | Pix e boleto | Exigidos pelo Stripe | Lidos da conta e do pedido no momento da confirmação | — | **Stripe** (EUA) | Política do Stripe |
+| Valor, moeda e id do pedido; dados do cartão digitados nos campos do Stripe.js (iframes do Stripe) | Pagamento | Cobrança | O cartão vai **direto** do app ao Stripe; a API guarda só o id e o status do PaymentIntent (`payments`) | O titular; operadores | **Stripe** (EUA) — transferência internacional a avaliar (LGPD-07) | `payments`: com o pedido; Stripe: política própria |
 | IP do aparelho | Carregamento de imagens | Exibir catálogo | — | — | **Unsplash** (`images.unsplash.com`) recebe IP e user-agent do aparelho | Política da Unsplash |
 | Sacola (ids de produto, quantidade) | Produto | Compra | AsyncStorage do aparelho | Quem usa o aparelho | — | Até logout explícito / limpeza |
 
-**Não coletado** (verificado): CPF, telefone, data de nascimento, geolocalização, dados de cartão, contatos, câmera/microfone (permissões bloqueadas), analytics, identificadores de publicidade, cookies (app nativo; API não emite cookies).
+**Não coletado** (verificado): telefone, data de nascimento, geolocalização, dados de cartão, contatos, câmera/microfone (permissões bloqueadas), analytics, identificadores de publicidade, cookies (app nativo; API não emite cookies).
 
-**Dados mínimos para concluir uma compra hoje**: nome, e-mail, senha, endereço de entrega. Com Stripe entrará o **ID do cliente/PaymentIntent** (não o cartão: o PaymentSheet tokeniza no Stripe). Para **boleto** e alguns fluxos de **Pix** no Stripe Brasil, o provedor pode exigir **CPF** e e-mail do pagador — decisão pendente (B-05).
+**Dados mínimos para concluir uma compra hoje**: nome, e-mail, senha, endereço de entrega; com Pix ou boleto, também **CPF/CNPJ** (exigido pelo Stripe, repassado sem ser armazenado). A API guarda só o id e o status do PaymentIntent; o cartão vai direto do app ao Stripe.
 
 ## 2. Matriz de riscos de privacidade
 
@@ -32,7 +35,7 @@
 | P-06 | Retenção indefinida de logs com IP | Média | Baixo | Aberto (depende da infraestrutura de produção) | SEC-05 |
 | P-07 | Terceiro (Unsplash) recebe IP do usuário sem que isso seja informado | Alta | Baixo | Aberto: informar na política ou servir imagens por CDN próprio | LGPD-07 / PERF-03 |
 | P-08 | Endereço completo em cópia imutável no pedido | — | Médio | Necessário para a entrega e prova da transação; prazo de guarda precisa de definição jurídica/fiscal | LGPD-02 |
-| P-09 | Futuro: Stripe (EUA) receberá nome/e-mail/valor → transferência internacional | Certa (quando integrar) | Médio | Planejado | LGPD-07 |
+| P-09 | Stripe (EUA) recebe nome, e-mail, CPF/CNPJ (Pix/boleto), endereço (boleto), valor e, pelo SDK e páginas hospedadas, IP/aparelho → transferência internacional | Certa | Médio | Em vigor desde a integração; base legal a validar | LGPD-07 |
 
 ## 3. Bases legais — hipóteses para validação jurídica
 
@@ -55,8 +58,8 @@ A aceitação dos Termos de Uso **não** é consentimento para tratamento de dad
 |---|---|---|---|---|---|
 | Gestão de conta | Clientes | nome, e-mail, hash de senha | Contrato | Hospedagem da API e do banco (a definir) | Enquanto a conta existir |
 | Entrega | Clientes / destinatários | endereço, nome do destinatário | Contrato | ViaCEP/BrasilAPI (só CEP) | Endereço: até exclusão; pedido: prazo legal |
-| Vendas | Clientes | pedidos, itens, valores | Contrato / obrigação legal | Stripe (futuro) | Prazo fiscal |
-| Segurança | Usuários da API | IP, user-agent, URL, requestId | Legítimo interesse | Provedor de logs (a definir) | A definir (sugestão técnica: 90 dias) |
+| Vendas | Clientes | pedidos, itens, valores | Contrato / obrigação legal | Stripe | Prazo fiscal |
+| Segurança | Usuários da API | IP, método, URL, requestId | Legítimo interesse | Provedor de logs (a definir) | A definir (sugestão técnica: 90 dias) |
 
 ## 5. Requisitos técnicos e tasks
 
