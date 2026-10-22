@@ -16,7 +16,7 @@ function timeoutError() {
 }
 
 function setup(handlers: { viacep?: () => Promise<Response>; brasilapi?: () => Promise<Response> }) {
-  const fetch = vi.fn(async (url: string) => {
+  const fetch = vi.fn(async (url: string, _init?: { redirect?: string }) => {
     const handler = url.includes('viacep') ? handlers.viacep : handlers.brasilapi
     if (!handler) throw new Error('provedor não configurado')
     return handler()
@@ -95,6 +95,15 @@ describe('consulta de CEP', () => {
     advance(24 * 60 * 60_000 + 1)
     await lookup('01310100')
     expect(fetch).toHaveBeenCalledTimes(2)
+  })
+
+  it('não segue redirecionamentos e descarta respostas grandes demais (usa o fallback)', async () => {
+    const { lookup, fetch } = setup({
+      viacep: async () => new Response('x'.repeat(20_000), { status: 200 }),
+      brasilapi: async () => json(200, BRASILAPI_OK),
+    })
+    await expect(lookup('01310100')).resolves.toMatchObject({ city: 'São Paulo' })
+    expect(fetch.mock.calls.every(([, init]) => init?.redirect === 'error')).toBe(true)
   })
 
   it('mascara o CEP na URL registrada pelo logger', () => {

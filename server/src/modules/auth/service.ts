@@ -4,7 +4,8 @@ import type { FastifyBaseLogger } from 'fastify'
 
 import { isPgError, type Pool, type Queryable, UNIQUE_VIOLATION } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
-import { conflict, unauthorized } from '../../lib/errors.js'
+import { AppError, conflict, unauthorized } from '../../lib/errors.js'
+import { createLoginThrottle, type LoginThrottle } from '../../lib/login-throttle.js'
 import { getDummyHash, hashPassword, verifyPassword } from '../../lib/passwords.js'
 import { generateRefreshToken, hashToken } from '../../lib/tokens.js'
 import * as repo from './repository.js'
@@ -16,6 +17,8 @@ export interface AuthServiceDeps {
   signAccessToken: (userId: string) => string
   accessTokenTtlSeconds: number
   refreshTokenTtlDays: number
+  /** Limite de falhas de login por e-mail (padrão: 5 em 15 min). */
+  loginThrottle?: LoginThrottle
 }
 
 export const toUserDto = (user: repo.UserRecord): UserDto => ({
@@ -36,6 +39,7 @@ const invalidRefresh = () => unauthorized('Sessão expirada. Entre novamente.', 
 
 export function createAuthService(deps: AuthServiceDeps) {
   const { pool, log } = deps
+  const throttle = deps.loginThrottle ?? createLoginThrottle()
 
   async function issueTokens(db: Queryable, userId: string, familyId: string): Promise<{ tokens: TokensDto; tokenId: string }> {
     const refreshToken = generateRefreshToken()
@@ -74,10 +78,18 @@ export function createAuthService(deps: AuthServiceDeps) {
     },
 
     async login(input: LoginBody): Promise<{ user: UserDto; tokens: TokensDto }> {
+      const wait = throttle.retryAfter(input.email)
+      if (wait > 0) {
+        throw new AppError(429, 'TOO_MANY_LOGIN_ATTEMPTS', `Muitas tentativas para esta conta. Tente novamente em ${Math.ceil(wait / 60)} min.`)
+      }
       const user = await repo.findUserByEmail(pool, input.email)
       // Sempre executa o scrypt para não revelar, pelo tempo de resposta, se o e-mail existe.
       const valid = await verifyPassword(input.password, user?.passwordHash ?? (await getDummyHash()))
-      if (!user || !valid) throw invalidCredentials()
+      if (!user || !valid) {
+        throttle.recordFailure(input.email)
+        throw invalidCredentials()
+      }
+      throttle.reset(input.email)
       const { tokens } = await issueTokens(pool, user.id, randomUUID())
       return { user: toUserDto(user), tokens }
     },

@@ -23,7 +23,27 @@ export const createOrderHeadersSchema = z.object({
 
 export const listOrdersQuerySchema = paginationQuerySchema
 
-export const orderStatusSchema = z.enum(['placed', 'paid', 'shipped', 'delivered', 'cancelled'])
+// 'placed' só existe em pedidos anteriores à integração de pagamento (migration 0003).
+export const orderStatusSchema = z.enum([
+  'pending_payment',
+  'placed',
+  'paid',
+  'shipped',
+  'delivered',
+  'cancelled',
+  'expired',
+  'refunded',
+])
+
+export const paymentStatusSchema = z.enum([
+  'requires_payment_method',
+  'requires_confirmation',
+  'requires_action',
+  'processing',
+  'requires_capture',
+  'succeeded',
+  'canceled',
+])
 
 export const shippingAddressSchema = z.object({
   fullName: z.string(),
@@ -63,6 +83,11 @@ export const orderSummarySchema = z.object({
 })
 
 export const orderDetailSchema = orderSummarySchema.omit({ previewImageUrls: true }).extend({
+  /** Até quando o estoque fica reservado aguardando pagamento (null fora de `pending_payment`). */
+  reservedUntil: isoDateSchema.nullable(),
+  paymentStatus: paymentStatusSchema.nullable(),
+  /** Código da última falha informada pelo Stripe (ex.: `card_declined`), sem dados do pagador. */
+  paymentFailureCode: z.string().nullable(),
   subtotalCents: z.number().int(),
   shippingCents: z.number().int(),
   shippingAddress: shippingAddressSchema,

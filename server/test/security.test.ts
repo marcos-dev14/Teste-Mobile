@@ -74,13 +74,14 @@ describe('segurança da API', () => {
 describe('rate limiting', () => {
   const ctx = setupTestApp({ RATE_LIMIT_ENABLED: 'true' })
 
-  it('bloqueia força bruta no login após 10 tentativas por minuto', async () => {
+  it('bloqueia força bruta no login após 10 tentativas por minuto por IP', async () => {
+    // E-mails diferentes isolam o limite por IP (o limite por e-mail tem teste próprio).
     const statuses: number[] = []
     for (let attempt = 0; attempt < 12; attempt += 1) {
       const response = await ctx.app.inject({
         method: 'POST',
         url: '/v1/auth/login',
-        payload: { email: 'alvo@example.com', password: `tentativa${attempt}` },
+        payload: { email: `alvo${attempt}@example.com`, password: `tentativa${attempt}` },
       })
       statuses.push(response.statusCode)
     }

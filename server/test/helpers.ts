@@ -6,6 +6,7 @@ import { buildApp, type App, type BuildAppOptions } from '../src/app.js'
 import { loadDotEnv, parseEnv, type Env } from '../src/config/env.js'
 import { createPool, type Pool } from '../src/db/pool.js'
 import { seed } from '../src/db/seed.js'
+import { createFakePaymentGateway } from './fake-payment-gateway.js'
 import { assertTestDatabase } from './test-database.js'
 
 export interface TestContext {
@@ -20,7 +21,7 @@ export interface TestContext {
  */
 export function setupTestApp(
   overrides: Partial<Record<keyof Env, string>> = {},
-  options: Pick<BuildAppOptions, 'zipCodeLookup'> = {},
+  options: Pick<BuildAppOptions, 'zipCodeLookup' | 'paymentGateway'> = {},
 ): TestContext {
   loadDotEnv()
   const url = assertTestDatabase(process.env.DATABASE_URL_TEST)
@@ -44,11 +45,13 @@ export function setupTestApp(
         pool,
         logger: false,
         zipCodeLookup: options.zipCodeLookup ?? (async () => Promise.reject(new Error('rede desabilitada nos testes'))),
+        // Nenhum teste acessa o Stripe: gateway em memória.
+        paymentGateway: options.paymentGateway ?? createFakePaymentGateway().gateway,
       })
       await ctx.app.ready()
     }
     await pool.query(
-      `TRUNCATE order_items, orders, addresses, refresh_tokens, users, product_colors, products
+      `TRUNCATE payment_events, payments, order_items, orders, addresses, refresh_tokens, users, product_colors, products
        RESTART IDENTITY CASCADE`,
     )
     await seed(pool)

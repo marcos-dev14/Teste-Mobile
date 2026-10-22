@@ -13,7 +13,13 @@ export type ZipCodeLookup = (digits: string) => Promise<ZipCodeLookupDto | null>
 
 export class ZipCodeLookupUnavailable extends Error {}
 
-type FetchLike = (url: string, init: { signal: AbortSignal; headers: Record<string, string> }) => Promise<Response>
+type FetchLike = (
+  url: string,
+  init: { signal: AbortSignal; headers: Record<string, string>; redirect: 'error' },
+) => Promise<Response>
+
+/** Respostas de CEP têm poucas centenas de bytes; acima disso algo está errado. */
+const MAX_RESPONSE_BYTES = 16 * 1024
 
 interface ProviderAddress {
   street?: unknown
@@ -114,8 +120,17 @@ export function createZipCodeLookup(options: ZipCodeLookupOptions): ZipCodeLooku
     const response = await fetchFn(provider.url(digits), {
       signal: AbortSignal.timeout(timeoutMs),
       headers: { Accept: 'application/json' },
+      // Host fixo: redirecionamento não é esperado e não é seguido.
+      redirect: 'error',
     })
-    const body: unknown = await response.json().catch(() => null)
+    const text = await response.text()
+    if (text.length > MAX_RESPONSE_BYTES) throw new Error('resposta grande demais')
+    let body: unknown = null
+    try {
+      body = JSON.parse(text)
+    } catch {
+      body = null
+    }
     const raw = provider.parse(response.status, body)
     return raw ? toDto(digits, raw) : null
   }

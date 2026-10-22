@@ -13,6 +13,9 @@ interface OrderRow {
   total_cents: number
   shipping_address: ShippingAddress
   request_fingerprint: string
+  reserved_until: Date | null
+  payment_status: OrderDetailDto['paymentStatus']
+  payment_failure_code: string | null
   created_at: Date
 }
 
@@ -31,7 +34,9 @@ interface OrderItemRow {
 }
 
 const ORDER_COLUMNS = `id, number, status, payment_method, item_count, subtotal_cents, shipping_cents,
-  total_cents, shipping_address, request_fingerprint, created_at`
+  total_cents, shipping_address, request_fingerprint, reserved_until, created_at,
+  (SELECT p.status FROM payments p WHERE p.order_id = orders.id) AS payment_status,
+  (SELECT p.failure_code FROM payments p WHERE p.order_id = orders.id) AS payment_failure_code`
 
 function toDetail(row: OrderRow, items: OrderItemRow[]): OrderDetailDto {
   return {
@@ -44,6 +49,9 @@ function toDetail(row: OrderRow, items: OrderItemRow[]): OrderDetailDto {
     shippingCents: row.shipping_cents,
     totalCents: row.total_cents,
     createdAt: row.created_at.toISOString(),
+    reservedUntil: row.reserved_until?.toISOString() ?? null,
+    paymentStatus: row.payment_status,
+    paymentFailureCode: row.payment_failure_code,
     shippingAddress: row.shipping_address,
     items: items.map((item) => ({
       id: item.id,
@@ -140,6 +148,19 @@ export async function listOrdersForUser(
   }
 }
 
+/** Pedidos aguardando pagamento do usuário (limite contra reserva abusiva de estoque). */
+export async function countPendingOrders(db: Queryable, userId: string): Promise<number> {
+  const { rows } = await db.query<{ total: number }>(
+    `SELECT count(*)::int AS total FROM orders WHERE user_id = $1 AND status = 'pending_payment'`,
+    [userId],
+  )
+  return rows[0]?.total ?? 0
+}
+
+export async function lockUser(db: Queryable, userId: string): Promise<void> {
+  await db.query('SELECT 1 FROM users WHERE id = $1 FOR UPDATE', [userId])
+}
+
 /** Decremento condicional: defesa extra além do FOR UPDATE. Retorna false se faltou estoque. */
 export async function decrementStock(db: Queryable, colorId: string, quantity: number): Promise<boolean> {
   const { rowCount } = await db.query(
@@ -160,14 +181,17 @@ export interface NewOrder {
   shippingAddress: ShippingAddress
   idempotencyKey: string
   requestFingerprint: string
+  reservationMinutes: number
 }
 
 /** Retorna null se outra transação já gravou um pedido com a mesma chave de idempotência. */
 export async function insertOrder(db: Queryable, order: NewOrder, lines: PricedLine[]): Promise<string | null> {
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO orders (user_id, address_id, payment_method, item_count, subtotal_cents, shipping_cents,
-                         total_cents, shipping_address, idempotency_key, request_fingerprint)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                         total_cents, shipping_address, idempotency_key, request_fingerprint,
+                         status, reserved_until)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+             'pending_payment', now() + make_interval(mins => $11))
      ON CONFLICT (user_id, idempotency_key) DO NOTHING
      RETURNING id`,
     [
@@ -181,6 +205,7 @@ export async function insertOrder(db: Queryable, order: NewOrder, lines: PricedL
       order.shippingAddress,
       order.idempotencyKey,
       order.requestFingerprint,
+      order.reservationMinutes,
     ],
   )
   const orderId = rows[0]?.id
