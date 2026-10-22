@@ -6,7 +6,7 @@ import { scheduleOnRN } from 'react-native-worklets'
 import { makeStyles, useStyles } from '@/ui'
 
 const DOT = 18
-const DURATION = 520
+const DURATION = 380
 /** Altura extra do arco (px): a bolinha sobe além da linha reta e desce sobre o ícone. */
 const ARC = 90
 const EASE_IN_OUT = Easing.bezier(0.77, 0, 0.175, 1)

@@ -7,7 +7,6 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated'
 
@@ -40,7 +39,6 @@ export const CartIconButton = forwardRef<View, CartIconButtonProps>(function Car
   const count = useCartCount()
   const reduceMotion = useReducedMotion()
   const iconScale = useSharedValue(1)
-  const iconRotate = useSharedValue(0)
   const badgeScale = useSharedValue(1)
   const lastSignal = useRef(bumpSignal)
 
@@ -49,19 +47,13 @@ export const CartIconButton = forwardRef<View, CartIconButtonProps>(function Car
     lastSignal.current = bumpSignal
     // Movimento reduzido: só o número muda.
     if (reduceMotion) return
-    iconScale.set(withSequence(withTiming(1.16, { duration: 110, easing: EASE_OUT }), withSpring(1, { duration: 320, dampingRatio: 0.55 })))
-    iconRotate.set(
-      withSequence(
-        withTiming(-9, { duration: 70, easing: EASE_OUT }),
-        withTiming(7, { duration: 90 }),
-        withSpring(0, { duration: 300, dampingRatio: 0.6 }),
-      ),
-    )
-    badgeScale.set(withSequence(withTiming(1.35, { duration: 120, easing: EASE_OUT }), withSpring(1, { duration: 300, dampingRatio: 0.55 })))
-  }, [bumpSignal, reduceMotion, iconScale, iconRotate, badgeScale])
+    // Um pulso curto, sem balançar nem quicar: confirma sem chamar mais atenção que o necessário.
+    iconScale.set(withSequence(withTiming(1.08, { duration: 100, easing: EASE_OUT }), withTiming(1, { duration: 160, easing: EASE_OUT })))
+    badgeScale.set(withSequence(withTiming(1.15, { duration: 100, easing: EASE_OUT }), withTiming(1, { duration: 160, easing: EASE_OUT })))
+  }, [bumpSignal, reduceMotion, iconScale, badgeScale])
 
   const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.get() }, { rotate: `${iconRotate.get()}deg` }],
+    transform: [{ scale: iconScale.get() }],
   }))
   const badgeStyle = useAnimatedStyle(() => ({ transform: [{ scale: badgeScale.get() }] }))
 

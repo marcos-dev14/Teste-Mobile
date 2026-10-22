@@ -51,7 +51,9 @@ describe('adicionar à sacola — feedback', () => {
     await waitFor(() => expect(badge()).toHaveTextContent('1'))
     expect(screen.getByLabelText('Abrir sacola, 1 item')).toBeTruthy()
     expect(screen.getByText('Na sacola')).toBeTruthy()
-    expect(screen.getByText('1× Camiseta (Branco) na sacola')).toBeTruthy()
+    // Sem toast de "Ver sacola": o próprio botão e o contador confirmam.
+    expect(screen.queryByText('1× Camiseta (Branco) na sacola')).toBeNull()
+    expect(screen.queryByText('Ver sacola')).toBeNull()
   })
 
   it('toque duplo rápido adiciona uma vez; um novo toque depois do intervalo adiciona de novo', async () => {

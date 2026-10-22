@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FlatList, ScrollView, useWindowDimensions, View } from 'react-native'
+import { AccessibilityInfo, FlatList, ScrollView, useWindowDimensions, View } from 'react-native'
 import { useReducedMotion } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -148,13 +148,8 @@ export default function ProductScreen() {
     clearTimeout(addedTimer.current)
     addedTimer.current = setTimeout(() => setJustAdded(false), ADDED_FEEDBACK_MS)
     if (!reduceMotion) flyRef.current?.launch(addButtonRef.current, cartIconRef.current, color.hex)
-    // Toast complementar: anuncia o resultado ao leitor de tela e oferece o atalho para a sacola.
-    toast.show({
-      tone: 'success',
-      message: `${quantity}× ${product.name} (${color.name}) na sacola`,
-      actionLabel: 'Ver sacola',
-      onAction: () => router.navigate('/cart'),
-    })
+    // Sem toast: o botão "Na sacola", o voo e o contador já confirmam. Só o leitor de tela é avisado.
+    AccessibilityInfo.announceForAccessibility(`${quantity}× ${product.name} (${color.name}) na sacola`)
     setQuantity(1)
   }
 

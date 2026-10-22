@@ -4,6 +4,8 @@ import { ScrollView, View } from 'react-native'
 import { AddressSummary } from '@/features/addresses/address-card'
 import { RequireAuth } from '@/features/auth/require-auth'
 import { PAYMENT_LABELS, STATUS_LABELS, useOrder } from '@/features/orders/api'
+import { useOrderPayment } from '@/features/payments/api'
+import { PendingPaymentActions } from '@/features/payments/pending-payment-actions'
 import { isApiError } from '@/lib/api/errors'
 import { formatDate, formatMoney, pluralize } from '@/lib/format'
 import { AppHeader, Badge, Card, Divider, EmptyState, ErrorState, LoadingState, makeStyles, Price, ProductImage, Reveal, Screen, Text, useStyles } from '@/ui'
@@ -20,11 +22,13 @@ export default function OrderDetailScreen() {
 function OrderDetail({ id }: { id: string }) {
   const styles = useStyles(styleFactory)
   const { data: order, error, isPending, refetch } = useOrder(id)
+  // Pendente: o servidor confere o Stripe (e repete enquanto um Pix aguarda), sem depender do webhook.
+  useOrderPayment(order?.status === 'pending_payment' ? id : undefined)
 
   let content
   if (isPending) {
     content = <LoadingState label="Carregando pedido" />
-  } else if (error || !order) {
+  } else if (!order) {
     // 404 também para pedidos de outra pessoa: o servidor não revela que existem.
     content =
       isApiError(error) && error.status === 404 ? (
@@ -47,6 +51,8 @@ function OrderDetail({ id }: { id: string }) {
           </View>
           <Badge label={status.label} tone={status.tone} />
         </Reveal>
+
+        <PendingPaymentActions order={order} />
 
         <Reveal index={1}>
           <Card style={styles.card}>

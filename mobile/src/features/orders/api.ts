@@ -21,11 +21,14 @@ export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 }
 
 export const STATUS_LABELS: Record<OrderStatus, { label: string; tone: 'neutral' | 'accent' | 'success' | 'warning' | 'danger' }> = {
+  pending_payment: { label: 'Aguardando pagamento', tone: 'warning' },
   placed: { label: 'Recebido', tone: 'accent' },
   paid: { label: 'Pago', tone: 'success' },
   shipped: { label: 'Enviado', tone: 'warning' },
   delivered: { label: 'Entregue', tone: 'success' },
   cancelled: { label: 'Cancelado', tone: 'danger' },
+  expired: { label: 'Expirado', tone: 'neutral' },
+  refunded: { label: 'Reembolsado', tone: 'neutral' },
 }
 
 export function useOrders() {

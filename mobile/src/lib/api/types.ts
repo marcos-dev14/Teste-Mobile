@@ -145,7 +145,50 @@ export interface ZipCodeLookup {
 // Pedidos -----------------------------------------------------------------------------
 
 export type PaymentMethod = 'pix' | 'credit_card' | 'boleto'
-export type OrderStatus = 'placed' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+/** `placed`: pedidos anteriores à integração de pagamento. */
+export type OrderStatus =
+  | 'pending_payment'
+  | 'placed'
+  | 'paid'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'expired'
+  | 'refunded'
+
+/** Estado do PaymentIntent no Stripe, lido pelo servidor. */
+export type PaymentStatus =
+  | 'requires_payment_method'
+  | 'requires_confirmation'
+  | 'requires_action'
+  | 'processing'
+  | 'requires_capture'
+  | 'succeeded'
+  | 'canceled'
+
+/** Resposta de `POST /v1/orders/:id/payment`: o necessário para o painel de cartão (nunca dados de cartão). */
+/** Instruções do Pix (QR Code e "copia e cola"), geradas pelo Stripe. */
+export interface PixInstructions {
+  qrCodeData: string
+  qrCodeImageUrl: string
+  hostedInstructionsUrl: string | null
+  expiresAt: string
+}
+
+/** Boleto gerado pelo Stripe. */
+export interface BoletoInstructions {
+  number: string
+  pdfUrl: string | null
+  hostedVoucherUrl: string | null
+  expiresAt: string
+}
+
+/** Resposta de `POST /v1/orders/:id/payment`, por método (nunca chave secreta nem dados do pagador). */
+export type PaymentSession = { paymentIntentId: string; amountCents: number; currency: string } & (
+  | { method: 'card'; clientSecret: string; publishableKey: string }
+  | { method: 'pix'; pix: PixInstructions }
+  | { method: 'boleto'; boleto: BoletoInstructions }
+)
 
 export interface OrderSummary {
   id: string
@@ -172,6 +215,11 @@ export interface OrderItem {
 }
 
 export interface OrderDetail extends Omit<OrderSummary, 'previewImageUrls'> {
+  /** Até quando os itens ficam reservados aguardando pagamento. */
+  reservedUntil: string | null
+  paymentStatus: PaymentStatus | null
+  /** Código da última falha informada pelo Stripe (ex.: `card_declined`). */
+  paymentFailureCode: string | null
   subtotalCents: number
   shippingCents: number
   shippingAddress: NewAddress

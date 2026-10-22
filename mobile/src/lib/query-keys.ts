@@ -14,6 +14,9 @@ export const queryKeys = {
   orders: {
     all: (userId: string) => ['user', userId, 'orders'] as const,
     detail: (userId: string, id: string) => ['user', userId, 'orders', id] as const,
+    /** Instruções de Pix/boleto vigentes do pedido. */
+    payment: (userId: string, id: string) => ['user', userId, 'orders', id, 'payment'] as const,
   },
   user: (userId: string) => ['user', userId] as const,
+  paymentMethods: ['payment-methods'] as const,
 }
