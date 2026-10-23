@@ -40,7 +40,7 @@ export default function ProfileScreen() {
   const confirmSignOut = async () => {
     const confirmed = await confirm({
       title: 'Sair da conta?',
-      message: 'Sua sacola continua salva neste aparelho.',
+      message: 'A sacola deste aparelho também será esvaziada.',
       confirmLabel: 'Sair',
       tone: 'danger',
       icon: 'log-out-outline',
@@ -78,6 +78,8 @@ export default function ProfileScreen() {
         <Reveal index={3}>
           <Card style={styles.card}>
             <ListItem icon="log-out-outline" title="Sair" destructive onPress={() => void confirmSignOut()} />
+            <Divider inset={48} />
+            <ListItem icon="trash-outline" title="Excluir conta" destructive onPress={() => router.push('/account/delete')} />
           </Card>
         </Reveal>
         <AppInfo index={4} />

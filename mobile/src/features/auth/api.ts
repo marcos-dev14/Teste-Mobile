@@ -9,4 +9,6 @@ export const authApi = {
     api.post<{ tokens: Tokens }>('/v1/auth/refresh', { refreshToken }, { timeoutMs: 10_000 }),
   logout: (refreshToken: string) => api.post<void>('/v1/auth/logout', { refreshToken }, { timeoutMs: 5_000 }),
   me: () => api.get<User>('/v1/me', { auth: true }),
+  /** Exclusão de conta (LGPD). 403 INVALID_PASSWORD; 409 ACCOUNT_HAS_ORDERS_IN_PROGRESS. */
+  deleteAccount: (password: string) => api.post<void>('/v1/me/delete', { password }, { auth: true }),
 }
