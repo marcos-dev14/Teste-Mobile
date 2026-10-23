@@ -13,14 +13,14 @@ Status: ✅ concluído e validado · 🟡 parcial · ⛔ bloqueado · ⬜ a faze
 | PAY-03 | PaymentIntent por pedido + guarda `sk_test_`/`pk_test_` | A3 | P1 | Alto | M | PAY-02 | ✅ |
 | PAY-04 | Webhook Stripe assinado, idempotente, monotônico | A3/A1 | P1 | Alto | M | PAY-02 | ✅ validado com `stripe listen` |
 | PAY-05 | Reserva de estoque com expiração | A3/A5 | P1 | Médio | M | PAY-02 | ✅ |
-| PAY-06 | Painel de cartão do app (campos do Stripe.js) + tela de resultado | A3/A6 | P1 | Médio | M | PAY-03 | 🟡 falta rodar no aparelho |
+| PAY-06 | Painel de cartão do app (campos do Stripe.js) + tela de resultado | A3/A6 | P1 | Médio | M | PAY-03 | 🟡 emulador ok (2026-10-22); falta celular real |
 | PAY-07 | Cancelamento pelo cliente e reembolso automático | A3 | P2 | Médio | M | PAY-04 | ✅ |
 | PAY-08 | Limite de pedidos pendentes por usuário | A1/A3 | P2 | Baixo | P | PAY-02 | ✅ |
 | PAY-09 | Reconciliação quando o webhook não chega | A3 | P2 | Médio | M | PAY-04 | ✅ |
 | PAY-10 | Pix e boleto via Stripe | A3 | P2 | Médio | M | — | ✅ modo de teste (produção: checkout-stripe §8) |
 | PAY-11 | Parcelamento no cartão | A3 | P2 | Médio | G | B-07 | ⛔ Stripe Brasil não oferece |
-| LGPD-01 | Política de privacidade no app e em URL | A4/A6 | P1 | Baixo | P | B-01 | 🟡 rascunho |
-| LGPD-02 | Exclusão de conta | A4/A1 | P1 | Alto | M | B-02 | ⛔ |
+| LGPD-01 | Política de privacidade no app e em URL | A4/A6 | P1 | Baixo | P | B-01 | 🟡 rascunho atualizado (2026-10-22) |
+| LGPD-02 | Exclusão de conta | A4/A1 | P1 | Alto | M | — | ✅ |
 | LGPD-03 | Exportação de dados do titular | A4 | P2 | Baixo | P | — | ⬜ |
 | LGPD-04 | Edição de perfil e endereço | A4/A6 | P2 | Baixo | M | ADDR-02 | ⬜ |
 | LGPD-05 | Descarte de refresh tokens expirados | A4/A1 | P2 | Baixo | P | — | ✅ |
@@ -48,7 +48,7 @@ Status: ✅ concluído e validado · 🟡 parcial · ⛔ bloqueado · ⬜ a faze
 | OBS-01 | Monitoramento de crash/erros | A6/A1 | P2 | Baixo | P | B-03 | ⛔ |
 | OBS-02 | Métricas de latência/erro por rota | A5 | P2 | Baixo | M | — | ⬜ |
 | QA-01 | E2E (Maestro) dos fluxos de compra | A7 | P2 | — | M | — | ⬜ |
-| QA-02 | Suíte de testes do Stripe (ver checkout-stripe §7) | A7 | P1 | — | M | PAY-02…10 | 🟡 falta 3DS e telas no aparelho |
+| QA-02 | Suíte de testes do Stripe (ver checkout-stripe §7) | A7 | P1 | — | M | PAY-02…10 | 🟡 emulador ok (2026-10-22); falta celular real |
 | QA-04 | CI (typecheck, lint, test, audit) | A7 | P2 | Baixo | P | — | ⬜ |
 | QA-05 | Handle aberto no Jest | A7 | P3 | Baixo | P | — | 🟡 timer do toast corrigido; aviso persiste na suíte completa |
 
@@ -73,10 +73,12 @@ Implementação, contratos, máquina de estados e resultados dos testes em [chec
 - **Solução**: rascunho fiel às práticas reais em [`docs/legal/politica-de-privacidade.md`](../legal/politica-de-privacidade.md) com campos `[PENDENTE]`; depois, link em Perfil e Cadastro e URL pública.
 - **Aceite**: documento sem informação inventada; publicado só após B-01 e revisão jurídica. **Rollback**: n/a.
 
-### LGPD-02 — Exclusão de conta ⛔
-- **Problema**: impossível excluir a conta (P-01); `orders.user_id ON DELETE RESTRICT`.
-- **Solução**: `DELETE /v1/me` com senha; numa transação: revogar todos os refresh tokens, apagar endereços, anonimizar `users` (nome "Conta excluída", e-mail `deleted+<uuid>@invalid`, hash inutilizável, `deleted_at`), manter pedidos pelo prazo legal; `authenticate` rejeita contas excluídas (fecha a janela de 15 min, S-10). App: Perfil → "Excluir conta" com confirmação.
-- **Bloqueio**: B-02 (prazo de guarda dos pedidos). **Testes**: login falha após exclusão; token antigo → 401; pedidos inacessíveis a terceiros; endereços removidos. **Risco**: alto (irreversível) — exige revisão.
+### LGPD-02 — Exclusão de conta ✅
+- **Implementado (2026-10-22)**: `POST /v1/me/delete` com a senha (403 `INVALID_PASSWORD` se errada; mesmo limite de taxa do login). Recusa com 409 `ACCOUNT_HAS_ORDERS_IN_PROGRESS` se houver pedido aguardando pagamento, pago ou enviado. Numa transação, com a conta travada (a trava também bloqueia pedidos novos pela FK): apaga endereços e refresh tokens e anonimiza `users` (nome "Conta excluída", e-mail `excluida+<id>@invalid`, hash inutilizável, `deleted_at`). Pedidos ficam (com o snapshot de entrega) pelo prazo legal. `authenticate` recusa contas excluídas: o access token deixa de valer na hora (fecha a janela de 15 min). O e-mail fica livre para um novo cadastro.
+- **App**: Perfil → Excluir conta (`mobile/src/app/account/delete.tsx`): explica os efeitos, pede a senha, confirma no diálogo do app, encerra a sessão e limpa a sacola do aparelho.
+- **Arquivos**: `server/db/migrations/0006_account_deletion.sql`, `server/src/modules/auth/{repository,service,routes,schemas}.ts`, `server/src/plugins/auth.ts`, `server/src/app.ts`.
+- **Testes**: `server/test/account-deletion.test.ts` (senha errada, sem sessão, efeitos completos e token antigo, bloqueio por pedido pendente/pago, pedido preservado); `mobile/src/features/auth/__tests__/delete-account.test.tsx`.
+- **Pendências**: prazo de guarda dos pedidos e descarte depois dele (B-02); backups (B-02); dados já enviados ao Stripe seguem a retenção do Stripe (documentado na política).
 
 ### LGPD-03 — Exportação ⬜
 `GET /v1/me/export` (JSON com perfil, endereços, pedidos), rate limit baixo. Aceite: só dados do próprio titular; teste de isolamento.

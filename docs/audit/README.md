@@ -15,6 +15,8 @@ Legenda usada em todos os documentos: **inspecionado** (lido no código), **impl
 
 **Feito nesta rodada** (implementado e testado): consulta de CEP pelo servidor com fallback, cache e logs sem CEP; formulário de endereço com preenchimento automático, número, bairro e UF validada; feedback de "adicionar à sacola" com badge, voo até o ícone e proteção contra toque duplo; confirmação de pedido honesta; descarte de sessões expiradas; correção de timer de toast que vazava. Testes: API 65 → 81, app 58 → 70.
 
+**O que falta (2026-10-23): [pendencias.md](pendencias.md)** — o que fecha a branch, o que depende de decisões ou de terceiros antes das lojas, e o que é só código.
+
 ## Auditoria final (2026-10-21)
 
 Relatório principal: **[final-security-audit.md](final-security-audit.md)** — nenhum P0; 2 P1 corrigidos (reembolso repetido de forma durável; duplicidade após reabrir o app), 1 P1 bloqueado (exclusão de conta). Complementos: [payment-integrity.md](payment-integrity.md) · [duplicate-purchase-prevention.md](duplicate-purchase-prevention.md) · [user-data-privacy.md](user-data-privacy.md) · [database-integrity.md](database-integrity.md) · [test-results.md](test-results.md) · [residual-risks.md](residual-risks.md).
@@ -41,9 +43,9 @@ Relatório principal: **[final-security-audit.md](final-security-audit.md)** —
 
 | ID | O que falta | Quem fornece | Desbloqueia |
 |---|---|---|---|
-| B-01 | Razão social, CNPJ, endereço, canal de privacidade/encarregado | Negócio | LGPD-01, 06, 08, 09, 10 |
-| B-02 | Prazo de guarda de pedidos e logs após exclusão de conta | Jurídico/contábil | LGPD-02 |
-| B-03 | Provedores de hospedagem, logs, monitoramento e e-mail (e país) | Negócio/infra | LGPD-07, OBS-01, SEC-05 |
+| B-01 | 🟡 Decidido (2026-10-22): projeto pessoal, conformidade progressiva; canal de privacidade dedicado (DPO formal em avaliação); resposta completa em até 15 dias como referência. **Falta**: identificação do controlador e o e-mail do canal | Responsável pelo projeto | LGPD-01, 06, 08, 09, 10 |
+| B-02 | 🟡 Decidido: conta excluída/anonimizada na hora (implementado); logs 6 meses como referência. **Falta**: prazo de guarda de pedidos (validar com contador), prazo e procedimento de expiração de backups | Contador/infra | LGPD-02 (feito), SEC-05 |
+| B-03 | Provedores de hospedagem, logs, monitoramento e e-mail (e país) — documentar só depois de confirmados. Imagens: Unsplash mantido durante o desenvolvimento | Negócio/infra | LGPD-07, OBS-01, SEC-05 |
 | B-04 | Política de troca, devolução, frete e cancelamento | Negócio | LGPD-09 |
 | B-05 | ✅ Resolvido em modo de teste (chaves, `whsec_` via `npx @stripe/cli`, Pix e boleto disponíveis). **Gerar novas chaves: a secreta foi colada no chat.** Produção: ativar a conta (`charges_enabled: false`) — ver checkout-stripe §8 | Negócio | ativação futura |
 | B-06 | Provedor de e-mail transacional | Negócio/infra | SEC-04 |
@@ -54,7 +56,7 @@ Relatório principal: **[final-security-audit.md](final-security-audit.md)** —
 Nenhum destes está atendido ainda; o app **não está pronto para uso real**.
 
 1. Pagamento: ✅ cartão, Pix e boleto em Test Mode, com webhooks reais validados; `paid` só pela leitura do Stripe feita no servidor; reserva com expiração. Faltam 3DS e as telas no aparelho. Ativação em produção tem pendências próprias (checkout-stripe §8); trocar para `live` é decisão separada, fora deste trabalho (hoje o código recusa `live`).
-2. Exclusão de conta no app, política de privacidade e termos publicados e acessíveis, canal do titular funcionando.
+2. ✅ Exclusão de conta no app. Faltam: política de privacidade e termos revisados por jurídico e publicados em URL acessível, canal do titular funcionando, plano de resposta a incidentes.
 3. CI obrigatório (typecheck, lint, testes, audit) e build de release com `https://`.
 4. Logs com destino e retenção definidos; monitoramento de erros avaliado quanto à LGPD.
 5. Rate limit compatível com a topologia de produção (proxy confiável e store compartilhado se houver mais de uma instância).

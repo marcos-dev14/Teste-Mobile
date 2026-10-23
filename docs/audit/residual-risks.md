@@ -6,7 +6,7 @@ Situação em 2026-10-21, após as correções da auditoria final. **O sistema n
 
 | ID | P | Risco | Por que continua aberto | Mitigação atual | Ação |
 |---|---|---|---|---|---|
-| RR-01 | P1 | Sem exclusão/exportação de conta | Depende do prazo legal de guarda de pedidos (B-02) | — | Decidir retenção; implementar LGPD-02/03 |
+| RR-01 | P2 | Exclusão de conta feita (2026-10-22); falta exportação de dados e o prazo de guarda/descarte de pedidos e backups | Prazo depende de validação contábil (B-02) | Exclusão no app; pedidos sem vínculo com dados de acesso | Implementar LGPD-03; definir prazos |
 | RR-02 | P2 | 3 boletos abertos bloqueiam novas compras por até ~7 dias | Regra de negócio (B8): reduzir o limite libera esgotamento de estoque por boletos não canceláveis | Limite de 3 pendentes | Decidir: limite separado para boleto, vencimento menor, ou não reservar estoque para boleto |
 | RR-03 | P2 | Telas de pagamento, 3DS e polling não testados em aparelho real | Ambiente sem dispositivo/build de release | Testes de componente; e2e da API com Stripe real | Roteiro em `testing-plan.md §4` |
 | RR-04 | P3 | Duas instâncias do app (ou troca de método antes de repetir) criam 2 pedidos | Indistinguível de recompra legítima | Limite de 3 pendentes; 1 PaymentIntent por pedido (sem cobrança dupla); expiração devolve estoque | Aceitar ou criar sacola no servidor (CART-03) |
@@ -24,7 +24,7 @@ B-01 dados do controlador · B-02 prazos de retenção · B-03 provedores de pro
 
 ## Condições antes de produção
 
-1. Exclusão de conta, política de privacidade e termos publicados.
+1. ✅ Exclusão de conta. Política de privacidade e termos revisados e publicados; canal do titular; plano de incidentes.
 2. Testes em aparelho real (Android e iOS, build de release), incluindo 3DS, Pix e boleto.
 3. `pnpm jobs:run` agendado (a cada minuto) e `pnpm db:integrity` com alerta.
 4. CI obrigatória: typecheck, lint, testes (com Postgres), `npx expo config`, **`npx expo export` para web e Android** (testes e typecheck não detectam módulo nativo importado na web), `pnpm audit`.
