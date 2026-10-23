@@ -33,6 +33,8 @@ export const loginBodySchema = z
   })
   .strict()
 
+export const deleteAccountBodySchema = z.object({ password: z.string().min(1, 'Informe a senha.').max(128) }).strict()
+
 export const refreshBodySchema = z
   .object({ refreshToken: z.string().min(32).max(128) })
   .strict()
@@ -56,5 +58,6 @@ export const refreshResponseSchema = z.object({ tokens: tokensSchema })
 
 export type RegisterBody = z.infer<typeof registerBodySchema>
 export type LoginBody = z.infer<typeof loginBodySchema>
+export type DeleteAccountBody = z.infer<typeof deleteAccountBodySchema>
 export type UserDto = z.infer<typeof userSchema>
 export type TokensDto = z.infer<typeof tokensSchema>

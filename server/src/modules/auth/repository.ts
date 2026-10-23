@@ -146,3 +146,43 @@ export async function deleteExpiredRefreshTokens(db: Queryable, graceDays: numbe
   )
   return rowCount ?? 0
 }
+
+// Exclusão de conta ------------------------------------------------------------
+
+/** Conta existente e não excluída (consultado a cada requisição autenticada). */
+export async function isActiveUser(db: Queryable, id: string): Promise<boolean> {
+  const { rowCount } = await db.query('SELECT 1 FROM users WHERE id = $1 AND deleted_at IS NULL', [id])
+  return (rowCount ?? 0) > 0
+}
+
+/** Trava a conta ativa para a exclusão (serializa com pedidos e sessões criados em paralelo). */
+export async function lockActiveUser(db: Queryable, id: string): Promise<UserRecord | null> {
+  const { rows } = await db.query<UserRow>(`SELECT ${USER_COLUMNS} FROM users WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`, [id])
+  return rows[0] ? toUser(rows[0]) : null
+}
+
+/** Pedidos que ainda dependem do contato do cliente: aguardando pagamento, pagos ou enviados. */
+export async function countOrdersInProgress(db: Queryable, userId: string): Promise<number> {
+  const { rows } = await db.query<{ total: number }>(
+    `SELECT count(*)::int AS total FROM orders
+      WHERE user_id = $1 AND status IN ('pending_payment', 'paid', 'shipped')`,
+    [userId],
+  )
+  return rows[0]?.total ?? 0
+}
+
+/**
+ * Remove dados pessoais da conta: apaga endereços e sessões e anonimiza o usuário (nome, e-mail
+ * único inválido e hash de senha inutilizável). Pedidos ficam, com o snapshot de entrega, pelo
+ * prazo legal de guarda.
+ */
+export async function anonymizeUser(db: Queryable, id: string): Promise<void> {
+  await db.query('DELETE FROM addresses WHERE user_id = $1', [id])
+  await db.query('DELETE FROM refresh_tokens WHERE user_id = $1', [id])
+  await db.query(
+    `UPDATE users
+        SET name = 'Conta excluída', email = 'excluida+' || id || '@invalid', password_hash = '!', deleted_at = now()
+      WHERE id = $1`,
+    [id],
+  )
+}

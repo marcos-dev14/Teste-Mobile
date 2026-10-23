@@ -10,6 +10,7 @@ import { addressRoutes } from './modules/addresses/routes.js'
 import { createAddressesService } from './modules/addresses/service.js'
 import { runMaintenance } from './jobs/maintenance.js'
 import { createZipCodeLookup, type ZipCodeLookup } from './modules/addresses/zip-code.js'
+import { isActiveUser } from './modules/auth/repository.js'
 import { authRoutes } from './modules/auth/routes.js'
 import { createAuthService } from './modules/auth/service.js'
 import { cartRoutes } from './modules/cart/routes.js'
@@ -114,6 +115,7 @@ export async function buildApp({ env, pool, logger, zipCodeLookup, paymentGatewa
   await app.register(authPlugin, {
     secret: env.JWT_SECRET,
     accessTokenTtlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
+    isAccountActive: (userId) => isActiveUser(pool, userId),
   })
 
   const authService = createAuthService({

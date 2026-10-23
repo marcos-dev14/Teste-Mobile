@@ -5,6 +5,7 @@ import type { ZodTypeProvider } from '../../lib/zod-compiler.js'
 import { AUTH_RATE_LIMIT, REFRESH_RATE_LIMIT } from '../../plugins/security.js'
 import {
   authResponseSchema,
+  deleteAccountBodySchema,
   loginBodySchema,
   refreshBodySchema,
   refreshResponseSchema,
@@ -60,6 +61,20 @@ export function authRoutes(service: AuthService) {
       '/me',
       { onRequest: [app.authenticate], schema: { response: { 200: userSchema } } },
       async (request) => service.getProfile(request.user.sub),
+    )
+
+    app.post(
+      '/me/delete',
+      {
+        onRequest: [app.authenticate],
+        // Mesmo limite do login: a rota verifica senha.
+        config: { rateLimit: AUTH_RATE_LIMIT },
+        schema: { body: deleteAccountBodySchema, response: { 204: z.null() } },
+      },
+      async (request, reply) => {
+        await service.deleteAccount(request.user.sub, request.body)
+        return reply.status(204).send(null)
+      },
     )
   }
 }

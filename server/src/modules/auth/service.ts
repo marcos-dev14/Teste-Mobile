@@ -9,7 +9,7 @@ import { createLoginThrottle, type LoginThrottle } from '../../lib/login-throttl
 import { getDummyHash, hashPassword, verifyPassword } from '../../lib/passwords.js'
 import { generateRefreshToken, hashToken } from '../../lib/tokens.js'
 import * as repo from './repository.js'
-import type { LoginBody, RegisterBody, TokensDto, UserDto } from './schemas.js'
+import type { DeleteAccountBody, LoginBody, RegisterBody, TokensDto, UserDto } from './schemas.js'
 
 export interface AuthServiceDeps {
   pool: Pool
@@ -142,6 +142,33 @@ export function createAuthService(deps: AuthServiceDeps) {
       // Usuário removido com token ainda válido.
       if (!user) throw unauthorized('Sessão inválida ou expirada.', 'INVALID_TOKEN')
       return toUserDto(user)
+    },
+
+    /**
+     * Exclusão de conta (LGPD): exige a senha; recusa se houver pedido em andamento (aguardando
+     * pagamento, pago ou enviado), que ainda depende do contato do cliente. Apaga endereços e
+     * sessões e anonimiza a conta; os pedidos ficam pelo prazo legal de guarda.
+     */
+    async deleteAccount(userId: string, input: DeleteAccountBody): Promise<void> {
+      const user = await repo.findUserById(pool, userId)
+      if (!user) throw unauthorized('Sessão inválida ou expirada.', 'INVALID_TOKEN')
+      // Fora da transação: o scrypt é caro e não deve segurar a trava da conta.
+      // 403 (e não 401): senha errada aqui não significa sessão inválida para o app.
+      if (!(await verifyPassword(input.password, user.passwordHash))) {
+        throw new AppError(403, 'INVALID_PASSWORD', 'Senha incorreta.')
+      }
+      await withTransaction(pool, async (tx) => {
+        // A trava também bloqueia pedidos novos da conta até o fim (FK de orders → users).
+        if (!(await repo.lockActiveUser(tx, userId))) throw unauthorized('Sessão inválida ou expirada.', 'INVALID_TOKEN')
+        if ((await repo.countOrdersInProgress(tx, userId)) > 0) {
+          throw conflict(
+            'ACCOUNT_HAS_ORDERS_IN_PROGRESS',
+            'Você tem pedidos em andamento. Cancele os que aguardam pagamento ou aguarde a entrega para excluir a conta.',
+          )
+        }
+        await repo.anonymizeUser(tx, userId)
+      })
+      log.info({ userId }, 'account deleted')
     },
   }
 }

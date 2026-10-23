@@ -30,6 +30,11 @@ declare module 'fastify' {
 export interface AuthPluginOptions {
   secret: string
   accessTokenTtlSeconds: number
+  /**
+   * Conta ainda ativa. Fecha a janela do access token (até 15 min) depois da exclusão da conta:
+   * um token assinado antes dela deixa de valer na hora.
+   */
+  isAccountActive?: (userId: string) => Promise<boolean>
 }
 
 export const authPlugin = fp<AuthPluginOptions>(async (app: FastifyInstance, options) => {
@@ -46,6 +51,9 @@ export const authPlugin = fp<AuthPluginOptions>(async (app: FastifyInstance, opt
       const payload = await request.jwtVerify<AccessTokenPayload>()
       if (payload.typ !== 'access' || typeof payload.sub !== 'string') throw new Error('invalid token type')
     } catch {
+      throw unauthorized('Sessão inválida ou expirada.', 'INVALID_TOKEN')
+    }
+    if (options.isAccountActive && !(await options.isAccountActive(request.user.sub))) {
       throw unauthorized('Sessão inválida ou expirada.', 'INVALID_TOKEN')
     }
   })
