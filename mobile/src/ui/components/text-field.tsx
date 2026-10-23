@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef, useState, type ReactNode } from 'react'
 import { Pressable, TextInput, View, type TextInputProps } from 'react-native'
 
 import { makeStyles, useStyles, useTheme } from '../theme/theme-provider'
@@ -12,10 +12,12 @@ export interface TextFieldProps extends Omit<TextInputProps, 'style'> {
   icon?: IconName
   /** Exibe botão para mostrar/ocultar a senha. */
   secureToggle?: boolean
+  /** Elemento à direita do campo (ex.: indicador de carregamento). */
+  accessory?: ReactNode
 }
 
 export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
-  { label, error, hint, icon, secureToggle, secureTextEntry, onFocus, onBlur, ...rest },
+  { label, error, hint, icon, secureToggle, accessory, secureTextEntry, onFocus, onBlur, ...rest },
   ref,
 ) {
   const styles = useStyles(styleFactory)
@@ -51,6 +53,7 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
           }}
           {...rest}
         />
+        {accessory}
         {secureToggle ? (
           <Pressable
             onPress={() => setHidden((value) => !value)}

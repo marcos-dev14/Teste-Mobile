@@ -2,10 +2,11 @@ import { randomUUID } from 'node:crypto'
 
 import { afterAll, beforeEach } from 'vitest'
 
-import { buildApp, type App } from '../src/app.js'
+import { buildApp, type App, type BuildAppOptions } from '../src/app.js'
 import { loadDotEnv, parseEnv, type Env } from '../src/config/env.js'
 import { createPool, type Pool } from '../src/db/pool.js'
 import { seed } from '../src/db/seed.js'
+import { createFakePaymentGateway } from './fake-payment-gateway.js'
 import { assertTestDatabase } from './test-database.js'
 
 export interface TestContext {
@@ -18,7 +19,10 @@ export interface TestContext {
  * Cria app + pool contra o banco de teste. Antes de cada teste limpa todas as tabelas
  * e recarrega o catálogo de seed, garantindo independência entre testes.
  */
-export function setupTestApp(overrides: Partial<Record<keyof Env, string>> = {}): TestContext {
+export function setupTestApp(
+  overrides: Partial<Record<keyof Env, string>> = {},
+  options: Pick<BuildAppOptions, 'zipCodeLookup' | 'paymentGateway'> = {},
+): TestContext {
   loadDotEnv()
   const url = assertTestDatabase(process.env.DATABASE_URL_TEST)
   const env = parseEnv({
@@ -35,11 +39,19 @@ export function setupTestApp(overrides: Partial<Record<keyof Env, string>> = {})
 
   beforeEach(async () => {
     if (!ctx.app) {
-      ctx.app = await buildApp({ env, pool, logger: false })
+      // Nenhum teste acessa os provedores de CEP reais: sem stub, a consulta falha como indisponível.
+      ctx.app = await buildApp({
+        env,
+        pool,
+        logger: false,
+        zipCodeLookup: options.zipCodeLookup ?? (async () => Promise.reject(new Error('rede desabilitada nos testes'))),
+        // Nenhum teste acessa o Stripe: gateway em memória.
+        paymentGateway: options.paymentGateway ?? createFakePaymentGateway().gateway,
+      })
       await ctx.app.ready()
     }
     await pool.query(
-      `TRUNCATE order_items, orders, addresses, refresh_tokens, users, product_colors, products
+      `TRUNCATE payment_events, payments, order_items, orders, addresses, refresh_tokens, users, product_colors, products
        RESTART IDENTITY CASCADE`,
     )
     await seed(pool)
@@ -74,8 +86,10 @@ export async function registerUser(app: App, overrides: Partial<{ name: string; 
 
 export const validAddress = {
   fullName: 'Pessoa Teste',
-  addressLine1: 'Rua das Flores, 123',
+  addressLine1: 'Rua das Flores',
+  number: '123',
   addressLine2: 'Apto 4',
+  neighborhood: 'Bela Vista',
   city: 'São Paulo',
   state: 'SP',
   zipCode: '01310100',

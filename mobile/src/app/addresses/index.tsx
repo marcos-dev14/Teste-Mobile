@@ -1,32 +1,34 @@
 import { router } from 'expo-router'
-import { Alert, FlatList, View } from 'react-native'
+import { FlatList, View } from 'react-native'
 
 import { AddressSummary } from '@/features/addresses/address-card'
 import { useAddresses, useDeleteAddress } from '@/features/addresses/api'
 import { RequireAuth } from '@/features/auth/require-auth'
 import { describeError } from '@/lib/api/errors'
 import type { Address } from '@/lib/api/types'
-import { AppHeader, ScreenTitle, Button, Card, EmptyState, ErrorState, IconButton, LoadingState, makeStyles, Reveal, Screen, useStyles, useToast } from '@/ui'
+import { AppHeader, ScreenTitle, Button, Card, EmptyState, ErrorState, IconButton, LoadingState, makeStyles, Reveal, Screen, useConfirm, useStyles, useToast } from '@/ui'
 
 export default function AddressesScreen() {
   const styles = useStyles(styleFactory)
   const toast = useToast()
+  const confirm = useConfirm()
   const addresses = useAddresses()
   const remove = useDeleteAddress()
 
-  const confirmRemove = (address: Address) =>
-    Alert.alert('Remover endereço?', `${address.addressLine1}, ${address.city}`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Remover',
-        style: 'destructive',
-        onPress: () =>
-          remove.mutate(address.id, {
-            onSuccess: () => toast.show({ tone: 'success', message: 'Endereço removido.' }),
-            onError: (error) => toast.show({ tone: 'error', message: describeError(error).message }),
-          }),
-      },
-    ])
+  const confirmRemove = async (address: Address) => {
+    const confirmed = await confirm({
+      title: 'Remover endereço?',
+      message: `${address.addressLine1}, ${address.city}`,
+      confirmLabel: 'Remover',
+      tone: 'danger',
+      icon: 'trash-outline',
+    })
+    if (!confirmed) return
+    remove.mutate(address.id, {
+      onSuccess: () => toast.show({ tone: 'success', message: 'Endereço removido.' }),
+      onError: (error) => toast.show({ tone: 'error', message: describeError(error).message }),
+    })
+  }
 
   return (
     <RequireAuth>
@@ -43,7 +45,7 @@ export default function AddressesScreen() {
                 <View style={styles.flex}>
                   <AddressSummary address={item} />
                 </View>
-                <IconButton icon="trash-outline" accessibilityLabel={`Remover endereço ${item.addressLine1}`} color="danger" onPress={() => confirmRemove(item)} />
+                <IconButton icon="trash-outline" accessibilityLabel={`Remover endereço ${item.addressLine1}`} color="danger" onPress={() => void confirmRemove(item)} />
               </Card>
             </Reveal>
           )}

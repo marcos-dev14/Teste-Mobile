@@ -110,9 +110,15 @@ O original coletava número de cartão e CVV e os descartava (S12). A nova vers�
 | GET | `/v1/products?search&sort&page&pageSize` | — | `{ data, page, pageSize, total }`; `sort ∈ featured,price_asc,price_desc,newest` |
 | GET | `/v1/products/:id` | — | detalhe com cores, imagens e estoque |
 | POST | `/v1/cart/quote` | — | preços/estoque/totais calculados no servidor |
-| GET/POST | `/v1/addresses` | ✓ | listar/criar endereços próprios |
+| GET/POST | `/v1/addresses` | ✓ | listar/criar endereços próprios (criação exige `number`, `neighborhood` e UF válida) |
+| GET | `/v1/addresses/zip-codes/:zipCode` | ✓ | sugestão de endereço por CEP (ViaCEP → BrasilAPI, cache); 404 `ZIP_CODE_NOT_FOUND`, 503 `ZIP_CODE_LOOKUP_UNAVAILABLE`; 30/min |
 | DELETE | `/v1/addresses/:id` | ✓ | remover endereço próprio |
-| POST | `/v1/orders` | ✓ | cria pedido (header `Idempotency-Key`) |
+| GET | `/v1/payment-methods` | — | métodos habilitados (`PAYMENT_METHODS`) |
+| POST | `/v1/orders` | ✓ | cria pedido `pending_payment` com estoque reservado (cartão/Pix: `PAYMENT_RESERVATION_MINUTES`; boleto: vencimento + carência) (header `Idempotency-Key`; máx. 3 pendentes) |
+| POST | `/v1/orders/:id/payment` | ✓ | corpo opcional `{ taxId }` (Pix/boleto). Cartão → `{ method: 'card', clientSecret, publishableKey }`; Pix → `{ method: 'pix', pix: { qrCodeData, qrCodeImageUrl, hostedInstructionsUrl, expiresAt } }`; boleto → `{ method: 'boleto', boleto: { number, pdfUrl, hostedVoucherUrl, expiresAt } }`. 422 `TAX_ID_REQUIRED` / `INVALID_TAX_ID` / `PAYER_DETAILS_REJECTED` |
+| POST | `/v1/orders/:id/payment/sync` | ✓ | o servidor consulta o Stripe e aplica o status → pedido |
+| POST | `/v1/orders/:id/cancel` | ✓ | cancela pedido pendente (cancela o PaymentIntent e devolve o estoque) |
+| POST | `/v1/webhooks/stripe` | assinatura | eventos do Stripe (raw body, deduplicados); 503 sem `STRIPE_WEBHOOK_SECRET` |
 | GET | `/v1/orders?page&pageSize` | ✓ | pedidos do usuário |
 | GET | `/v1/orders/:id` | ✓ | detalhe (404 se não for do usuário) |
 

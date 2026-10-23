@@ -1,72 +1,39 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { router } from 'expo-router'
 import { View } from 'react-native'
 
 import { AddressSummary } from '@/features/addresses/address-card'
 import { useAddresses } from '@/features/addresses/api'
-import { useCurrentUser } from '@/features/auth/require-auth'
 import { toPurchaseItems } from '@/features/cart/cart-logic'
 import { useCartQuote } from '@/features/cart/hooks'
 import { useCartStore } from '@/features/cart/store'
 import { CheckoutLayout, CONTENT_ENTRANCE } from '@/features/checkout/checkout-layout'
 import { idempotencyKeyFor, useCheckout } from '@/features/checkout/store'
-import { PAYMENT_LABELS, usePlaceOrder } from '@/features/orders/api'
-import { describeError, isApiError } from '@/lib/api/errors'
+import { useSubmitOrder } from '@/features/checkout/use-submit-order'
+import { PAYMENT_LABELS } from '@/features/orders/api'
 import { formatMoney, pluralize } from '@/lib/format'
-import { queryKeys } from '@/lib/query-keys'
-import { haptics } from '@/lib/haptics'
-import { Button, Card, Divider, ErrorState, InlineLoader, LoadingState, makeStyles, Price, ProductImage, Reveal, Text, useStyles, useToast } from '@/ui'
+import { Button, Card, Divider, ErrorState, InlineLoader, LoadingState, makeStyles, Price, ProductImage, Reveal, Text, useStyles } from '@/ui'
+
+const PAY_LABELS = { credit_card: 'Pagar', pix: 'Gerar Pix', boleto: 'Gerar boleto' } as const
 
 export default function CheckoutReviewScreen() {
   const styles = useStyles(styleFactory)
-  const toast = useToast()
   const items = useCartStore((state) => state.items)
   const quote = useCartQuote()
   const addresses = useAddresses()
   const addressId = useCheckout((state) => state.addressId)
   const paymentMethod = useCheckout((state) => state.paymentMethod)
-  const placeOrder = usePlaceOrder()
-  const queryClient = useQueryClient()
-  const user = useCurrentUser()
+  const submit = useSubmitOrder({ onStockChanged: () => void quote.refetch() })
 
   const address = addresses.data?.find((item) => item.id === addressId)
   const data = quote.data
 
   const confirm = () => {
-    if (!address || !data?.isPurchasable) return
+    if (!address || !data?.isPurchasable || submit.isPending) return
     const input = { addressId: address.id, paymentMethod, items: toPurchaseItems(items) }
-    const idempotencyKey = idempotencyKeyFor(JSON.stringify(input))
-    placeOrder.mutate(
-      { input, idempotencyKey },
-      {
-        onSuccess: (order) => {
-          void haptics.success()
-          useCheckout.getState().reset()
-          // Remove as etapas do checkout do histórico: "voltar" na confirmação leva às abas.
-          router.dismissAll()
-          router.push({ pathname: '/checkout/success', params: { orderId: order.id, number: String(order.number) } })
-        },
-        onError: (error) => {
-          void haptics.error()
-          if (isApiError(error) && (error.code === 'INSUFFICIENT_STOCK' || error.code === 'ITEM_UNAVAILABLE')) {
-            void quote.refetch()
-            toast.show({ tone: 'error', message: 'O estoque mudou. Revise sua sacola.', actionLabel: 'Ver sacola', onAction: () => router.navigate('/cart') })
-          } else if (isApiError(error) && error.code === 'ADDRESS_NOT_FOUND') {
-            // Endereço removido (ex.: em outro aparelho): descarta a seleção e recarrega a lista.
-            useCheckout.getState().setAddress(null)
-            void queryClient.invalidateQueries({ queryKey: queryKeys.addresses(user?.id ?? 'anon') })
-            toast.show({ tone: 'error', message: 'Endereço não encontrado. Escolha outro.' })
-            router.navigate('/checkout/address')
-          } else {
-            // Falha de rede: a mesma chave de idempotência será reutilizada na nova tentativa.
-            toast.show({ tone: 'error', message: describeError(error).message })
-          }
-        },
-      },
-    )
+    submit.mutate({ input, idempotencyKey: idempotencyKeyFor(JSON.stringify(input)) })
   }
 
-  if (items.length === 0 && !placeOrder.isSuccess) {
+  if (items.length === 0 && submit.isIdle) {
     return (
       <CheckoutLayout step={2} title="Revisão">
         <Text variant="body" color="textMuted">
@@ -83,9 +50,10 @@ export default function CheckoutReviewScreen() {
       title="Confira e confirme"
       footer={
         <Button
-          title={data ? `Confirmar pedido · ${formatMoney(data.totalCents)}` : 'Confirmar pedido'}
+          title={`${PAY_LABELS[paymentMethod]}${data ? ` · ${formatMoney(data.totalCents)}` : ''}`}
+          icon="lock-closed-outline"
           onPress={confirm}
-          loading={placeOrder.isPending}
+          loading={submit.isPending}
           disabled={!address || !data?.isPurchasable || quote.isFetching}
           fullWidth
           testID="place-order"
@@ -131,7 +99,14 @@ export default function CheckoutReviewScreen() {
             <Text variant="headline">Entrega</Text>
             <Button title="Alterar" variant="ghost" size="md" onPress={() => router.navigate('/checkout/address')} />
           </View>
-          {address ? <AddressSummary address={address} /> : <LoadingState layout="inline" label="Carregando endereço" />}
+          {address ? (
+            <AddressSummary address={address} />
+          ) : addresses.isPending ? (
+            <LoadingState layout="inline" label="Carregando endereço" />
+          ) : (
+            // Sem endereço escolhido (deep link, endereço removido): não fica carregando para sempre.
+            <Button title="Escolher endereço" variant="secondary" onPress={() => router.navigate('/checkout/address')} />
+          )}
         </Card>
       </Reveal>
 

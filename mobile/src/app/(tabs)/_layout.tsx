@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import { View } from 'react-native'
-import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withSpring } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSequence, withTiming } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { useCartCount } from '@/features/cart/store'
@@ -22,7 +22,7 @@ function CartTabIcon({ focused }: { focused: boolean }) {
 
   useEffect(() => {
     if (count > previous.current && !reduceMotion) {
-      scale.value = withSequence(withSpring(1.35, theme.motion.spring.snappy), withSpring(1, theme.motion.spring.gentle))
+      scale.value = withSequence(withTiming(1.15, { duration: theme.motion.duration.fast }), withTiming(1, { duration: theme.motion.duration.base }))
     }
     previous.current = count
   }, [count, reduceMotion, scale, theme])

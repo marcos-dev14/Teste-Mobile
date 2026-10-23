@@ -11,8 +11,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 
 import { session, useSession } from '@/features/auth/session-store'
 import { useSessionCleanup } from '@/features/auth/use-session-cleanup'
+import { CardPaymentHost } from '@/features/payments/card-payment-sheet'
 import { createQueryClient, wireQueryLifecycle } from '@/lib/query-client'
-import { AnimatedSplash, EntranceGateProvider, ThemeProvider, ToastProvider, useTheme } from '@/ui'
+import { AnimatedSplash, ConfirmProvider, EntranceGateProvider, ThemeProvider, ToastProvider, useTheme } from '@/ui'
 
 // A splash nativa fica até a splash animada (camada JS idêntica) estar desenhada; ela a esconde.
 void SplashScreen.preventAutoHideAsync()
@@ -49,10 +50,13 @@ export default function RootLayout() {
         <ThemeProvider>
           <QueryClientProvider client={queryClient}>
             <ToastProvider>
-              <SessionEffects />
-              <AppIntro>
-                <ThemedNavigation />
-              </AppIntro>
+              <ConfirmProvider>
+                <SessionEffects />
+                <AppIntro>
+                  <ThemedNavigation />
+                </AppIntro>
+                <CardPaymentHost />
+              </ConfirmProvider>
             </ToastProvider>
           </QueryClientProvider>
         </ThemeProvider>

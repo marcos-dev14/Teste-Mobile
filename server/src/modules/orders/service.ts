@@ -1,6 +1,6 @@
 import type { Pool } from '../../db/pool.js'
 import { withTransaction } from '../../db/transaction.js'
-import { conflict, notFound } from '../../lib/errors.js'
+import { AppError, conflict, notFound } from '../../lib/errors.js'
 import { offsetFor } from '../../lib/schemas.js'
 import { fingerprint } from '../../lib/tokens.js'
 import { findAddressForUser } from '../addresses/repository.js'
@@ -17,7 +17,21 @@ const idempotencyMismatch = () =>
     'Esta chave de idempotência já foi usada com outro conteúdo. Gere uma nova chave.',
   )
 
-export function createOrdersService({ pool }: { pool: Pool }) {
+/** Pedidos aguardando pagamento por usuário: sem limite, uma conta poderia reservar todo o estoque. */
+export const MAX_PENDING_ORDERS_PER_USER = 3
+
+type PaymentMethod = CreateOrderBody['paymentMethod']
+
+export interface OrdersServiceDeps {
+  pool: Pool
+  /** Métodos habilitados para a conta Stripe (`PAYMENT_METHODS`). */
+  paymentMethods: PaymentMethod[]
+  /** Minutos de reserva do estoque por método (boleto: vencimento + prazo de confirmação). */
+  reservationMinutes: (method: PaymentMethod) => number
+}
+
+export function createOrdersService({ pool, paymentMethods, reservationMinutes: reservationFor }: OrdersServiceDeps) {
+  const available = new Set(paymentMethods)
   async function replay(userId: string, key: string, requestFingerprint: string) {
     const existing = await repo.findOrderByIdempotencyKey(pool, userId, key)
     if (!existing) return null
@@ -46,8 +60,24 @@ export function createOrdersService({ pool }: { pool: Pool }) {
       const previous = await replay(userId, idempotencyKey, requestFingerprint)
       if (previous) return { order: previous, created: false }
 
+      if (!available.has(input.paymentMethod)) {
+        throw new AppError(422, 'PAYMENT_METHOD_UNAVAILABLE', 'Esta forma de pagamento não está disponível no momento.')
+      }
+
       try {
         const order = await withTransaction(pool, async (tx) => {
+          // Serializa pedidos do mesmo usuário para o limite de pendentes não ser furado por concorrência.
+          await repo.lockUser(tx, userId)
+          // Duplicata concorrente com a mesma chave: a primeira já gravou o pedido enquanto esta
+          // esperava a trava. Devolve o pedido existente em vez de validar estoque/limite de novo
+          // (o que daria 409 enganoso, pois o próprio pedido já reservou o estoque).
+          if (await repo.findOrderByIdempotencyKey(tx, userId, idempotencyKey)) throw new IdempotencyRace()
+          if ((await repo.countPendingOrders(tx, userId)) >= MAX_PENDING_ORDERS_PER_USER) {
+            throw conflict(
+              'TOO_MANY_PENDING_ORDERS',
+              `Você já tem ${MAX_PENDING_ORDERS_PER_USER} pedidos aguardando pagamento. Pague ou cancele um deles antes.`,
+            )
+          }
           const address = await findAddressForUser(tx, userId, input.addressId)
           if (!address) throw notFound('Endereço não encontrado.', 'ADDRESS_NOT_FOUND')
 
@@ -99,7 +129,9 @@ export function createOrdersService({ pool }: { pool: Pool }) {
               shippingAddress: {
                 fullName: address.fullName,
                 addressLine1: address.addressLine1,
+                number: address.number,
                 addressLine2: address.addressLine2,
+                neighborhood: address.neighborhood,
                 city: address.city,
                 state: address.state,
                 zipCode: address.zipCode,
@@ -107,6 +139,7 @@ export function createOrdersService({ pool }: { pool: Pool }) {
               },
               idempotencyKey,
               requestFingerprint,
+              reservationMinutes: reservationFor(input.paymentMethod),
             },
             quote.lines,
           )
@@ -122,6 +155,9 @@ export function createOrdersService({ pool }: { pool: Pool }) {
         return { order: winner, created: false }
       }
     },
+
+    /** Formas de pagamento oferecidas no checkout. */
+    paymentMethods: (): PaymentMethod[] => [...available],
 
     async list(userId: string, page: number, pageSize: number) {
       const { items, total } = await repo.listOrdersForUser(pool, userId, pageSize, offsetFor(page, pageSize))

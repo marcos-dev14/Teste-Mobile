@@ -4,11 +4,9 @@ import type { NewAddress } from '@/lib/api/types'
 import { Icon, makeStyles, PressableScale, Text, useStyles } from '@/ui'
 
 export function formatAddressLines(address: NewAddress): string[] {
-  return [
-    address.addressLine2 ? `${address.addressLine1}, ${address.addressLine2}` : address.addressLine1,
-    `${address.city} – ${address.state}, ${address.zipCode}`,
-    address.country,
-  ]
+  const street = [address.addressLine1, address.number, address.addressLine2].filter(Boolean).join(', ')
+  const locality = [address.neighborhood, `${address.city} – ${address.state}`].filter(Boolean).join(', ')
+  return [street, `${locality}, ${address.zipCode}`, address.country]
 }
 
 export function AddressSummary({ address }: { address: NewAddress }) {

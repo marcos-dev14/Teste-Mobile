@@ -123,7 +123,7 @@ export function AnimatedSplash({ onReveal, onFinish }: AnimatedSplashProps) {
       opacity: interpolate(word.value, [0, 0.4], [0, 1], Extrapolation.CLAMP),
       transform: [
         { translateX: symbolX.value - (1 - word.value) * wordWidth },
-        { translateY: (1 - word.value) * motion.entrance.offsetY * 0.5 },
+        { translateY: (1 - word.value) * motion.entrance.offsetY },
       ],
     }
   })

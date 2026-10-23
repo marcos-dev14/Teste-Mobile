@@ -25,3 +25,19 @@ export function maskZipCode(value: string): string {
 export function formatRating(rating: number): string {
   return rating.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 }
+
+const timeFormatter = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+/** Hora local (ex.: "14:35"). */
+export function formatTime(iso: string): string {
+  return timeFormatter.format(new Date(iso))
+}
+
+/** Tempo restante em contagem regressiva (ex.: 1799000 → "29:59"; acima de 1 h, "1:02:03"). */
+export function formatCountdown(ms: number): string {
+  const total = Math.max(0, Math.ceil(ms / 1000))
+  const hours = Math.floor(total / 3600)
+  const minutes = Math.floor((total % 3600) / 60)
+  const seconds = String(total % 60).padStart(2, '0')
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${seconds}` : `${String(minutes).padStart(2, '0')}:${seconds}`
+}

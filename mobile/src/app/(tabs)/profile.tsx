@@ -1,13 +1,14 @@
 import { router } from 'expo-router'
-import { Alert, ScrollView, View } from 'react-native'
+import { ScrollView, View } from 'react-native'
 
 import { session, useSession } from '@/features/auth/session-store'
 import { env } from '@/lib/env'
-import { AppHeader, Button, ScreenTitle, Card, Divider, EmptyState, ListItem, Logo, makeStyles, Reveal, Screen, Text, useStyles, useToast } from '@/ui'
+import { AppHeader, Button, ScreenTitle, Card, Divider, EmptyState, ListItem, Logo, makeStyles, Reveal, Screen, Text, useConfirm, useStyles, useToast } from '@/ui'
 
 export default function ProfileScreen() {
   const styles = useStyles(styleFactory)
   const toast = useToast()
+  const confirm = useConfirm()
   const user = useSession((state) => state.user)
 
   if (!user) {
@@ -36,17 +37,17 @@ export default function ProfileScreen() {
     .map((part) => part[0]?.toUpperCase())
     .join('')
 
-  const confirmSignOut = () =>
-    Alert.alert('Sair da conta?', 'Sua sacola continua salva neste aparelho.', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: () => {
-          void session.signOut().then(() => toast.show({ message: 'Você saiu da sua conta.' }))
-        },
-      },
-    ])
+  const confirmSignOut = async () => {
+    const confirmed = await confirm({
+      title: 'Sair da conta?',
+      message: 'A sacola deste aparelho também será esvaziada.',
+      confirmLabel: 'Sair',
+      tone: 'danger',
+      icon: 'log-out-outline',
+    })
+    if (!confirmed) return
+    void session.signOut().then(() => toast.show({ message: 'Você saiu da sua conta.' }))
+  }
 
   return (
     <Screen>
@@ -76,7 +77,9 @@ export default function ProfileScreen() {
 
         <Reveal index={3}>
           <Card style={styles.card}>
-            <ListItem icon="log-out-outline" title="Sair" destructive onPress={confirmSignOut} />
+            <ListItem icon="log-out-outline" title="Sair" destructive onPress={() => void confirmSignOut()} />
+            <Divider inset={48} />
+            <ListItem icon="trash-outline" title="Excluir conta" destructive onPress={() => router.push('/account/delete')} />
           </Card>
         </Reveal>
         <AppInfo index={4} />

@@ -1,58 +1,157 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useRef, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { View, type TextInput } from 'react-native'
+import { AccessibilityInfo, ActivityIndicator, View, type TextInput } from 'react-native'
 import { z } from 'zod'
 
 import { isApiError } from '@/lib/api/errors'
-import type { Address, NewAddress } from '@/lib/api/types'
+import type { Address, CreateAddressInput } from '@/lib/api/types'
 import { maskZipCode } from '@/lib/format'
-import { Button, makeStyles, Text, TextField, useStyles, useToast } from '@/ui'
+import { Button, makeStyles, Text, TextField, useStyles, useTheme, useToast } from '@/ui'
 
-import { useCreateAddress } from './api'
+import { fetchZipCode, useCreateAddress } from './api'
+
+/** Mesma lista do servidor. */
+export const BRAZILIAN_STATES = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA',
+  'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+] as const
 
 // Mesmas regras do servidor (o servidor continua sendo a validação definitiva).
 export const addressFormSchema = z.object({
   fullName: z.string().trim().min(3, 'Informe o nome completo.').max(100),
-  addressLine1: z.string().trim().min(3, 'Informe rua e número.').max(120),
-  addressLine2: z.string().trim().max(120).optional(),
-  city: z.string().trim().min(2, 'Informe a cidade.').max(80),
-  state: z.string().trim().min(2, 'Informe o estado.').max(40),
   zipCode: z.string().regex(/^\d{5}-\d{3}$/, 'CEP deve ter 8 dígitos.'),
+  addressLine1: z.string().trim().min(3, 'Informe a rua.').max(120),
+  number: z.string().trim().min(1, 'Informe o número (ou S/N).').max(10, 'Máximo de 10 caracteres.'),
+  addressLine2: z.string().trim().max(120).optional(),
+  neighborhood: z.string().trim().min(2, 'Informe o bairro.').max(80),
+  city: z.string().trim().min(2, 'Informe a cidade.').max(80),
+  state: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((value) => (BRAZILIAN_STATES as readonly string[]).includes(value), 'UF inválida (ex.: SP).'),
   country: z.string().trim().min(2, 'Informe o país.').max(60),
 })
 
 type FormValues = z.infer<typeof addressFormSchema>
+type FieldName = keyof FormValues
 
-const FIELDS: {
-  name: keyof FormValues
+interface FieldConfig {
+  name: FieldName
   label: string
   autoComplete?: 'name' | 'street-address' | 'postal-code' | 'country'
-  half?: boolean
-}[] = [
-  { name: 'fullName', label: 'Nome de quem recebe', autoComplete: 'name' },
-  { name: 'zipCode', label: 'CEP', autoComplete: 'postal-code' },
-  { name: 'addressLine1', label: 'Rua e número', autoComplete: 'street-address' },
-  { name: 'addressLine2', label: 'Complemento (opcional)' },
-  { name: 'city', label: 'Cidade', half: true },
-  { name: 'state', label: 'Estado', half: true },
-  { name: 'country', label: 'País', autoComplete: 'country' },
+  /** Proporção da largura quando divide a linha com outro campo. */
+  flex?: number
+}
+
+/** Linhas do formulário; campos lado a lado dividem a largura. CEP antes da rua: ele preenche o resto. */
+const ROWS: FieldConfig[][] = [
+  [{ name: 'fullName', label: 'Nome de quem recebe', autoComplete: 'name' }],
+  [{ name: 'zipCode', label: 'CEP', autoComplete: 'postal-code' }],
+  [{ name: 'addressLine1', label: 'Rua', autoComplete: 'street-address' }],
+  [
+    { name: 'number', label: 'Número' },
+    { name: 'addressLine2', label: 'Complemento (opcional)', flex: 1.6 },
+  ],
+  [{ name: 'neighborhood', label: 'Bairro' }],
+  [
+    { name: 'city', label: 'Cidade', flex: 2.4 },
+    { name: 'state', label: 'UF' },
+  ],
+  [{ name: 'country', label: 'País', autoComplete: 'country' }],
 ]
+const ORDER = ROWS.flat().map((field) => field.name)
+
+/** Campos que a consulta de CEP pode sugerir. */
+type AutoFillField = 'addressLine1' | 'neighborhood' | 'city' | 'state'
+
+type LookupStatus = 'idle' | 'loading' | 'found' | 'not_found' | 'unavailable'
+
+const LOOKUP_MESSAGES: Partial<Record<LookupStatus, string>> = {
+  loading: 'Buscando endereço…',
+  found: 'Endereço sugerido pelo CEP. Confira e complete.',
+  not_found: 'CEP não encontrado. Confira o número ou preencha o endereço.',
+  unavailable: 'Não foi possível consultar o CEP agora. Preencha o endereço manualmente.',
+}
 
 export function AddressForm({ onCreated, submitLabel = 'Salvar endereço' }: { onCreated: (address: Address) => void; submitLabel?: string }) {
   const styles = useStyles(styleFactory)
+  const theme = useTheme()
   const toast = useToast()
+  const queryClient = useQueryClient()
   const createAddress = useCreateAddress()
-  const inputs = useRef<Partial<Record<keyof FormValues, TextInput | null>>>({})
+  const inputs = useRef<Partial<Record<FieldName, TextInput | null>>>({})
+  const [lookupStatus, setLookupStatus] = useState<LookupStatus>('idle')
+  /** CEP da consulta mais recente: respostas de CEPs anteriores são descartadas. */
+  const currentLookup = useRef<string | null>(null)
+  /** Último valor preenchido automaticamente em cada campo. */
+  const autoFilled = useRef<Partial<Record<AutoFillField, string>>>({})
 
-  const { control, handleSubmit, setError, formState } = useForm<FormValues>({
+  const { control, handleSubmit, setError, setValue, getValues, formState } = useForm<FormValues>({
     resolver: zodResolver(addressFormSchema),
-    defaultValues: { fullName: '', addressLine1: '', addressLine2: '', city: '', state: '', zipCode: '', country: 'Brasil' },
+    defaultValues: {
+      fullName: '',
+      zipCode: '',
+      addressLine1: '',
+      number: '',
+      addressLine2: '',
+      neighborhood: '',
+      city: '',
+      state: '',
+      country: 'Brasil',
+    },
     mode: 'onTouched',
   })
 
+  const lookupZipCode = async (digits: string) => {
+    currentLookup.current = digits
+    setLookupStatus('loading')
+    try {
+      const result = await fetchZipCode(queryClient, digits)
+      if (currentLookup.current !== digits) return
+      const suggestions: Record<AutoFillField, string | null> = {
+        addressLine1: result.street,
+        neighborhood: result.neighborhood,
+        city: result.city,
+        state: result.state,
+      }
+      for (const [field, value] of Object.entries(suggestions) as [AutoFillField, string | null][]) {
+        if (!value) continue
+        const current = getValues(field) ?? ''
+        // Nunca sobrescreve o que a pessoa digitou: só campos vazios ou ainda com a sugestão anterior.
+        if (current.trim() === '' || current === autoFilled.current[field]) {
+          setValue(field, value, { shouldValidate: true })
+          autoFilled.current[field] = value
+        }
+      }
+      setLookupStatus('found')
+      AccessibilityInfo.announceForAccessibility(LOOKUP_MESSAGES.found!)
+      // O CEP não informa o número; sem rua (CEP geral da cidade), a rua vem primeiro.
+      inputs.current[result.street ? 'number' : 'addressLine1']?.focus()
+    } catch (error) {
+      if (currentLookup.current !== digits) return
+      const status: LookupStatus = isApiError(error) && error.status === 404 ? 'not_found' : 'unavailable'
+      setLookupStatus(status)
+      AccessibilityInfo.announceForAccessibility(LOOKUP_MESSAGES[status]!)
+    }
+  }
+
+  const onZipCodeChange = (text: string, onChange: (value: string) => void) => {
+    const masked = maskZipCode(text)
+    onChange(masked)
+    const digits = masked.replace(/\D/g, '')
+    if (digits.length < 8) {
+      currentLookup.current = null
+      setLookupStatus('idle')
+    } else if (digits !== currentLookup.current) {
+      void lookupZipCode(digits)
+    }
+  }
+
   const submit = handleSubmit(async (values) => {
-    const input: NewAddress = { ...values, addressLine2: values.addressLine2 || null }
+    const input: CreateAddressInput = { ...values, addressLine2: values.addressLine2 || null }
     try {
       const address = await createAddress.mutateAsync(input)
       onCreated(address)
@@ -61,7 +160,7 @@ export function AddressForm({ onCreated, submitLabel = 'Salvar endereço' }: { o
       const details = isApiError(error) ? (error.details ?? []) : []
       let mapped = false
       for (const detail of details) {
-        const field = String(detail.path ?? '').replace(/^body\./, '') as keyof FormValues
+        const field = String(detail.path ?? '').replace(/^body\./, '') as FieldName
         if (field in addressFormSchema.shape) {
           setError(field, { message: String(detail.message) })
           mapped = true
@@ -71,46 +170,63 @@ export function AddressForm({ onCreated, submitLabel = 'Salvar endereço' }: { o
     }
   })
 
-  const renderField = (field: (typeof FIELDS)[number], index: number) => (
-    <Controller
-      key={field.name}
-      control={control}
-      name={field.name}
-      render={({ field: { onChange, onBlur, value }, fieldState }) => (
-        <View style={field.half ? styles.half : undefined}>
-          <TextField
-            ref={(ref) => {
-              inputs.current[field.name] = ref
-            }}
-            label={field.label}
-            value={value ?? ''}
-            onBlur={onBlur}
-            onChangeText={(text) => onChange(field.name === 'zipCode' ? maskZipCode(text) : text)}
-            error={fieldState.error?.message}
-            autoComplete={field.autoComplete}
-            keyboardType={field.name === 'zipCode' ? 'number-pad' : 'default'}
-            autoCapitalize={field.name === 'state' ? 'characters' : 'words'}
-            returnKeyType={index === FIELDS.length - 1 ? 'done' : 'next'}
-            onSubmitEditing={() => {
-              const next = FIELDS[index + 1]
-              if (next) inputs.current[next.name]?.focus()
-              else void submit()
-            }}
-          />
-        </View>
-      )}
-    />
-  )
+  const renderField = (field: FieldConfig) => {
+    const index = ORDER.indexOf(field.name)
+    const isZipCode = field.name === 'zipCode'
+    return (
+      <Controller
+        key={field.name}
+        control={control}
+        name={field.name}
+        render={({ field: { onChange, onBlur, value }, fieldState }) => (
+          <View style={{ flex: field.flex ?? 1 }}>
+            <TextField
+              ref={(ref) => {
+                inputs.current[field.name] = ref
+              }}
+              label={field.label}
+              value={value ?? ''}
+              onBlur={onBlur}
+              onChangeText={(text) => {
+                if (isZipCode) onZipCodeChange(text, onChange)
+                else onChange(field.name === 'state' ? text.toUpperCase() : text)
+              }}
+              error={fieldState.error?.message}
+              hint={isZipCode ? LOOKUP_MESSAGES[lookupStatus] : undefined}
+              accessory={
+                isZipCode && lookupStatus === 'loading' ? (
+                  <ActivityIndicator size="small" color={theme.colors.textMuted} accessibilityLabel="Buscando endereço" />
+                ) : undefined
+              }
+              autoComplete={field.autoComplete}
+              keyboardType={isZipCode ? 'number-pad' : 'default'}
+              autoCapitalize={field.name === 'state' ? 'characters' : 'words'}
+              maxLength={field.name === 'state' ? 2 : undefined}
+              returnKeyType={index === ORDER.length - 1 ? 'done' : 'next'}
+              onSubmitEditing={() => {
+                const next = ORDER[index + 1]
+                if (next) inputs.current[next]?.focus()
+                else void submit()
+              }}
+              testID={`address-${field.name}`}
+            />
+          </View>
+        )}
+      />
+    )
+  }
 
   return (
     <View style={styles.form}>
-      {FIELDS.slice(0, 4).map(renderField)}
-      <View style={styles.row}>{FIELDS.slice(4, 6).map((field, offset) => renderField(field, 4 + offset))}</View>
-      {renderField(FIELDS[6]!, 6)}
+      {ROWS.map((row) => (
+        <View key={row[0]!.name} style={styles.row}>
+          {row.map(renderField)}
+        </View>
+      ))}
       <Text variant="caption" color="textMuted">
         Usamos este endereço apenas para a entrega dos seus pedidos.
       </Text>
-      <Button title={submitLabel} onPress={submit} loading={formState.isSubmitting} fullWidth />
+      <Button title={submitLabel} onPress={submit} loading={formState.isSubmitting} fullWidth testID="address-submit" />
     </View>
   )
 }
@@ -118,5 +234,4 @@ export function AddressForm({ onCreated, submitLabel = 'Salvar endereço' }: { o
 const styleFactory = makeStyles((t) => ({
   form: { gap: t.space.md },
   row: { flexDirection: 'row', gap: t.space.sm },
-  half: { flex: 1 },
 }))

@@ -16,7 +16,10 @@
     "test:watch": "vitest",
     "db:migrate": "tsx src/db/cli.ts migrate",
     "db:status": "tsx src/db/cli.ts status",
-    "db:seed": "tsx src/db/cli.ts seed"
+    "db:seed": "tsx src/db/cli.ts seed",
+    "db:cleanup": "tsx src/db/cli.ts cleanup",
+    "jobs:run": "tsx src/db/cli.ts maintenance",
+    "db:integrity": "tsx src/db/cli.ts integrity"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",
@@ -26,6 +29,7 @@
     "fastify": "^5.12.7",
     "fastify-plugin": "^5.1.0",
     "pg": "^8.23.1",
+    "stripe": "^23.0.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {

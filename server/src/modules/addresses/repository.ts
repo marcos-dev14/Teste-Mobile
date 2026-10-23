@@ -5,7 +5,9 @@ interface AddressRow {
   id: string
   full_name: string
   address_line1: string
+  number: string | null
   address_line2: string | null
+  neighborhood: string | null
   city: string
   state: string
   zip_code: string
@@ -14,13 +16,15 @@ interface AddressRow {
 }
 
 const COLUMNS =
-  'id, full_name, address_line1, address_line2, city, state, zip_code, country, created_at'
+  'id, full_name, address_line1, number, address_line2, neighborhood, city, state, zip_code, country, created_at'
 
 const toAddress = (row: AddressRow): AddressDto => ({
   id: row.id,
   fullName: row.full_name,
   addressLine1: row.address_line1,
+  number: row.number,
   addressLine2: row.address_line2,
+  neighborhood: row.neighborhood,
   city: row.city,
   state: row.state,
   zipCode: row.zip_code,
@@ -61,15 +65,18 @@ export async function insertAddress(
   maxPerUser: number,
 ): Promise<AddressDto | null> {
   const { rows } = await db.query<AddressRow>(
-    `INSERT INTO addresses (user_id, full_name, address_line1, address_line2, city, state, zip_code, country)
-     SELECT $1, $2, $3, $4, $5, $6, $7, $8
-      WHERE (SELECT count(*) FROM addresses WHERE user_id = $1) < $9
+    `INSERT INTO addresses (user_id, full_name, address_line1, number, address_line2, neighborhood,
+                            city, state, zip_code, country)
+     SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+      WHERE (SELECT count(*) FROM addresses WHERE user_id = $1) < $11
      RETURNING ${COLUMNS}`,
     [
       userId,
       input.fullName,
       input.addressLine1,
+      input.number,
       input.addressLine2,
+      input.neighborhood,
       input.city,
       input.state,
       input.zipCode,

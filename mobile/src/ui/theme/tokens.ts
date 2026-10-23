@@ -141,26 +141,29 @@ export const brand = {
   clayLight: '#E58A63',
 } as const
 
+/** Cores fixas, iguais nos dois temas, exigidas por conteúdo de terceiros. */
+export const fixedColors = {
+  /** Fundo do QR Code do Pix: leitores de QR precisam de fundo claro, também no tema escuro. */
+  qrBackground: '#FFFFFF',
+} as const
+
 export const motion = {
-  duration: { fast: 120, base: 220, slow: 320 },
+  duration: { fast: 120, base: 180, slow: 240 },
   spring: {
     snappy: { damping: 18, stiffness: 320, mass: 0.6 },
-    gentle: { damping: 20, stiffness: 180, mass: 0.8 },
   },
   pressScale: 0.97,
   /** Desaceleração natural (cúbica "ease-out quint"), usada nas entradas. */
   easeOut: [0.22, 1, 0.36, 1] as const,
-  /** Entrada de telas: conteúdo real sobe e é revelado da esquerda para a direita, em grupos. */
+  /** Entrada de telas: conteúdo real aparece com fade e sobe poucos dp, em grupos. Discreta e curta. */
   entrance: {
-    duration: 380,
-    offsetY: 14,
-    /** Leve deriva horizontal do conteúdo enquanto a máscara avança. */
-    offsetX: 8,
-    stagger: 45,
-    /** Teto de passos escalonados: a entrada inteira termina em ≤ ~740 ms. */
-    maxSteps: 8,
-    /** Movimento reduzido: só um fade curto, sem deslocamento nem máscara. */
-    reducedDuration: 140,
+    duration: 220,
+    offsetY: 6,
+    stagger: 30,
+    /** Teto de passos escalonados: a entrada inteira termina em ≤ ~370 ms. */
+    maxSteps: 5,
+    /** Movimento reduzido: só um fade curto, sem deslocamento. */
+    reducedDuration: 120,
   },
 } as const
 

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AccessibilityInfo, Pressable, View } from 'react-native'
 import Animated, { FadeInDown, FadeOutDown, ReduceMotion } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -43,6 +43,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [bottomOffset, setBottomOffset] = useState(0)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
   const sequence = useRef(0)
+
+  useEffect(() => () => clearTimeout(timer.current), [])
 
   const show = useCallback((options: ToastOptions) => {
     clearTimeout(timer.current)

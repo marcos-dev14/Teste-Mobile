@@ -33,7 +33,7 @@ describe('pedidos', () => {
 
     const response = await placeOrder(user.auth, {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [
         { productId: shirt.productId, colorId: shirt.colorId, quantity: 2 },
         { productId: jeans.productId, colorId: jeans.colorId, quantity: 1 },
@@ -42,12 +42,12 @@ describe('pedidos', () => {
     expect(response.statusCode).toBe(201)
     const order = response.json()
     expect(order).toMatchObject({
-      status: 'placed',
-      paymentMethod: 'pix',
+      status: 'pending_payment',
+      paymentMethod: 'credit_card',
       itemCount: 3,
       subtotalCents: shirt.priceCents * 2 + jeans.priceCents,
       totalCents: shirt.priceCents * 2 + jeans.priceCents,
-      shippingAddress: expect.objectContaining({ zipCode: '01310-100' }),
+      shippingAddress: expect.objectContaining({ zipCode: '01310-100', number: '123', neighborhood: 'Bela Vista' }),
     })
     expect(order.number).toBeGreaterThanOrEqual(1001)
     expect(order.items).toHaveLength(2)
@@ -60,7 +60,7 @@ describe('pedidos', () => {
     const shirt = await getColor(ctx.pool, 'camiseta-basica')
     const base = {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
     }
     for (const tampered of [
@@ -77,7 +77,7 @@ describe('pedidos', () => {
     const shirt = await getColor(ctx.pool, 'camiseta-basica')
     const response = await placeOrder(user.auth, {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity }],
     })
     expect(response.statusCode).toBe(400)
@@ -88,7 +88,7 @@ describe('pedidos', () => {
     const shirt = await getColor(ctx.pool, 'camiseta-basica')
     const payload = {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
     }
     expect((await placeOrder(user.auth, payload, null)).statusCode).toBe(400)
@@ -122,7 +122,7 @@ describe('pedidos', () => {
     const shirt = await getColor(ctx.pool, 'camiseta-basica')
     const response = await placeOrder(bob.auth, {
       addressId: alice.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
     })
     expect(response.statusCode).toBe(404)
@@ -137,7 +137,7 @@ describe('pedidos', () => {
 
     const response = await placeOrder(user.auth, {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [
         { productId: shirt.productId, colorId: shirt.colorId, quantity: 1 },
         { productId: soldOut.productId, colorId: soldOut.colorId, quantity: 1 },
@@ -158,7 +158,7 @@ describe('pedidos', () => {
     const bag = await getColor(ctx.pool, 'bolsa-transversal')
     const response = await placeOrder(user.auth, {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       // Preço da camiseta com a cor (e estoque) da bolsa.
       items: [{ productId: shirt.productId, colorId: bag.colorId, quantity: 1 }],
     })
@@ -173,7 +173,7 @@ describe('pedidos', () => {
     const created = (
       await placeOrder(alice.auth, {
         addressId: alice.addressId,
-        paymentMethod: 'pix',
+        paymentMethod: 'credit_card',
         items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
       })
     ).json()
@@ -199,7 +199,7 @@ describe('pedidos', () => {
     const order = (
       await placeOrder(user.auth, {
         addressId: user.addressId,
-        paymentMethod: 'pix',
+        paymentMethod: 'credit_card',
         items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
       })
     ).json()
@@ -210,6 +210,26 @@ describe('pedidos', () => {
     const detail = (await ctx.app.inject({ method: 'GET', url: `/v1/orders/${order.id}`, headers: user.auth })).json()
     expect(detail.totalCents).toBe(shirt.priceCents)
     expect(detail.shippingAddress.city).toBe('São Paulo')
+  })
+
+  it('pedidos gravados antes da migration 0002 devolvem número e bairro nulos', async () => {
+    const user = await buyer()
+    const shirt = await getColor(ctx.pool, 'camiseta-basica')
+    const order = (
+      await placeOrder(user.auth, {
+        addressId: user.addressId,
+        paymentMethod: 'credit_card',
+        items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
+      })
+    ).json()
+    await ctx.pool.query(
+      `UPDATE orders SET shipping_address = shipping_address - 'number' - 'neighborhood' WHERE id = $1`,
+      [order.id],
+    )
+
+    const detail = await ctx.app.inject({ method: 'GET', url: `/v1/orders/${order.id}`, headers: user.auth })
+    expect(detail.statusCode).toBe(200)
+    expect(detail.json().shippingAddress).toMatchObject({ number: null, neighborhood: null, city: 'São Paulo' })
   })
 })
 
@@ -223,7 +243,7 @@ describe('pedidos concorrentes', () => {
       buyers.map((user) =>
         placeOrder(user.auth, {
           addressId: user.addressId,
-          paymentMethod: 'pix',
+          paymentMethod: 'credit_card',
           items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
         }),
       ),
@@ -233,13 +253,29 @@ describe('pedidos concorrentes', () => {
     expect(await getStock(ctx.pool, shirt.colorId)).toBe(0)
   })
 
+  it('duplicata simultânea com a mesma chave pela ÚLTIMA unidade recebe o mesmo pedido (não 409)', async () => {
+    const user = await buyer()
+    const shirt = await getColor(ctx.pool, 'camiseta-basica')
+    await setStock(ctx.pool, shirt.colorId, 1)
+    const key = randomUUID()
+    const payload = {
+      addressId: user.addressId,
+      paymentMethod: 'credit_card',
+      items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
+    }
+    const responses = await Promise.all(Array.from({ length: 5 }, () => placeOrder(user.auth, payload, key)))
+    expect(responses.map((response) => response.statusCode).sort()).toEqual([200, 200, 200, 200, 201])
+    expect(new Set(responses.map((response) => response.json().id)).size).toBe(1)
+    expect(await getStock(ctx.pool, shirt.colorId)).toBe(0)
+  })
+
   it('retentativas simultâneas com a mesma chave geram um único pedido', async () => {
     const user = await buyer()
     const shirt = await getColor(ctx.pool, 'camiseta-basica')
     const key = randomUUID()
     const payload = {
       addressId: user.addressId,
-      paymentMethod: 'pix',
+      paymentMethod: 'credit_card',
       items: [{ productId: shirt.productId, colorId: shirt.colorId, quantity: 1 }],
     }
     const responses = await Promise.all(Array.from({ length: 5 }, () => placeOrder(user.auth, payload, key)))

@@ -2,7 +2,7 @@ import { contrastRatio, readableOn } from '@/ui/theme/contrast'
 import { darkColors, lightColors, type ColorTokens } from '@/ui/theme/tokens'
 
 import { resolveApiUrl } from '../env'
-import { formatMoney, maskZipCode, pluralize } from '../format'
+import { formatCountdown, formatMoney, maskZipCode, pluralize } from '../format'
 
 describe('formatMoney', () => {
   it('formata centavos em reais', () => {
@@ -22,6 +22,14 @@ describe('utilitários de texto', () => {
     expect(maskZipCode('01310100')).toBe('01310-100')
     expect(maskZipCode('0131')).toBe('0131')
     expect(maskZipCode('01310-100999abc')).toBe('01310-100')
+  })
+
+  it('formata a contagem regressiva', () => {
+    expect(formatCountdown(30 * 60_000)).toBe('30:00')
+    expect(formatCountdown(59_001)).toBe('01:00')
+    expect(formatCountdown(5_000)).toBe('00:05')
+    expect(formatCountdown(3_723_000)).toBe('1:02:03')
+    expect(formatCountdown(-1)).toBe('00:00')
   })
 })
 
